@@ -1,0 +1,473 @@
+"use client";
+
+import {
+  useEffect,
+  useMemo,
+  useState,
+  type CSSProperties,
+} from "react";
+
+import { useRouter } from "next/navigation";
+
+import {
+  requisicoesTecnicasMock,
+  RequisicaoTecnica,
+} from "@/lib/requisicoesTecnicas";
+
+import {
+  carregarEstados,
+  ouvirAlteracoes,
+} from "@/lib/requisicoesStore";
+
+/* =========================================================
+   HELPERS
+========================================================= */
+
+function prioridadeClass(prioridade: string) {
+  if (prioridade === "URGENTE") {
+    return "collector-priority urgent";
+  }
+
+  if (prioridade === "ALTA") {
+    return "collector-priority high";
+  }
+
+  return "collector-priority normal";
+}
+
+function statusNome(status: string) {
+  if (status === "PENDENTE") {
+    return "Pendente";
+  }
+
+  if (status === "EM_SEPARACAO") {
+    return "Em Separação";
+  }
+
+  return status.replaceAll("_", " ");
+}
+
+/* =========================================================
+   ESTILOS
+
+   IMPORTANTE:
+   A tela inteira NÃO rola.
+
+   Quem rola é somente "listStyle", onde ficam os cards.
+========================================================= */
+
+const phoneStyle: CSSProperties = {
+  height: "100%",
+  minHeight: 0,
+
+  display: "flex",
+  flexDirection: "column",
+
+  overflow: "hidden",
+};
+
+const headerStyle: CSSProperties = {
+  flex: "0 0 auto",
+};
+
+const searchAreaStyle: CSSProperties = {
+  flex: "0 0 auto",
+};
+
+/*
+ * ESSA É A CORREÇÃO PRINCIPAL.
+ *
+ * flex: 1
+ * minHeight: 0
+ * overflowY: auto
+ *
+ * fazem a lista ocupar somente o espaço restante
+ * e permitir rolagem até o último pedido.
+ */
+const listStyle: CSSProperties = {
+  flex: "1 1 auto",
+  minHeight: 0,
+
+  overflowY: "auto",
+  overflowX: "hidden",
+
+  WebkitOverflowScrolling: "touch",
+
+  overscrollBehavior: "contain",
+
+  paddingBottom: 24,
+
+  scrollbarGutter: "stable",
+};
+
+const bottomInfoStyle: CSSProperties = {
+  flex: "0 0 auto",
+};
+
+/* =========================================================
+   COMPONENTE
+========================================================= */
+
+export default function SeparacaoListaPage() {
+  const router = useRouter();
+
+  const [busca, setBusca] = useState("");
+
+  const [requisicoes, setRequisicoes] =
+    useState<RequisicaoTecnica[]>([]);
+
+  /* =======================================================
+     CARREGAR REQUISIÇÕES
+  ======================================================= */
+
+  function carregar() {
+    const estados = carregarEstados();
+
+    const lista = requisicoesTecnicasMock
+      .map((req) => {
+        const estado = estados[req.id];
+
+        if (!estado) {
+          return req;
+        }
+
+        return {
+          ...req,
+
+          status: estado.status,
+
+          itens: req.itens.map((item) => ({
+            ...item,
+
+            separado:
+              estado.itens[item.id]?.quantidadeSeparada ??
+              item.separado,
+          })),
+        };
+      })
+      .filter(
+        (req) =>
+          req.status === "PENDENTE" ||
+          req.status === "EM_SEPARACAO"
+      );
+
+    setRequisicoes(lista);
+  }
+
+  /* =======================================================
+     ATUALIZAÇÃO
+  ======================================================= */
+
+  useEffect(() => {
+    carregar();
+
+    return ouvirAlteracoes(carregar);
+  }, []);
+
+  /* =======================================================
+     PESQUISA
+  ======================================================= */
+
+  const filtradas = useMemo(() => {
+    const termo = busca
+      .trim()
+      .toLowerCase();
+
+    if (!termo) {
+      return requisicoes;
+    }
+
+    return requisicoes.filter(
+      (req) =>
+        req.codigo
+          .toLowerCase()
+          .includes(termo) ||
+
+        req.tecnico
+          .toLowerCase()
+          .includes(termo) ||
+
+        req.codigoTecnico
+          .toLowerCase()
+          .includes(termo) ||
+
+        req.base
+          .toLowerCase()
+          .includes(termo)
+    );
+  }, [busca, requisicoes]);
+
+  /* =======================================================
+     TOTAL DE ITENS
+  ======================================================= */
+
+  function totalItens(
+    req: RequisicaoTecnica
+  ) {
+    return req.itens.reduce(
+      (total, item) =>
+        total + item.solicitado,
+      0
+    );
+  }
+
+  /* =======================================================
+     ABRIR REQUISIÇÃO
+  ======================================================= */
+
+  function abrirRequisicao(
+    req: RequisicaoTecnica
+  ) {
+    router.push(
+      `/coletor/separacao/${req.id}`
+    );
+  }
+
+  /* =======================================================
+     RENDER
+  ======================================================= */
+
+  return (
+    <div className="collector-screen">
+      <div
+        className="collector-phone"
+        style={phoneStyle}
+      >
+        {/* =================================================
+            CABEÇALHO
+        ================================================= */}
+
+        <div
+          className="collector-header"
+          style={headerStyle}
+        >
+          <div className="collector-header-title">
+            <button
+              type="button"
+              className="collector-back-button"
+              onClick={() => {
+                console.log("VOLTAR SEPARAÇÃO -> /coletor/expedicoes");
+                window.location.href = "/coletor/expedicoes";
+                }}
+              aria-label="Voltar"
+            >
+              ‹
+            </button>
+
+            <strong>
+              Ordens - Separação
+            </strong>
+          </div>
+        </div>
+
+        {/* =================================================
+            PESQUISA
+        ================================================= */}
+
+        <div
+          className="collector-search-area"
+          style={searchAreaStyle}
+        >
+          <div className="collector-search-box">
+            <span>⌕</span>
+
+            <input
+              value={busca}
+              onChange={(e) =>
+                setBusca(
+                  e.target.value
+                )
+              }
+              placeholder="Parâmetro de busca"
+            />
+          </div>
+        </div>
+
+        {/* =================================================
+            LISTA COM SCROLL
+        ================================================= */}
+
+        <div
+          className="collector-request-list"
+          style={listStyle}
+        >
+          {filtradas.length === 0 && (
+            <div
+              style={{
+                padding: "32px 16px",
+                textAlign: "center",
+                color: "#7b8794",
+                fontSize: 13,
+                fontWeight: 600,
+              }}
+            >
+              Nenhuma requisição encontrada.
+            </div>
+          )}
+
+          {filtradas.map((req) => (
+            <button
+              type="button"
+              key={req.id}
+              className="collector-request-card"
+              onClick={() =>
+                abrirRequisicao(req)
+              }
+              style={{
+                width: "calc(100% - 20px)",
+                margin: "0 10px 10px",
+                padding: 0,
+                background: "#ffffff",
+                borderTop: "1px solid #d9e5eb",
+                borderRight: "1px solid #d9e5eb",
+                borderBottom: "1px solid #d9e5eb",
+                borderLeft: "7px solid #159fc5",
+                borderRadius: 16,
+                overflow: "hidden",
+                boxShadow: "0 3px 9px rgba(15, 23, 42, 0.055)",
+              }}
+            >
+
+              <div className="collector-card-content">
+                {/* =========================================
+                    CABEÇALHO DO CARD
+                ========================================= */}
+
+                <div className="collector-card-header">
+                  <strong>
+                    {req.codigo}
+                  </strong>
+
+                  <span
+                    className={prioridadeClass(
+                      req.prioridade
+                    )}
+                  >
+                    {req.prioridade}
+                  </span>
+                </div>
+
+                {/* =========================================
+                    TÉCNICO
+                ========================================= */}
+
+                <div className="collector-technician">
+                  {req.tecnico}
+                </div>
+
+                {/* =========================================
+                    DADOS
+                ========================================= */}
+
+                <div className="collector-card-row">
+                  <span>
+                    Técnico:
+                  </span>
+
+                  <b>
+                    {req.codigoTecnico}
+                  </b>
+                </div>
+
+                <div className="collector-card-row">
+                  <span>
+                    Base:
+                  </span>
+
+                  <b>
+                    {req.base}
+                  </b>
+                </div>
+
+                <div className="collector-card-row">
+                  <span>
+                    Tipo:
+                  </span>
+
+                  <b>
+                    {req.tipo}
+                  </b>
+                </div>
+
+                {/* =========================================
+                    QUANTIDADES
+                ========================================= */}
+
+                <div className="collector-card-numbers">
+                  <div>
+                    <span>
+                      Itens:
+                    </span>
+
+                    <strong>
+                      {totalItens(req)}
+                    </strong>
+                  </div>
+
+                  <div>
+                    <span>
+                      SKUs:
+                    </span>
+
+                    <strong>
+                      {req.itens.length}
+                    </strong>
+                  </div>
+                </div>
+
+                {/* =========================================
+                    STATUS
+                ========================================= */}
+
+                <div className="collector-card-footer">
+                  <span
+                    className={
+                      req.status ===
+                      "PENDENTE"
+                        ? "collector-status pending"
+                        : "collector-status separating"
+                    }
+                  >
+                    {statusNome(
+                      req.status
+                    )}
+                  </span>
+
+                  <span className="collector-arrow">
+                    ›
+                  </span>
+                </div>
+              </div>
+            </button>
+          ))}
+
+          {/*
+           * Folga extra para garantir que o último card
+           * nunca fique escondido no final da área rolável.
+           */}
+          <div
+            aria-hidden="true"
+            style={{
+              height: 12,
+              flexShrink: 0,
+            }}
+          />
+        </div>
+
+        {/* =================================================
+            RODAPÉ
+        ================================================= */}
+
+        <div
+          className="collector-bottom-info"
+          style={bottomInfoStyle}
+        >
+          {filtradas.length}{" "}
+          {filtradas.length === 1
+            ? "requisição disponível"
+            : "requisições disponíveis"}
+        </div>
+      </div>
+    </div>
+  );
+}

@@ -1,0 +1,2055 @@
+﻿"use client";
+
+import {
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
+
+import {
+  useRouter,
+} from "next/navigation";
+
+import {
+  carregarPendenciasRetorno,
+  iniciarAnalisePendencia,
+  ouvirPendenciasRetorno,
+  PendenciaRetorno,
+  reabrirAnalisePendencia,
+  resolverPendenciaRetorno,
+  SolucaoPendenciaRetorno,
+} from "@/lib/pendenciasRetornoStore";
+
+/* =========================================================
+   TIPOS
+========================================================= */
+
+type FiltroStatus =
+  | "TODAS"
+  | "ABERTA"
+  | "EM_ANALISE"
+  | "RESOLVIDA";
+
+/* =========================================================
+   PAGE
+========================================================= */
+
+export default function Page() {
+  const router =
+    useRouter();
+
+  const [
+    pendencias,
+    setPendencias,
+  ] = useState<
+    PendenciaRetorno[]
+  >([]);
+
+  const [
+    selecionadaId,
+    setSelecionadaId,
+  ] = useState<
+    string | null
+  >(null);
+
+  const [
+    pesquisa,
+    setPesquisa,
+  ] = useState("");
+
+  const [
+    filtro,
+    setFiltro,
+  ] =
+    useState<FiltroStatus>(
+      "TODAS"
+    );
+
+  const [
+    modalResolver,
+    setModalResolver,
+  ] = useState(false);
+
+  const [
+    solucao,
+    setSolucao,
+  ] =
+    useState<SolucaoPendenciaRetorno | null>(
+      null
+    );
+
+  const [
+    observacao,
+    setObservacao,
+  ] = useState("");
+
+  const [
+    mensagem,
+    setMensagem,
+  ] = useState("");
+
+  /* =========================================================
+     CARREGAR
+  ========================================================= */
+
+  function atualizar() {
+    const dados =
+      carregarPendenciasRetorno();
+
+    setPendencias(dados);
+
+    setSelecionadaId(
+      (atual) => {
+        if (
+          atual &&
+          dados.some(
+            (item) =>
+              item.id ===
+              atual
+          )
+        ) {
+          return atual;
+        }
+
+        return (
+          dados[0]?.id ??
+          null
+        );
+      }
+    );
+  }
+
+  useEffect(() => {
+    atualizar();
+
+    return ouvirPendenciasRetorno(
+      atualizar
+    );
+  }, []);
+
+  /* =========================================================
+     RESUMO
+  ========================================================= */
+
+  const resumo =
+    useMemo(() => {
+      return {
+        total:
+          pendencias.length,
+
+        abertas:
+          pendencias.filter(
+            (item) =>
+              item.status ===
+              "ABERTA"
+          ).length,
+
+        analise:
+          pendencias.filter(
+            (item) =>
+              item.status ===
+              "EM_ANALISE"
+          ).length,
+
+        resolvidas:
+          pendencias.filter(
+            (item) =>
+              item.status ===
+              "RESOLVIDA"
+          ).length,
+      };
+    }, [pendencias]);
+
+  /* =========================================================
+     FILTRO
+  ========================================================= */
+
+  const filtradas =
+    useMemo(() => {
+      const termo =
+        pesquisa
+          .trim()
+          .toLowerCase();
+
+      return pendencias.filter(
+        (pendencia) => {
+          if (
+            filtro !==
+              "TODAS" &&
+            pendencia.status !==
+              filtro
+          ) {
+            return false;
+          }
+
+          if (!termo) {
+            return true;
+          }
+
+          const texto = [
+            pendencia.id,
+            pendencia.retornoCodigo,
+            pendencia.documentoOrigem,
+            pendencia.codigoProduto,
+            pendencia.produto,
+            pendencia.tecnico,
+            pendencia.codigoTecnico,
+            pendencia.base,
+            pendencia.motivo,
+          ]
+            .filter(Boolean)
+            .join(" ")
+            .toLowerCase();
+
+          return texto.includes(
+            termo
+          );
+        }
+      );
+    }, [
+      pendencias,
+      pesquisa,
+      filtro,
+    ]);
+
+  const selecionada =
+    useMemo(() => {
+      return (
+        pendencias.find(
+          (item) =>
+            item.id ===
+            selecionadaId
+        ) ?? null
+      );
+    }, [
+      pendencias,
+      selecionadaId,
+    ]);
+
+  /* =========================================================
+     AÃ‡Ã•ES
+  ========================================================= */
+
+  function iniciarAnalise() {
+    if (!selecionada) {
+      return;
+    }
+
+    try {
+      iniciarAnalisePendencia(
+        selecionada.id
+      );
+
+      setMensagem(
+        "âœ“ PendÃªncia colocada em anÃ¡lise."
+      );
+
+      atualizar();
+    } catch (erro) {
+      setMensagem(
+        erro instanceof Error
+          ? erro.message
+          : "Erro ao iniciar anÃ¡lise."
+      );
+    }
+  }
+
+  function devolverParaAberta() {
+    if (!selecionada) {
+      return;
+    }
+
+    try {
+      reabrirAnalisePendencia(
+        selecionada.id
+      );
+
+      setMensagem(
+        "PendÃªncia devolvida para ABERTA."
+      );
+
+      atualizar();
+    } catch (erro) {
+      setMensagem(
+        erro instanceof Error
+          ? erro.message
+          : "Erro ao atualizar pendÃªncia."
+      );
+    }
+  }
+
+  function abrirResolucao() {
+    setSolucao(null);
+
+    setObservacao("");
+
+    setMensagem("");
+
+    setModalResolver(true);
+  }
+
+  function confirmarResolucao() {
+    if (
+      !selecionada
+    ) {
+      return;
+    }
+
+    if (!solucao) {
+      setMensagem(
+        "Selecione a soluÃ§Ã£o da pendÃªncia."
+      );
+
+      return;
+    }
+
+    if (
+      !observacao.trim()
+    ) {
+      setMensagem(
+        "Informe a justificativa da resoluÃ§Ã£o."
+      );
+
+      return;
+    }
+
+    try {
+      resolverPendenciaRetorno(
+        selecionada.id,
+        {
+          solucao,
+          observacao,
+        }
+      );
+
+      setModalResolver(
+        false
+      );
+
+      setSolucao(null);
+
+      setObservacao("");
+
+      setMensagem(
+        "âœ“ PendÃªncia resolvida com sucesso."
+      );
+
+      atualizar();
+    } catch (erro) {
+      setMensagem(
+        erro instanceof Error
+          ? erro.message
+          : "Erro ao resolver pendÃªncia."
+      );
+    }
+  }
+
+  /* =========================================================
+     RENDER
+  ========================================================= */
+
+  return (
+    <main style={page}>
+      {/* =============================================
+          INDICADORES
+      ============================================= */}
+
+      <section style={metrics}>
+        <MetricCard
+          title="PendÃªncias"
+          value={resumo.total}
+          subtitle="registros gerados"
+          accent="#4f9bb4"
+          onClick={() =>
+            setFiltro(
+              "TODAS"
+            )
+          }
+        />
+
+        <MetricCard
+          title="Abertas"
+          value={resumo.abertas}
+          subtitle="aguardando anÃ¡lise"
+          accent="#f0a000"
+          onClick={() =>
+            setFiltro(
+              "ABERTA"
+            )
+          }
+        />
+
+        <MetricCard
+          title="Em anÃ¡lise"
+          value={resumo.analise}
+          subtitle="em tratamento"
+          accent="#65a6bd"
+          onClick={() =>
+            setFiltro(
+              "EM_ANALISE"
+            )
+          }
+        />
+
+        <MetricCard
+          title="Resolvidas"
+          value={
+            resumo.resolvidas
+          }
+          subtitle="pendÃªncias encerradas"
+          accent="#38a88e"
+          onClick={() =>
+            setFiltro(
+              "RESOLVIDA"
+            )
+          }
+        />
+      </section>
+
+      {/* =============================================
+          TOOLBAR
+      ============================================= */}
+
+      <section style={toolbar}>
+        <div style={titleArea}>
+          <button
+            type="button"
+            style={backButton}
+            onClick={() =>
+              router.push(
+                "/expedicoes/retornos"
+              )
+            }
+          >
+            â†©
+          </button>
+
+          <h1 style={title}>
+            PendÃªncias de Retorno
+          </h1>
+        </div>
+
+        <div style={toolbarRight}>
+          <select
+            value={filtro}
+            onChange={(event) =>
+              setFiltro(
+                event.target
+                  .value as FiltroStatus
+              )
+            }
+            style={filterSelect}
+          >
+            <option value="TODAS">
+              Todas
+            </option>
+
+            <option value="ABERTA">
+              Abertas
+            </option>
+
+            <option value="EM_ANALISE">
+              Em anÃ¡lise
+            </option>
+
+            <option value="RESOLVIDA">
+              Resolvidas
+            </option>
+          </select>
+
+          <input
+            value={pesquisa}
+            onChange={(event) =>
+              setPesquisa(
+                event.target.value
+              )
+            }
+            placeholder="Pesquisar RET / REQ / produto / tÃ©cnico"
+            style={searchInput}
+          />
+        </div>
+      </section>
+
+      {/* =============================================
+          CONTEÃšDO
+      ============================================= */}
+
+      <section style={workspace}>
+        {/* ===========================================
+            LISTA
+        =========================================== */}
+
+        <div style={sidebar}>
+          <div style={sidebarHeader}>
+            <strong>
+              PendÃªncias
+            </strong>
+
+            <span>
+              {filtradas.length}
+            </span>
+          </div>
+
+          <div style={list}>
+            {filtradas.length ===
+              0 && (
+              <div style={emptyList}>
+                Nenhuma pendÃªncia encontrada.
+              </div>
+            )}
+
+            {filtradas.map(
+              (pendencia) => {
+                const ativa =
+                  pendencia.id ===
+                  selecionadaId;
+
+                return (
+                  <button
+                    key={
+                      pendencia.id
+                    }
+                    type="button"
+                    onClick={() => {
+                      setSelecionadaId(
+                        pendencia.id
+                      );
+
+                      setMensagem(
+                        ""
+                      );
+                    }}
+                    style={{
+                      ...listCard,
+
+                      borderColor:
+                        ativa
+                          ? "#009fe3"
+                          : "#cad6dc",
+
+                      background:
+                        ativa
+                          ? "#eaf8fd"
+                          : "#ffffff",
+                    }}
+                  >
+                    <div
+                      style={
+                        listCardTop
+                      }
+                    >
+                      <div>
+                        <span
+                          style={
+                            tinyLabel
+                          }
+                        >
+                          RETORNO
+                        </span>
+
+                        <strong
+                          style={
+                            returnNumber
+                          }
+                        >
+                          {
+                            pendencia.retornoCodigo
+                          }
+                        </strong>
+                      </div>
+
+                      <StatusBadge
+                        status={
+                          pendencia.status
+                        }
+                      />
+                    </div>
+
+                    <div
+                      style={
+                        originBox
+                      }
+                    >
+                      <span
+                        style={
+                          tinyLabel
+                        }
+                      >
+                        DOCUMENTO ORIGEM
+                      </span>
+
+                      <strong>
+                        {
+                          pendencia.documentoOrigem
+                        }
+                      </strong>
+                    </div>
+
+                    <strong
+                      style={
+                        technicianName
+                      }
+                    >
+                      {
+                        pendencia.tecnico
+                      }
+                    </strong>
+
+                    <span
+                      style={
+                        technicianInfo
+                      }
+                    >
+                      {
+                        pendencia.codigoTecnico
+                      }{" "}
+                      â€¢{" "}
+                      {
+                        pendencia.base
+                      }
+                    </span>
+
+                    <div
+                      style={
+                        productMini
+                      }
+                    >
+                      <div>
+                        <span
+                          style={
+                            tinyLabel
+                          }
+                        >
+                          PRODUTO
+                        </span>
+
+                        <strong>
+                          {
+                            pendencia.codigoProduto
+                          }
+                        </strong>
+                      </div>
+
+                      <div>
+                        <span
+                          style={
+                            tinyLabel
+                          }
+                        >
+                          QTD.
+                        </span>
+
+                        <strong>
+                          {
+                            pendencia.quantidade
+                          }{" "}
+                          {
+                            pendencia.unidade
+                          }
+                        </strong>
+                      </div>
+                    </div>
+                  </button>
+                );
+              }
+            )}
+          </div>
+        </div>
+
+        {/* ===========================================
+            DETALHE
+        =========================================== */}
+
+        <section style={detail}>
+          {!selecionada && (
+            <div style={emptyDetail}>
+              Selecione uma pendÃªncia.
+            </div>
+          )}
+
+          {selecionada && (
+            <>
+              <div style={detailHeader}>
+                <div>
+                  <span style={tinyLabel}>
+                    PENDÃŠNCIA DO RETORNO
+                  </span>
+
+                  <h2 style={detailTitle}>
+                    {
+                      selecionada.retornoCodigo
+                    }
+                  </h2>
+
+                  <span style={detailSubtitle}>
+                    DivergÃªncia de recebimento
+                  </span>
+                </div>
+
+                <StatusBadge
+                  status={
+                    selecionada.status
+                  }
+                />
+              </div>
+
+              <div style={infoStrip}>
+                <DetailInfo
+                  label="TÃ‰CNICO RESPONSÃVEL"
+                  value={`${selecionada.tecnico} â€¢ ${selecionada.codigoTecnico}`}
+                />
+
+                <DetailInfo
+                  label="BASE"
+                  value={
+                    selecionada.base
+                  }
+                />
+
+                <DetailInfo
+                  label="DOCUMENTO ORIGEM"
+                  value={
+                    selecionada.documentoOrigem
+                  }
+                />
+
+                <DetailInfo
+                  label="RETORNO"
+                  value={
+                    selecionada.retornoCodigo
+                  }
+                />
+              </div>
+
+              <div style={alertBox}>
+                <div style={alertIcon}>
+                  !
+                </div>
+
+                <div>
+                  <strong>
+                    DivergÃªncia de estoque
+                  </strong>
+
+                  <p>
+                    Este material nÃ£o entrou em estoque durante o recebimento do retorno. A pendÃªncia precisa ser analisada antes de qualquer movimentaÃ§Ã£o.
+                  </p>
+                </div>
+              </div>
+
+              <h3 style={sectionTitle}>
+                Material da pendÃªncia
+              </h3>
+
+              <div style={productTable}>
+                <div
+                  style={
+                    tableHeader
+                  }
+                >
+                  <span>
+                    CÃ“DIGO
+                  </span>
+
+                  <span>
+                    PRODUTO
+                  </span>
+
+                  <span>
+                    UND
+                  </span>
+
+                  <span>
+                    QTD.
+                  </span>
+
+                  <span>
+                    MOTIVO
+                  </span>
+                </div>
+
+                <div style={tableRow}>
+                  <strong>
+                    {
+                      selecionada.codigoProduto
+                    }
+                  </strong>
+
+                  <strong>
+                    {
+                      selecionada.produto
+                    }
+                  </strong>
+
+                  <span>
+                    {
+                      selecionada.unidade
+                    }
+                  </span>
+
+                  <strong
+                    style={{
+                      color:
+                        "#d92d20",
+                    }}
+                  >
+                    {
+                      selecionada.quantidade
+                    }
+                  </strong>
+
+                  <span>
+                    {formatarTexto(
+                      selecionada.motivo ??
+                        "-"
+                    )}
+                  </span>
+                </div>
+              </div>
+
+              {selecionada
+                .seriais.length >
+                0 && (
+                <div style={serialBox}>
+                  <span style={tinyLabel}>
+                    SERIAIS
+                  </span>
+
+                  <strong>
+                    {selecionada.seriais.join(
+                      ", "
+                    )}
+                  </strong>
+                </div>
+              )}
+
+              <div style={analysisGrid}>
+                <div style={analysisCard}>
+                  <span style={tinyLabel}>
+                    OBSERVAÃ‡ÃƒO DA CONFERÃŠNCIA
+                  </span>
+
+                  <p>
+                    {selecionada.observacao ||
+                      "Sem observaÃ§Ã£o."}
+                  </p>
+                </div>
+
+                <div style={analysisCard}>
+                  <span style={tinyLabel}>
+                    CHAVE DE CONTROLE
+                  </span>
+
+                  <p
+                    style={{
+                      fontFamily:
+                        "monospace",
+                    }}
+                  >
+                    {
+                      selecionada.chaveIdempotencia
+                    }
+                  </p>
+                </div>
+              </div>
+
+              {selecionada.status ===
+                "RESOLVIDA" && (
+                <div
+                  style={
+                    resolvedBox
+                  }
+                >
+                  <strong>
+                    âœ“ PENDÃŠNCIA RESOLVIDA
+                  </strong>
+
+                  <div
+                    style={
+                      resolvedGrid
+                    }
+                  >
+                    <DetailInfo
+                      label="SOLUÃ‡ÃƒO"
+                      value={formatarSolucao(
+                        selecionada.solucao
+                      )}
+                    />
+
+                    <DetailInfo
+                      label="RESOLVIDO EM"
+                      value={formatarData(
+                        selecionada.resolvidoEm
+                      )}
+                    />
+
+                    <DetailInfo
+                      label="JUSTIFICATIVA"
+                      value={
+                        selecionada.observacaoResolucao ??
+                        "-"
+                      }
+                    />
+                  </div>
+                </div>
+              )}
+
+              {mensagem && (
+                <div
+                  style={{
+                    ...message,
+
+                    background:
+                      mensagem.startsWith(
+                        "âœ“"
+                      )
+                        ? "#eaf8f0"
+                        : "#fff4e5",
+
+                    color:
+                      mensagem.startsWith(
+                        "âœ“"
+                      )
+                        ? "#067647"
+                        : "#9a6700",
+                  }}
+                >
+                  {mensagem}
+                </div>
+              )}
+
+              {/* =====================================
+                  AÃ‡Ã•ES
+              ===================================== */}
+
+              <div style={actions}>
+                {selecionada.status ===
+                  "ABERTA" && (
+                  <button
+                    type="button"
+                    style={
+                      secondaryButton
+                    }
+                    onClick={
+                      iniciarAnalise
+                    }
+                  >
+                    INICIAR ANÃLISE
+                  </button>
+                )}
+
+                {selecionada.status ===
+                  "EM_ANALISE" && (
+                  <>
+                    <button
+                      type="button"
+                      style={
+                        secondaryButton
+                      }
+                      onClick={
+                        devolverParaAberta
+                      }
+                    >
+                      DEVOLVER PARA ABERTA
+                    </button>
+
+                    <button
+                      type="button"
+                      style={
+                        primaryButton
+                      }
+                      onClick={
+                        abrirResolucao
+                      }
+                    >
+                      RESOLVER PENDÃŠNCIA
+                    </button>
+                  </>
+                )}
+              </div>
+            </>
+          )}
+        </section>
+      </section>
+
+      {/* =============================================
+          MODAL
+      ============================================= */}
+
+      {modalResolver &&
+        selecionada && (
+          <div style={overlay}>
+            <div style={modal}>
+              <div style={modalHeader}>
+                <div>
+                  <span style={tinyLabel}>
+                    RESOLUÃ‡ÃƒO DA PENDÃŠNCIA
+                  </span>
+
+                  <h2 style={modalTitle}>
+                    {
+                      selecionada.retornoCodigo
+                    }{" "}
+                    â€¢{" "}
+                    {
+                      selecionada.codigoProduto
+                    }
+                  </h2>
+                </div>
+
+                <button
+                  type="button"
+                  style={closeButton}
+                  onClick={() =>
+                    setModalResolver(
+                      false
+                    )
+                  }
+                >
+                  Ã—
+                </button>
+              </div>
+
+              <div style={modalProduct}>
+                <strong>
+                  {
+                    selecionada.produto
+                  }
+                </strong>
+
+                <span>
+                  {
+                    selecionada.quantidade
+                  }{" "}
+                  {
+                    selecionada.unidade
+                  }
+                </span>
+              </div>
+
+              <p style={modalInstruction}>
+                Informe o destino definitivo do material.
+              </p>
+
+              <ResolutionOption
+                active={
+                  solucao ===
+                  "DISPONIVEL"
+                }
+                icon="âœ“"
+                title="MATERIAL LOCALIZADO / OK"
+                description="A quantidade serÃ¡ adicionada ao estoque DISPONÃVEL do CD."
+                onClick={() =>
+                  setSolucao(
+                    "DISPONIVEL"
+                  )
+                }
+              />
+
+              <ResolutionOption
+                active={
+                  solucao ===
+                  "QUARENTENA"
+                }
+                icon="âš "
+                title="AVARIA CONFIRMADA"
+                description="A quantidade serÃ¡ adicionada exclusivamente Ã  QUARENTENA."
+                onClick={() =>
+                  setSolucao(
+                    "QUARENTENA"
+                  )
+                }
+              />
+
+              <ResolutionOption
+                active={
+                  solucao ===
+                  "BAIXA"
+                }
+                icon="Ã—"
+                title="AJUSTE / BAIXA"
+                description="A pendÃªncia serÃ¡ encerrada sem adicionar quantidade ao estoque."
+                onClick={() =>
+                  setSolucao(
+                    "BAIXA"
+                  )
+                }
+              />
+
+              <label style={fieldLabel}>
+                JUSTIFICATIVA *
+              </label>
+
+              <textarea
+                value={observacao}
+                onChange={(event) =>
+                  setObservacao(
+                    event.target.value
+                  )
+                }
+                placeholder="Descreva o resultado da anÃ¡lise..."
+                style={textarea}
+              />
+
+              {solucao && (
+                <div
+                  style={{
+                    ...preview,
+
+                    background:
+                      solucao ===
+                      "DISPONIVEL"
+                        ? "#eaf8f0"
+                        : solucao ===
+                          "QUARENTENA"
+                        ? "#fff6dc"
+                        : "#fff0ef",
+                  }}
+                >
+                  {solucao ===
+                    "DISPONIVEL" && (
+                    <>
+                      <strong>
+                        âœ“ ESTOQUE DISPONÃVEL
+                      </strong>
+
+                      <span>
+                        {
+                          selecionada.quantidade
+                        }{" "}
+                        {
+                          selecionada.unidade
+                        } serÃ£o adicionadas ao estoque disponÃ­vel.
+                      </span>
+                    </>
+                  )}
+
+                  {solucao ===
+                    "QUARENTENA" && (
+                    <>
+                      <strong>
+                        âš  QUARENTENA
+                      </strong>
+
+                      <span>
+                        {
+                          selecionada.quantidade
+                        }{" "}
+                        {
+                          selecionada.unidade
+                        } serÃ£o adicionadas Ã  quarentena.
+                      </span>
+                    </>
+                  )}
+
+                  {solucao ===
+                    "BAIXA" && (
+                    <>
+                      <strong>
+                        Ã— SEM ENTRADA DE ESTOQUE
+                      </strong>
+
+                      <span>
+                        A pendÃªncia serÃ¡ encerrada sem gerar saldo.
+                      </span>
+                    </>
+                  )}
+                </div>
+              )}
+
+              <div style={modalActions}>
+                <button
+                  type="button"
+                  style={
+                    cancelButton
+                  }
+                  onClick={() =>
+                    setModalResolver(
+                      false
+                    )
+                  }
+                >
+                  CANCELAR
+                </button>
+
+                <button
+                  type="button"
+                  style={{
+                    ...confirmButton,
+
+                    opacity:
+                      solucao &&
+                      observacao.trim()
+                        ? 1
+                        : 0.45,
+                  }}
+                  disabled={
+                    !solucao ||
+                    !observacao.trim()
+                  }
+                  onClick={
+                    confirmarResolucao
+                  }
+                >
+                  CONFIRMAR RESOLUÃ‡ÃƒO
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+    </main>
+  );
+}
+
+/* =========================================================
+   COMPONENTES
+========================================================= */
+
+function MetricCard({
+  title,
+  value,
+  subtitle,
+  accent,
+  onClick,
+}: {
+  title: string;
+  value: number;
+  subtitle: string;
+  accent: string;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      style={metricCard}
+    >
+      <div
+        style={{
+          ...metricHeader,
+          background: accent,
+        }}
+      >
+        {title}
+      </div>
+
+      <div style={metricValue}>
+        {value}
+      </div>
+
+      <div style={metricSubtitle}>
+        {subtitle}
+      </div>
+    </button>
+  );
+}
+
+function StatusBadge({
+  status,
+}: {
+  status:
+    PendenciaRetorno["status"];
+}) {
+  const config =
+    status === "ABERTA"
+      ? {
+          background:
+            "#fff1c2",
+          color:
+            "#9a6700",
+          texto:
+            "Aberta",
+        }
+      : status ===
+        "EM_ANALISE"
+      ? {
+          background:
+            "#dff4fb",
+          color:
+            "#087da7",
+          texto:
+            "Em anÃ¡lise",
+        }
+      : {
+          background:
+            "#daf2e5",
+          color:
+            "#067647",
+          texto:
+            "Resolvida",
+        };
+
+  return (
+    <span
+      style={{
+        ...statusBadge,
+        background:
+          config.background,
+        color:
+          config.color,
+      }}
+    >
+      {config.texto}
+    </span>
+  );
+}
+
+function DetailInfo({
+  label,
+  value,
+}: {
+  label: string;
+  value: string;
+}) {
+  return (
+    <div style={detailInfo}>
+      <span style={tinyLabel}>
+        {label}
+      </span>
+
+      <strong>
+        {value}
+      </strong>
+    </div>
+  );
+}
+
+function ResolutionOption({
+  active,
+  icon,
+  title,
+  description,
+  onClick,
+}: {
+  active: boolean;
+  icon: string;
+  title: string;
+  description: string;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      style={{
+        ...resolutionOption,
+
+        borderColor:
+          active
+            ? "#009fe3"
+            : "#d0d8dd",
+
+        background:
+          active
+            ? "#edf9fd"
+            : "#ffffff",
+      }}
+    >
+      <div
+        style={{
+          ...resolutionIcon,
+
+          background:
+            active
+              ? "#009fe3"
+              : "#edf1f3",
+
+          color:
+            active
+              ? "#ffffff"
+              : "#667085",
+        }}
+      >
+        {icon}
+      </div>
+
+      <div>
+        <strong>
+          {title}
+        </strong>
+
+        <span>
+          {description}
+        </span>
+      </div>
+    </button>
+  );
+}
+
+/* =========================================================
+   FORMATADORES
+========================================================= */
+
+function formatarTexto(
+  valor: string
+) {
+  return valor
+    .replaceAll("_", " ")
+    .toLowerCase()
+    .replace(
+      /(^|\s)\S/g,
+      (letra) =>
+        letra.toUpperCase()
+    );
+}
+
+function formatarSolucao(
+  valor?: SolucaoPendenciaRetorno
+) {
+  if (
+    valor === "DISPONIVEL"
+  ) {
+    return "Estoque disponÃ­vel";
+  }
+
+  if (
+    valor === "QUARENTENA"
+  ) {
+    return "Quarentena";
+  }
+
+  if (
+    valor === "BAIXA"
+  ) {
+    return "Ajuste / baixa";
+  }
+
+  return "-";
+}
+
+function formatarData(
+  valor?: string
+) {
+  if (!valor) {
+    return "-";
+  }
+
+  return new Intl.DateTimeFormat(
+    "pt-BR",
+    {
+      dateStyle: "short",
+      timeStyle: "short",
+    }
+  ).format(
+    new Date(valor)
+  );
+}
+
+/* =========================================================
+   ESTILOS
+========================================================= */
+
+const page:
+  React.CSSProperties = {
+  minHeight: "100vh",
+  background: "#e9eef2",
+  padding: 22,
+  boxSizing: "border-box",
+  color: "#14263a",
+};
+
+const metrics:
+  React.CSSProperties = {
+  display: "grid",
+  gridTemplateColumns:
+    "repeat(4, minmax(0, 1fr))",
+  gap: 10,
+  marginBottom: 16,
+};
+
+const metricCard:
+  React.CSSProperties = {
+  border: "1px solid #bdd0da",
+  borderRadius: 14,
+  overflow: "hidden",
+  background: "#ffffff",
+  padding: 0,
+  textAlign: "left",
+  cursor: "pointer",
+};
+
+const metricHeader:
+  React.CSSProperties = {
+  padding: "8px 12px",
+  color: "#ffffff",
+  fontWeight: 900,
+  fontSize: 12,
+};
+
+const metricValue:
+  React.CSSProperties = {
+  padding: "9px 12px 0",
+  fontSize: 23,
+  color: "#101828",
+};
+
+const metricSubtitle:
+  React.CSSProperties = {
+  padding: "3px 12px 12px",
+  color: "#667085",
+  fontSize: 9,
+};
+
+const toolbar:
+  React.CSSProperties = {
+  minHeight: 54,
+  border: "1px solid #009fe3",
+  borderRadius: 28,
+  background: "#ffffff",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "space-between",
+  gap: 16,
+  padding: "5px 14px",
+  marginBottom: 8,
+};
+
+const titleArea:
+  React.CSSProperties = {
+  display: "flex",
+  alignItems: "center",
+  gap: 7,
+};
+
+const backButton:
+  React.CSSProperties = {
+  border: 0,
+  background: "transparent",
+  color: "#007cac",
+  fontSize: 24,
+  cursor: "pointer",
+};
+
+const title:
+  React.CSSProperties = {
+  margin: 0,
+  color: "#007cac",
+  fontSize: 22,
+};
+
+const toolbarRight:
+  React.CSSProperties = {
+  display: "flex",
+  gap: 8,
+  alignItems: "center",
+};
+
+const filterSelect:
+  React.CSSProperties = {
+  minHeight: 38,
+  border: "1px solid #d5dde2",
+  borderRadius: 20,
+  padding: "0 14px",
+  background: "#f5f7f8",
+  outline: "none",
+};
+
+const searchInput:
+  React.CSSProperties = {
+  width: 310,
+  minHeight: 38,
+  border: 0,
+  borderRadius: 20,
+  padding: "0 16px",
+  background: "#f2f4f5",
+  outline: "none",
+};
+
+const workspace:
+  React.CSSProperties = {
+  display: "grid",
+  gridTemplateColumns:
+    "380px minmax(0, 1fr)",
+  gap: 14,
+  minHeight: 650,
+};
+
+const sidebar:
+  React.CSSProperties = {
+  border: "1px solid #009fe3",
+  borderRadius: 16,
+  overflow: "hidden",
+  background: "#ffffff",
+};
+
+const sidebarHeader:
+  React.CSSProperties = {
+  height: 48,
+  background: "#1694b4",
+  color: "#ffffff",
+  display: "flex",
+  justifyContent: "space-between",
+  alignItems: "center",
+  padding: "0 16px",
+  fontSize: 17,
+};
+
+const list:
+  React.CSSProperties = {
+  maxHeight: 690,
+  overflowY: "auto",
+  padding: 10,
+};
+
+const emptyList:
+  React.CSSProperties = {
+  padding: 30,
+  textAlign: "center",
+  color: "#667085",
+};
+
+const listCard:
+  React.CSSProperties = {
+  width: "100%",
+  border: "1px solid",
+  borderRadius: 11,
+  padding: 12,
+  marginBottom: 9,
+  textAlign: "left",
+  cursor: "pointer",
+  color: "#14263a",
+};
+
+const listCardTop:
+  React.CSSProperties = {
+  display: "flex",
+  justifyContent: "space-between",
+  gap: 8,
+};
+
+const tinyLabel:
+  React.CSSProperties = {
+  display: "block",
+  color: "#718096",
+  fontSize: 8,
+  fontWeight: 900,
+  marginBottom: 3,
+};
+
+const returnNumber:
+  React.CSSProperties = {
+  display: "block",
+  color: "#007cac",
+  fontSize: 18,
+};
+
+const originBox:
+  React.CSSProperties = {
+  marginTop: 10,
+  padding: 8,
+  border: "1px solid #ccd8de",
+  borderLeft: "4px solid #76aec2",
+  borderRadius: 6,
+  background: "#ffffff",
+  fontSize: 11,
+};
+
+const technicianName:
+  React.CSSProperties = {
+  display: "block",
+  marginTop: 10,
+  fontSize: 13,
+};
+
+const technicianInfo:
+  React.CSSProperties = {
+  display: "block",
+  marginTop: 2,
+  color: "#667085",
+  fontSize: 9,
+};
+
+const productMini:
+  React.CSSProperties = {
+  display: "grid",
+  gridTemplateColumns:
+    "1fr auto",
+  gap: 10,
+  marginTop: 10,
+  padding: 8,
+  background: "#f3f6f8",
+  borderRadius: 6,
+  fontSize: 9,
+};
+
+const statusBadge:
+  React.CSSProperties = {
+  display: "inline-flex",
+  alignItems: "center",
+  height: 24,
+  padding: "0 10px",
+  borderRadius: 14,
+  fontSize: 8,
+  fontWeight: 900,
+  whiteSpace: "nowrap",
+};
+
+const detail:
+  React.CSSProperties = {
+  border: "1px solid #009fe3",
+  borderRadius: 16,
+  background: "#ffffff",
+  overflow: "hidden",
+  padding: 16,
+};
+
+const emptyDetail:
+  React.CSSProperties = {
+  height: 500,
+  display: "grid",
+  placeItems: "center",
+  color: "#667085",
+};
+
+const detailHeader:
+  React.CSSProperties = {
+  display: "flex",
+  justifyContent: "space-between",
+  alignItems: "flex-start",
+  borderBottom: "1px solid #e5eaed",
+  paddingBottom: 13,
+};
+
+const detailTitle:
+  React.CSSProperties = {
+  margin: "2px 0",
+  color: "#007cac",
+  fontSize: 22,
+};
+
+const detailSubtitle:
+  React.CSSProperties = {
+  color: "#667085",
+  fontSize: 10,
+};
+
+const infoStrip:
+  React.CSSProperties = {
+  display: "grid",
+  gridTemplateColumns:
+    "repeat(4, 1fr)",
+  gap: 15,
+  background: "#f3f6f8",
+  borderRadius: 8,
+  padding: 13,
+  marginTop: 13,
+};
+
+const detailInfo:
+  React.CSSProperties = {
+  fontSize: 11,
+};
+
+const alertBox:
+  React.CSSProperties = {
+  display: "flex",
+  gap: 12,
+  padding: 12,
+  border: "1px solid #f4c6c1",
+  borderRadius: 8,
+  background: "#fff2f0",
+  marginTop: 13,
+  color: "#b42318",
+};
+
+const alertIcon:
+  React.CSSProperties = {
+  width: 30,
+  height: 30,
+  minWidth: 30,
+  borderRadius: "50%",
+  background: "#d92d20",
+  color: "#ffffff",
+  display: "grid",
+  placeItems: "center",
+  fontWeight: 900,
+};
+
+const sectionTitle:
+  React.CSSProperties = {
+  color: "#007cac",
+  fontSize: 14,
+  margin: "18px 0 8px",
+};
+
+const productTable:
+  React.CSSProperties = {
+  border: "1px solid #d7e0e5",
+  borderRadius: 7,
+  overflow: "hidden",
+};
+
+const tableHeader:
+  React.CSSProperties = {
+  display: "grid",
+  gridTemplateColumns:
+    "130px 1fr 80px 80px 160px",
+  gap: 10,
+  background: "#eaf0f3",
+  padding: 10,
+  color: "#526170",
+  fontSize: 8,
+  fontWeight: 900,
+};
+
+const tableRow:
+  React.CSSProperties = {
+  display: "grid",
+  gridTemplateColumns:
+    "130px 1fr 80px 80px 160px",
+  gap: 10,
+  padding: 12,
+  fontSize: 10,
+  alignItems: "center",
+};
+
+const serialBox:
+  React.CSSProperties = {
+  marginTop: 10,
+  padding: 11,
+  background: "#f4f7f8",
+  borderRadius: 7,
+  fontSize: 10,
+};
+
+const analysisGrid:
+  React.CSSProperties = {
+  display: "grid",
+  gridTemplateColumns:
+    "1fr 1fr",
+  gap: 10,
+  marginTop: 12,
+};
+
+const analysisCard:
+  React.CSSProperties = {
+  border: "1px solid #d7e0e5",
+  borderRadius: 7,
+  padding: 11,
+  fontSize: 10,
+  overflowWrap: "anywhere",
+};
+
+const resolvedBox:
+  React.CSSProperties = {
+  marginTop: 14,
+  padding: 13,
+  border: "1px solid #a9ddc2",
+  borderRadius: 8,
+  background: "#eaf8f0",
+  color: "#067647",
+};
+
+const resolvedGrid:
+  React.CSSProperties = {
+  display: "grid",
+  gridTemplateColumns:
+    "1fr 1fr 2fr",
+  gap: 12,
+  marginTop: 10,
+  color: "#344054",
+};
+
+const message:
+  React.CSSProperties = {
+  marginTop: 12,
+  padding: 10,
+  borderRadius: 7,
+  fontSize: 10,
+  fontWeight: 800,
+};
+
+const actions:
+  React.CSSProperties = {
+  display: "flex",
+  justifyContent: "flex-end",
+  gap: 9,
+  borderTop: "1px solid #e5eaed",
+  marginTop: 18,
+  paddingTop: 14,
+};
+
+const primaryButton:
+  React.CSSProperties = {
+  minHeight: 42,
+  border: 0,
+  borderRadius: 6,
+  background: "#0796bc",
+  color: "#ffffff",
+  padding: "0 18px",
+  fontSize: 10,
+  fontWeight: 900,
+  cursor: "pointer",
+};
+
+const secondaryButton:
+  React.CSSProperties = {
+  minHeight: 42,
+  border: "1px solid #0796bc",
+  borderRadius: 6,
+  background: "#ffffff",
+  color: "#087da7",
+  padding: "0 18px",
+  fontSize: 10,
+  fontWeight: 900,
+  cursor: "pointer",
+};
+
+const overlay:
+  React.CSSProperties = {
+  position: "fixed",
+  inset: 0,
+  zIndex: 1000,
+  background: "rgba(0,0,0,.45)",
+  display: "grid",
+  placeItems: "center",
+  padding: 20,
+};
+
+const modal:
+  React.CSSProperties = {
+  width: "min(620px, 96vw)",
+  maxHeight: "90vh",
+  overflowY: "auto",
+  background: "#ffffff",
+  borderRadius: 14,
+  padding: 18,
+  boxShadow: "0 18px 60px rgba(0,0,0,.22)",
+};
+
+const modalHeader:
+  React.CSSProperties = {
+  display: "flex",
+  justifyContent: "space-between",
+  gap: 12,
+};
+
+const modalTitle:
+  React.CSSProperties = {
+  margin: "3px 0 0",
+  color: "#007cac",
+  fontSize: 20,
+};
+
+const closeButton:
+  React.CSSProperties = {
+  width: 34,
+  height: 34,
+  border: 0,
+  borderRadius: "50%",
+  background: "#edf1f3",
+  color: "#667085",
+  fontSize: 20,
+  cursor: "pointer",
+};
+
+const modalProduct:
+  React.CSSProperties = {
+  display: "flex",
+  justifyContent: "space-between",
+  gap: 10,
+  padding: 11,
+  background: "#f3f6f8",
+  borderRadius: 7,
+  marginTop: 13,
+  fontSize: 11,
+};
+
+const modalInstruction:
+  React.CSSProperties = {
+  color: "#667085",
+  fontSize: 10,
+  margin: "13px 0 8px",
+};
+
+const resolutionOption:
+  React.CSSProperties = {
+  width: "100%",
+  minHeight: 62,
+  border: "1px solid",
+  borderRadius: 8,
+  marginBottom: 8,
+  padding: 10,
+  display: "flex",
+  alignItems: "center",
+  gap: 11,
+  textAlign: "left",
+  cursor: "pointer",
+};
+
+const resolutionIcon:
+  React.CSSProperties = {
+  width: 34,
+  height: 34,
+  minWidth: 34,
+  borderRadius: "50%",
+  display: "grid",
+  placeItems: "center",
+  fontWeight: 900,
+  fontSize: 17,
+};
+
+const fieldLabel:
+  React.CSSProperties = {
+  display: "block",
+  marginTop: 12,
+  marginBottom: 5,
+  color: "#344054",
+  fontSize: 9,
+  fontWeight: 900,
+};
+
+const textarea:
+  React.CSSProperties = {
+  width: "100%",
+  minHeight: 82,
+  border: "1px solid #bfcbd2",
+  borderRadius: 7,
+  padding: 10,
+  boxSizing: "border-box",
+  resize: "vertical",
+  outline: "none",
+};
+
+const preview:
+  React.CSSProperties = {
+  display: "flex",
+  flexDirection: "column",
+  gap: 4,
+  padding: 11,
+  marginTop: 10,
+  borderRadius: 7,
+  fontSize: 10,
+};
+
+const modalActions:
+  React.CSSProperties = {
+  display: "flex",
+  justifyContent: "flex-end",
+  gap: 8,
+  marginTop: 14,
+};
+
+const cancelButton:
+  React.CSSProperties = {
+  minHeight: 42,
+  padding: "0 16px",
+  border: "1px solid #cbd5db",
+  borderRadius: 6,
+  background: "#ffffff",
+  color: "#475467",
+  fontWeight: 900,
+  cursor: "pointer",
+};
+
+const confirmButton:
+  React.CSSProperties = {
+  minHeight: 42,
+  padding: "0 18px",
+  border: 0,
+  borderRadius: 6,
+  background: "#0796bc",
+  color: "#ffffff",
+  fontWeight: 900,
+  cursor: "pointer",
+};

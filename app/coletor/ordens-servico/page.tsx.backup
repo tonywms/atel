@@ -1,0 +1,1635 @@
+"use client";
+
+import {
+  useEffect,
+  useMemo,
+  useState,
+  type CSSProperties,
+} from "react";
+
+import {
+  useParams,
+  useRouter,
+} from "next/navigation";
+
+import {
+  adicionarMaterialOS,
+  adicionarPatrimonioRetiradaOS,
+  carregarPatrimonioDisponivelRetirada,
+  finalizarOrdemServico,
+  iniciarOrdemServico,
+  obterOrdemServico,
+  ouvirOrdensServico,
+  removerMaterialOS,
+  type DestinoMaterialOS,
+  type OrdemServico,
+  type PatrimonioCliente,
+} from "@/lib/ordensServicoStore";
+
+import {
+  carregarEstoqueTecnico,
+  ouvirEstoqueTecnico,
+  type EstoqueTecnico,
+} from "@/lib/estoqueTecnicoStore";
+
+/* =========================================================
+   HELPERS
+========================================================= */
+
+function statusNome(status: string) {
+  if (status === "PENDENTE") return "PENDENTE";
+  if (status === "EM_ATENDIMENTO") return "EM ATENDIMENTO";
+  if (status === "FINALIZADA") return "FINALIZADA";
+  if (status === "CANCELADA") return "CANCELADA";
+
+  return status.replaceAll("_", " ");
+}
+
+function tipoNome(tipo: string) {
+  if (tipo === "INSTALACAO") return "INSTALAÇÃO";
+  if (tipo === "MANUTENCAO") return "MANUTENÇÃO";
+  if (tipo === "TROCA") return "TROCA";
+  if (tipo === "RETIRADA") return "RETIRADA";
+
+  return tipo;
+}
+
+function destinoNome(
+  destino: DestinoMaterialOS
+) {
+  if (destino === "COMODATO") return "COMODATO";
+  if (destino === "VENDA") return "VENDA";
+
+  return "CONSUMO";
+}
+
+/* =========================================================
+   COMPONENTE
+========================================================= */
+
+export default function OrdemServicoDetalhePage() {
+  const router = useRouter();
+  const params = useParams();
+
+  const ordemId = Number(params.id);
+
+  const [ordem, setOrdem] =
+    useState<OrdemServico | null>(null);
+
+  const [estoque, setEstoque] =
+    useState<EstoqueTecnico[]>([]);
+
+  const [patrimoniosRetirada, setPatrimoniosRetirada] =
+    useState<PatrimonioCliente[]>([]);
+
+  const [patrimonioSelecionado, setPatrimonioSelecionado] =
+    useState("");
+
+  const [
+    produtoSelecionado,
+    setProdutoSelecionado,
+  ] = useState("");
+
+  const [
+    quantidade,
+    setQuantidade,
+  ] = useState("1");
+
+  const [
+    destino,
+    setDestino,
+  ] = useState<DestinoMaterialOS>(
+    "CONSUMO"
+  );
+
+  const [
+    seriaisSelecionados,
+    setSeriaisSelecionados,
+  ] = useState<string[]>([]);
+
+  const [erro, setErro] =
+    useState("");
+
+  const [
+    modalFinalizar,
+    setModalFinalizar,
+  ] = useState(false);
+
+  const [
+    finalizando,
+    setFinalizando,
+  ] = useState(false);
+
+  /* =======================================================
+     CARREGAMENTO
+  ======================================================= */
+
+  function carregar() {
+    const os =
+      obterOrdemServico(ordemId);
+
+    setOrdem(os ?? null);
+
+    if (!os) {
+      setEstoque([]);
+      setPatrimoniosRetirada([]);
+      return;
+    }
+
+    const lista =
+      carregarEstoqueTecnico().filter(
+        (item) =>
+          item.codigoTecnico ===
+            os.codigoTecnico &&
+          item.situacao ===
+            "DISPONIVEL" &&
+          item.quantidade > 0
+      );
+
+    setEstoque(lista);
+
+    if (os.tipo === "RETIRADA") {
+      setPatrimoniosRetirada(
+        carregarPatrimonioDisponivelRetirada(os.codigoCliente)
+      );
+    } else {
+      setPatrimoniosRetirada([]);
+    }
+  }
+
+  useEffect(() => {
+    carregar();
+
+    const offOS =
+      ouvirOrdensServico(carregar);
+
+    const offEstoque =
+      ouvirEstoqueTecnico(carregar);
+
+    return () => {
+      offOS();
+      offEstoque();
+    };
+  }, [ordemId]);
+
+  /* =======================================================
+     MATERIAL SELECIONADO
+  ======================================================= */
+
+  const itemEstoque =
+    useMemo(() => {
+      return estoque.find(
+        (item) =>
+          item.id ===
+          produtoSelecionado
+      );
+    }, [
+      estoque,
+      produtoSelecionado,
+    ]);
+
+  /* =======================================================
+     TOTAIS
+  ======================================================= */
+
+  const totalQuantidade =
+    useMemo(() => {
+      if (!ordem) return 0;
+
+      return ordem.itens.reduce(
+        (total, item) =>
+          total + item.quantidade,
+        0
+      );
+    }, [ordem]);
+
+  const totalSkus =
+    ordem?.itens.length ?? 0;
+
+  /* =======================================================
+     INICIAR
+  ======================================================= */
+
+  function iniciarAtendimento() {
+    if (!ordem) return;
+
+    setErro("");
+
+    try {
+      iniciarOrdemServico(
+        ordem.id
+      );
+
+      carregar();
+    } catch (error) {
+      setErro(
+        error instanceof Error
+          ? error.message
+          : "Erro ao iniciar atendimento."
+      );
+    }
+  }
+
+  /* =======================================================
+     SERIAL
+  ======================================================= */
+
+  function alternarSerial(
+    serial: string
+  ) {
+    setSeriaisSelecionados(
+      (atual) => {
+        if (
+          atual.includes(serial)
+        ) {
+          return atual.filter(
+            (item) =>
+              item !== serial
+          );
+        }
+
+        return [
+          ...atual,
+          serial,
+        ];
+      }
+    );
+  }
+
+  /* =======================================================
+     ADICIONAR MATERIAL
+  ======================================================= */
+
+  function adicionarMaterial() {
+    if (!ordem) return;
+
+    setErro("");
+
+    if (
+      ordem.status !==
+      "EM_ATENDIMENTO"
+    ) {
+      setErro(
+        "Inicie o atendimento."
+      );
+
+      return;
+    }
+
+    if (!itemEstoque) {
+      setErro(
+        "Selecione um produto."
+      );
+
+      return;
+    }
+
+    const qtd =
+      Number(quantidade);
+
+    if (
+      !Number.isFinite(qtd) ||
+      qtd <= 0
+    ) {
+      setErro(
+        "Quantidade inválida."
+      );
+
+      return;
+    }
+
+    if (
+      qtd >
+      itemEstoque.quantidade
+    ) {
+      setErro(
+        `Saldo disponível: ${itemEstoque.quantidade} ${itemEstoque.unidade}`
+      );
+
+      return;
+    }
+
+    if (
+      itemEstoque.seriais.length >
+        0 &&
+      seriaisSelecionados.length !==
+        qtd
+    ) {
+      setErro(
+        `Selecione ${qtd} serial(is).`
+      );
+
+      return;
+    }
+
+    try {
+      adicionarMaterialOS(
+        ordem.id,
+        {
+          codigoProduto:
+            itemEstoque.codigoProduto,
+
+          quantidade:
+            qtd,
+
+          seriais:
+            seriaisSelecionados,
+
+          destino,
+        }
+      );
+
+      setProdutoSelecionado(
+        ""
+      );
+
+      setQuantidade("1");
+
+      setDestino(
+        "CONSUMO"
+      );
+
+      setSeriaisSelecionados(
+        []
+      );
+
+      carregar();
+    } catch (error) {
+      setErro(
+        error instanceof Error
+          ? error.message
+          : "Erro ao adicionar material."
+      );
+    }
+  }
+
+  /* =======================================================
+     ADICIONAR PATRIMÔNIO PARA RETIRADA
+  ======================================================= */
+
+  function adicionarPatrimonioRetirada() {
+    if (!ordem) return;
+    setErro("");
+
+    if (ordem.status !== "EM_ATENDIMENTO") {
+      setErro("Inicie o atendimento.");
+      return;
+    }
+
+    if (!patrimonioSelecionado) {
+      setErro("Selecione o patrimônio a retirar.");
+      return;
+    }
+
+    try {
+      adicionarPatrimonioRetiradaOS(ordem.id, patrimonioSelecionado);
+      setPatrimonioSelecionado("");
+      carregar();
+    } catch (error) {
+      setErro(error instanceof Error ? error.message : "Erro ao adicionar patrimônio.");
+    }
+  }
+
+  /* =======================================================
+     REMOVER
+  ======================================================= */
+
+  function removerMaterial(
+    itemId: number
+  ) {
+    if (!ordem) return;
+
+    setErro("");
+
+    try {
+      removerMaterialOS(
+        ordem.id,
+        itemId
+      );
+
+      carregar();
+    } catch (error) {
+      setErro(
+        error instanceof Error
+          ? error.message
+          : "Erro ao remover material."
+      );
+    }
+  }
+
+  /* =======================================================
+     ABRIR MODAL DE FINALIZAÇÃO
+  ======================================================= */
+
+  function solicitarFinalizacao() {
+    if (!ordem) return;
+
+    setErro("");
+
+    if (
+      ordem.itens.length === 0
+    ) {
+      setErro(
+        ordem.tipo === "RETIRADA"
+          ? "Selecione pelo menos um patrimônio para retirada."
+          : "Adicione pelo menos um material."
+      );
+
+      return;
+    }
+
+    setModalFinalizar(true);
+  }
+
+  /* =======================================================
+     CANCELAR MODAL
+  ======================================================= */
+
+  function cancelarFinalizacao() {
+    if (finalizando) return;
+
+    setModalFinalizar(false);
+  }
+
+  /* =======================================================
+     CONFIRMAR FINALIZAÇÃO
+  ======================================================= */
+
+  function confirmarFinalizacao() {
+    if (
+      !ordem ||
+      finalizando
+    ) {
+      return;
+    }
+
+    setErro("");
+    setFinalizando(true);
+
+    try {
+      finalizarOrdemServico(
+        ordem.id
+      );
+
+      setModalFinalizar(false);
+
+      router.push(
+        "/coletor/ordens-servico"
+      );
+    } catch (error) {
+      setErro(
+        error instanceof Error
+          ? error.message
+          : "Erro ao finalizar OS."
+      );
+
+      setModalFinalizar(false);
+    } finally {
+      setFinalizando(false);
+    }
+  }
+
+  /* =======================================================
+     NÃO ENCONTRADA
+  ======================================================= */
+
+  if (!ordem) {
+    return (
+      <div className="collector-screen">
+        <div
+          className="collector-phone"
+          style={phoneStyle}
+        >
+          <div style={headerStyle}>
+            <button
+              type="button"
+              style={backButtonStyle}
+              onClick={() =>
+                router.push(
+                  "/coletor/ordens-servico"
+                )
+              }
+            >
+              ‹
+            </button>
+
+            <strong>
+              Ordem de Serviço
+            </strong>
+          </div>
+
+          <div style={emptyPageStyle}>
+            Ordem não encontrada.
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  /* =======================================================
+     RENDER
+  ======================================================= */
+
+  return (
+    <div className="collector-screen">
+      <div
+        className="collector-phone"
+        style={phoneStyle}
+      >
+        {/* =================================================
+            CABEÇALHO
+        ================================================= */}
+
+        <div style={headerStyle}>
+          <button
+            type="button"
+            style={backButtonStyle}
+            onClick={() =>
+              router.push(
+                "/coletor/ordens-servico"
+              )
+            }
+          >
+            ‹
+          </button>
+
+          <div style={headerInfoStyle}>
+            <strong style={headerCodigoStyle}>
+              {ordem.codigo}
+            </strong>
+
+            <span>
+              {ordem.tecnico.toUpperCase()}
+            </span>
+
+            <span>
+              {ordem.codigoTecnico} -{" "}
+              {ordem.base}
+            </span>
+          </div>
+
+          <button
+            type="button"
+            style={menuButtonStyle}
+            aria-label="Mais opções"
+          >
+            ⋮
+          </button>
+        </div>
+
+        {/* =================================================
+            ÁREA ROLÁVEL
+        ================================================= */}
+
+        <div style={scrollStyle}>
+          {/* ===============================================
+              DADOS DA ORDEM
+          =============================================== */}
+
+          <section style={boxStyle}>
+            <div style={boxHeaderStyle}>
+              <strong style={boxTitleStyle}>
+                Atendimento da OS
+              </strong>
+
+              <div style={circleIconStyle}>
+                ▣
+              </div>
+            </div>
+
+            <div style={statusMessageStyle}>
+              {ordem.status ===
+              "PENDENTE"
+                ? "Ordem aguardando início do atendimento"
+                : ordem.status ===
+                  "EM_ATENDIMENTO"
+                ? "Atendimento da ordem em andamento"
+                : "Atendimento concluído"}
+            </div>
+
+            <div style={indicatorsStyle}>
+              <div style={indicatorStyle}>
+                <span>
+                  STATUS
+                </span>
+
+                <strong>
+                  {statusNome(
+                    ordem.status
+                  )}
+                </strong>
+              </div>
+
+              <div style={indicatorStyle}>
+                <span>
+                  SKUs
+                </span>
+
+                <strong>
+                  {totalSkus}
+                </strong>
+              </div>
+
+              <div style={indicatorStyle}>
+                <span>
+                  ITENS
+                </span>
+
+                <strong>
+                  {totalQuantidade}
+                </strong>
+              </div>
+            </div>
+
+            <div style={subTitleStyle}>
+              CLIENTE
+            </div>
+
+            <div style={clientCardStyle}>
+              <strong style={clientNameStyle}>
+                {ordem.cliente}
+              </strong>
+
+              <div style={dataRowStyle}>
+                <span>
+                  Código
+                </span>
+
+                <b>
+                  {ordem.codigoCliente}
+                </b>
+              </div>
+
+              <div style={dataRowStyle}>
+                <span>
+                  Endereço
+                </span>
+
+                <b>
+                  {ordem.endereco}
+                </b>
+              </div>
+
+              <div style={dataRowStyle}>
+                <span>
+                  Cidade
+                </span>
+
+                <b>
+                  {ordem.cidade}
+                </b>
+              </div>
+            </div>
+
+            <div style={subTitleStyle}>
+              DADOS DA ORDEM
+            </div>
+
+            <div style={clientCardStyle}>
+              <div style={dataRowStyle}>
+                <span>
+                  Técnico
+                </span>
+
+                <b>
+                  {ordem.tecnico}
+                </b>
+              </div>
+
+              <div style={dataRowStyle}>
+                <span>
+                  Código
+                </span>
+
+                <b>
+                  {ordem.codigoTecnico}
+                </b>
+              </div>
+
+              <div style={dataRowStyle}>
+                <span>
+                  Base
+                </span>
+
+                <b>
+                  {ordem.base}
+                </b>
+              </div>
+
+              <div style={dataRowStyle}>
+                <span>
+                  Tipo
+                </span>
+
+                <b>
+                  {tipoNome(
+                    ordem.tipo
+                  )}
+                </b>
+              </div>
+            </div>
+
+            {ordem.observacao && (
+              <>
+                <div style={subTitleStyle}>
+                  OBSERVAÇÃO
+                </div>
+
+                <div style={observationStyle}>
+                  {ordem.observacao}
+                </div>
+              </>
+            )}
+          </section>
+
+          {/* ===============================================
+              MATERIAIS / RETIRADA
+          =============================================== */}
+
+          <section style={boxStyle}>
+            <div style={boxHeaderStyle}>
+              <strong style={boxTitleStyle}>
+                {ordem.tipo === "RETIRADA"
+                  ? "Patrimônio para Retirada"
+                  : "Materiais Utilizados"}
+              </strong>
+
+              <div style={circleIconStyle}>
+                {ordem.tipo === "RETIRADA" ? "↩" : "▦"}
+              </div>
+            </div>
+
+            {ordem.status === "PENDENTE" && (
+              <div style={emptyMaterialStyle}>
+                Inicie o atendimento para {ordem.tipo === "RETIRADA"
+                  ? "selecionar o patrimônio que será retirado."
+                  : "informar os materiais utilizados."}
+              </div>
+            )}
+
+            {ordem.status === "EM_ATENDIMENTO" && ordem.tipo === "RETIRADA" && (
+              <>
+                <label style={labelStyle}>PATRIMÔNIO DO CLIENTE</label>
+
+                <select
+                  value={patrimonioSelecionado}
+                  onChange={(e) => setPatrimonioSelecionado(e.target.value)}
+                  style={inputStyle}
+                >
+                  <option value="">Selecione o patrimônio</option>
+                  {patrimoniosRetirada
+                    .filter((pat) =>
+                      !ordem.itens.some((item) =>
+                        item.codigoProduto === pat.codigoProduto &&
+                        (!pat.serial || item.seriais.includes(pat.serial))
+                      )
+                    )
+                    .map((pat) => (
+                      <option key={pat.id} value={pat.id}>
+                        {pat.codigoProduto} - {pat.produto}
+                        {pat.serial ? ` | ${pat.serial}` : ""}
+                      </option>
+                    ))}
+                </select>
+
+                {patrimoniosRetirada.length === 0 && (
+                  <div style={stockInfoStyle}>
+                    <span>PATRIMÔNIO</span>
+                    <strong>NENHUM COMODATO INSTALADO</strong>
+                  </div>
+                )}
+
+                {patrimonioSelecionado && (
+                  <button type="button" onClick={adicionarPatrimonioRetirada} style={addMaterialStyle}>
+                    ADICIONAR À RETIRADA
+                  </button>
+                )}
+              </>
+            )}
+
+            {ordem.status === "EM_ATENDIMENTO" && ordem.tipo !== "RETIRADA" && (
+              <>
+                <label style={labelStyle}>PRODUTO</label>
+                <select
+                  value={produtoSelecionado}
+                  onChange={(e) => {
+                    setProdutoSelecionado(e.target.value);
+                    setQuantidade("1");
+                    setSeriaisSelecionados([]);
+                  }}
+                  style={inputStyle}
+                >
+                  <option value="">Selecione o produto</option>
+                  {estoque.map((item) => (
+                    <option key={item.id} value={item.id}>
+                      {item.codigoProduto} - {item.produto} | {item.quantidade} {item.unidade}
+                    </option>
+                  ))}
+                </select>
+
+                {itemEstoque && (
+                  <>
+                    <div style={stockInfoStyle}>
+                      <span>SALDO DISPONÍVEL</span>
+                      <strong>{itemEstoque.quantidade} {itemEstoque.unidade}</strong>
+                    </div>
+
+                    <div style={twoColumnsStyle}>
+                      <div>
+                        <label style={labelStyle}>QUANTIDADE</label>
+                        <input
+                          type="number" min={1} max={itemEstoque.quantidade}
+                          value={quantidade}
+                          onChange={(e) => setQuantidade(e.target.value)}
+                          style={inputStyle}
+                        />
+                      </div>
+
+                      <div>
+                        <label style={labelStyle}>DESTINO</label>
+                        <select
+                          value={destino}
+                          onChange={(e) => setDestino(e.target.value as DestinoMaterialOS)}
+                          style={inputStyle}
+                        >
+                          <option value="CONSUMO">CONSUMO</option>
+                          <option value="COMODATO">COMODATO</option>
+                          <option value="VENDA">VENDA</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    {itemEstoque.seriais.length > 0 && (
+                      <>
+                        <label style={labelStyle}>SERIAIS</label>
+                        <div style={serialContainerStyle}>
+                          {itemEstoque.seriais.map((serial) => {
+                            const selecionado = seriaisSelecionados.includes(serial);
+                            return (
+                              <button
+                                type="button" key={serial}
+                                onClick={() => alternarSerial(serial)}
+                                style={{...serialStyle, ...(selecionado ? serialSelectedStyle : {})}}
+                              >
+                                {selecionado ? "✓ " : ""}{serial}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </>
+                    )}
+
+                    <button type="button" onClick={adicionarMaterial} style={addMaterialStyle}>
+                      ADICIONAR MATERIAL
+                    </button>
+                  </>
+                )}
+              </>
+            )}
+
+            <div style={subTitleStyle}>
+              {ordem.tipo === "RETIRADA" ? "PATRIMÔNIOS DA RETIRADA" : "PRODUTOS DA OS"}
+            </div>
+
+            {ordem.itens.length === 0 && (
+              <div style={emptyMaterialStyle}>
+                {ordem.tipo === "RETIRADA" ? "Nenhum patrimônio selecionado." : "Nenhum material informado."}
+              </div>
+            )}
+
+            {ordem.itens.map((item) => (
+              <div key={item.id} style={productCardStyle}>
+                <div style={productTopStyle}>
+                  <div>
+                    <strong style={productCodeStyle}>{item.codigoProduto}</strong>
+                    <div style={productNameStyle}>{item.produto}</div>
+                  </div>
+                  <div style={productNumbersStyle}>
+                    <div>Quantidade <b>{item.quantidade}</b></div>
+                    <div>Unidade <b>{item.unidade}</b></div>
+                  </div>
+                </div>
+
+                <div style={destinationLineStyle}>
+                  ✓ {ordem.tipo === "RETIRADA" ? "RETIRADA DO CLIENTE" : destinoNome(item.destino)}
+                </div>
+
+                {item.seriais.length > 0 && (
+                  <div style={productSerialStyle}>Serial: <strong>{item.seriais.join(", ")}</strong></div>
+                )}
+
+                {ordem.status === "EM_ATENDIMENTO" && (
+                  <button type="button" onClick={() => removerMaterial(item.id)} style={removeStyle}>
+                    REMOVER
+                  </button>
+                )}
+              </div>
+            ))}
+          </section>
+
+          {erro && (
+            <div style={errorStyle}>
+              {erro}
+            </div>
+          )}
+
+          <div
+            style={{
+              height: 88,
+            }}
+          />
+        </div>
+
+        {/* =================================================
+            RODAPÉ
+        ================================================= */}
+
+        <div style={footerStyle}>
+          {ordem.status ===
+            "PENDENTE" && (
+            <button
+              type="button"
+              style={footerButtonStyle}
+              onClick={
+                iniciarAtendimento
+              }
+            >
+              INICIAR ATENDIMENTO
+            </button>
+          )}
+
+          {ordem.status ===
+            "EM_ATENDIMENTO" && (
+            <button
+              type="button"
+              style={footerButtonStyle}
+              onClick={
+                solicitarFinalizacao
+              }
+            >
+              {ordem.tipo === "RETIRADA"
+                ? "FINALIZAR RETIRADA"
+                : "FINALIZAR ORDEM DE SERVIÇO"}
+            </button>
+          )}
+
+          {ordem.status ===
+            "FINALIZADA" && (
+            <button
+              type="button"
+              style={{
+                ...footerButtonStyle,
+                background:
+                  "#8ec9d9",
+              }}
+              disabled
+            >
+              ORDEM FINALIZADA
+            </button>
+          )}
+        </div>
+
+        {/* =================================================
+            MODAL PADRÃO
+        ================================================= */}
+
+        {modalFinalizar && (
+          <div
+            style={modalOverlayStyle}
+            onMouseDown={
+              cancelarFinalizacao
+            }
+          >
+            <div
+              style={modalStyle}
+              onMouseDown={(e) =>
+                e.stopPropagation()
+              }
+            >
+              <div style={modalHeaderStyle}>
+                <div style={modalIconStyle}>
+                  ✓
+                </div>
+
+                <div style={modalHeaderTextStyle}>
+                  <strong>
+                    {ordem.tipo === "RETIRADA"
+                      ? "Finalizar Retirada"
+                      : "Finalizar Ordem de Serviço"}
+                  </strong>
+
+                  <span>
+                    {ordem.codigo}
+                  </span>
+                </div>
+              </div>
+
+              <div style={modalBodyStyle}>
+                <div style={modalMessageStyle}>
+                  {ordem.tipo === "RETIRADA"
+                    ? "Confirma a retirada do patrimônio deste cliente?"
+                    : "Confirma a finalização desta Ordem de Serviço?"}
+                </div>
+
+                <div style={modalIndicatorsStyle}>
+                  <div style={modalIndicatorStyle}>
+                    <span>
+                      SKUs
+                    </span>
+
+                    <strong>
+                      {totalSkus}
+                    </strong>
+                  </div>
+
+                  <div style={modalIndicatorStyle}>
+                    <span>
+                      ITENS
+                    </span>
+
+                    <strong>
+                      {totalQuantidade}
+                    </strong>
+                  </div>
+
+                  <div style={modalIndicatorStyle}>
+                    <span>
+                      TÉCNICO
+                    </span>
+
+                    <strong style={modalTechnicianStyle}>
+                      {ordem.codigoTecnico}
+                    </strong>
+                  </div>
+                </div>
+
+                <div style={modalWarningStyle}>
+                  <strong>
+                    Atenção
+                  </strong>
+
+                  <span>
+                    {ordem.tipo === "RETIRADA"
+                      ? "O patrimônio será marcado como RETIRADO e retornará ao estoque móvel do técnico."
+                      : "Os materiais serão baixados do estoque móvel do técnico após a finalização."}
+                  </span>
+                </div>
+
+                <div style={modalButtonsStyle}>
+                  <button
+                    type="button"
+                    style={modalCancelButtonStyle}
+                    onClick={
+                      cancelarFinalizacao
+                    }
+                    disabled={
+                      finalizando
+                    }
+                  >
+                    CANCELAR
+                  </button>
+
+                  <button
+                    type="button"
+                    style={modalConfirmButtonStyle}
+                    onClick={
+                      confirmarFinalizacao
+                    }
+                    disabled={
+                      finalizando
+                    }
+                  >
+                    {finalizando
+                      ? "FINALIZANDO..."
+                      : "FINALIZAR"}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/* =========================================================
+   ESTILOS
+========================================================= */
+
+const phoneStyle: CSSProperties = {
+  height: "100%",
+  minHeight: 0,
+  display: "flex",
+  flexDirection: "column",
+  overflow: "hidden",
+  background: "#f4f4f4",
+  position: "relative",
+};
+
+const headerStyle: CSSProperties = {
+  height: 74,
+  flex: "0 0 74px",
+  background: "#2093b7",
+  color: "#fff",
+  display: "flex",
+  alignItems: "center",
+  padding: "0 14px 0 10px",
+  boxSizing: "border-box",
+};
+
+const backButtonStyle: CSSProperties = {
+  width: 32,
+  height: 44,
+  border: 0,
+  background: "transparent",
+  color: "#fff",
+  fontSize: 38,
+  lineHeight: 1,
+  cursor: "pointer",
+  padding: 0,
+  marginRight: 5,
+};
+
+const headerInfoStyle: CSSProperties = {
+  flex: 1,
+  display: "flex",
+  flexDirection: "column",
+  minWidth: 0,
+  color: "#fff",
+  fontSize: 9,
+  fontWeight: 700,
+  lineHeight: 1.1,
+  textTransform: "uppercase",
+};
+
+const headerCodigoStyle: CSSProperties = {
+  fontSize: 21,
+  lineHeight: 1.05,
+  marginBottom: 3,
+  color: "#fff",
+};
+
+const menuButtonStyle: CSSProperties = {
+  width: 32,
+  height: 40,
+  border: 0,
+  background: "transparent",
+  color: "#fff",
+  fontSize: 28,
+  fontWeight: 700,
+  cursor: "pointer",
+};
+
+const scrollStyle: CSSProperties = {
+  flex: "1 1 auto",
+  minHeight: 0,
+  overflowY: "auto",
+  overflowX: "hidden",
+  padding: "10px 8px 0",
+  WebkitOverflowScrolling: "touch",
+};
+
+const boxStyle: CSSProperties = {
+  background: "#fff",
+  borderWidth: 1,
+  borderStyle: "solid",
+  borderColor: "#1499c7",
+  borderRadius: 15,
+  padding: "12px 16px 16px",
+  marginBottom: 10,
+};
+
+const boxHeaderStyle: CSSProperties = {
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "space-between",
+  marginBottom: 10,
+};
+
+const boxTitleStyle: CSSProperties = {
+  color: "#007ba5",
+  fontSize: 14,
+  fontWeight: 800,
+};
+
+const circleIconStyle: CSSProperties = {
+  width: 43,
+  height: 43,
+  borderRadius: "50%",
+  background: "#1595ba",
+  color: "#fff",
+  display: "grid",
+  placeItems: "center",
+  fontSize: 18,
+  fontWeight: 700,
+};
+
+const statusMessageStyle: CSSProperties = {
+  background: "#e7f6fb",
+  color: "#007ba5",
+  borderRadius: 7,
+  padding: "9px 10px",
+  marginBottom: 10,
+  fontSize: 12,
+  fontWeight: 700,
+};
+
+const indicatorsStyle: CSSProperties = {
+  display: "grid",
+  gridTemplateColumns: "repeat(3, 1fr)",
+  gap: 6,
+  marginBottom: 14,
+};
+
+const indicatorStyle: CSSProperties = {
+  minHeight: 62,
+  borderWidth: 1,
+  borderStyle: "solid",
+  borderColor: "#d5dfe4",
+  borderRadius: 6,
+  display: "flex",
+  flexDirection: "column",
+  alignItems: "center",
+  justifyContent: "center",
+  color: "#111",
+  fontSize: 11,
+  textAlign: "center",
+};
+
+const subTitleStyle: CSSProperties = {
+  color: "#000",
+  fontSize: 11,
+  fontWeight: 900,
+  marginTop: 10,
+  marginBottom: 7,
+};
+
+const clientCardStyle: CSSProperties = {
+  borderWidth: 1,
+  borderStyle: "solid",
+  borderColor: "#d8e1e5",
+  borderRadius: 7,
+  padding: "10px",
+  marginBottom: 8,
+};
+
+const clientNameStyle: CSSProperties = {
+  display: "block",
+  color: "#007ba5",
+  fontSize: 13,
+  marginBottom: 7,
+};
+
+const dataRowStyle: CSSProperties = {
+  display: "grid",
+  gridTemplateColumns: "70px 1fr",
+  gap: 4,
+  fontSize: 10,
+  color: "#5d6670",
+  marginTop: 3,
+};
+
+const observationStyle: CSSProperties = {
+  borderWidth: 1,
+  borderStyle: "solid",
+  borderColor: "#d8e1e5",
+  borderRadius: 7,
+  padding: "10px",
+  color: "#59636e",
+  fontSize: 11,
+};
+
+const labelStyle: CSSProperties = {
+  display: "block",
+  color: "#000",
+  fontSize: 10,
+  fontWeight: 900,
+  marginTop: 9,
+  marginBottom: 4,
+};
+
+const inputStyle: CSSProperties = {
+  width: "100%",
+  height: 39,
+  borderWidth: 1,
+  borderStyle: "solid",
+  borderColor: "#ccd9df",
+  borderRadius: 6,
+  background: "#fff",
+  color: "#333",
+  padding: "0 8px",
+  fontSize: 11,
+  boxSizing: "border-box",
+};
+
+const stockInfoStyle: CSSProperties = {
+  marginTop: 7,
+  background: "#e7f6fb",
+  borderRadius: 6,
+  padding: "8px 9px",
+  display: "flex",
+  justifyContent: "space-between",
+  color: "#007ba5",
+  fontSize: 10,
+};
+
+const twoColumnsStyle: CSSProperties = {
+  display: "grid",
+  gridTemplateColumns: "1fr 1fr",
+  gap: 8,
+};
+
+const serialContainerStyle: CSSProperties = {
+  display: "flex",
+  flexDirection: "column",
+  gap: 5,
+};
+
+const serialStyle: CSSProperties = {
+  minHeight: 36,
+  borderWidth: 1,
+  borderStyle: "solid",
+  borderColor: "#ccd9df",
+  borderRadius: 6,
+  background: "#fff",
+  color: "#4f5962",
+  textAlign: "left",
+  padding: "6px 9px",
+  fontSize: 10,
+  cursor: "pointer",
+};
+
+const serialSelectedStyle: CSSProperties = {
+  borderColor: "#1595ba",
+  background: "#e7f6fb",
+  color: "#007ba5",
+  fontWeight: 800,
+};
+
+const addMaterialStyle: CSSProperties = {
+  width: "100%",
+  height: 40,
+  marginTop: 10,
+  border: 0,
+  borderRadius: 4,
+  background: "#1595ba",
+  color: "#fff",
+  fontSize: 11,
+  fontWeight: 800,
+  cursor: "pointer",
+};
+
+const productCardStyle: CSSProperties = {
+  position: "relative",
+  borderWidth: 1,
+  borderStyle: "solid",
+  borderColor: "#d5dfe4",
+  borderRadius: 7,
+  padding: "10px",
+  marginBottom: 7,
+  background: "#fff",
+};
+
+const productTopStyle: CSSProperties = {
+  display: "flex",
+  justifyContent: "space-between",
+  gap: 8,
+};
+
+const productCodeStyle: CSSProperties = {
+  color: "#111",
+  fontSize: 11,
+};
+
+const productNameStyle: CSSProperties = {
+  color: "#59636e",
+  fontSize: 9,
+  marginTop: 2,
+  textTransform: "uppercase",
+};
+
+const productNumbersStyle: CSSProperties = {
+  textAlign: "right",
+  color: "#111",
+  fontSize: 8,
+  lineHeight: 1.2,
+};
+
+const destinationLineStyle: CSSProperties = {
+  marginTop: 8,
+  color: "#00994c",
+  fontSize: 10,
+  fontWeight: 900,
+};
+
+const productSerialStyle: CSSProperties = {
+  marginTop: 5,
+  color: "#59636e",
+  fontSize: 9,
+};
+
+const removeStyle: CSSProperties = {
+  marginTop: 8,
+  borderWidth: 1,
+  borderStyle: "solid",
+  borderColor: "#ff5b65",
+  borderRadius: 4,
+  background: "#fff",
+  color: "#e74751",
+  padding: "4px 8px",
+  fontSize: 9,
+  fontWeight: 800,
+  cursor: "pointer",
+};
+
+const emptyMaterialStyle: CSSProperties = {
+  minHeight: 54,
+  display: "grid",
+  placeItems: "center",
+  color: "#7c8792",
+  fontSize: 10,
+  textAlign: "center",
+};
+
+const errorStyle: CSSProperties = {
+  background: "#ffe9eb",
+  color: "#c83e48",
+  borderWidth: 1,
+  borderStyle: "solid",
+  borderColor: "#ffb8bd",
+  borderRadius: 7,
+  padding: "10px",
+  marginBottom: 10,
+  fontSize: 11,
+  fontWeight: 700,
+};
+
+const footerStyle: CSSProperties = {
+  flex: "0 0 auto",
+  padding: "14px 8px",
+  background: "#fff",
+  borderTopWidth: 1,
+  borderTopStyle: "solid",
+  borderTopColor: "#e1e5e8",
+};
+
+const footerButtonStyle: CSSProperties = {
+  width: "100%",
+  height: 49,
+  border: 0,
+  background: "#1595ba",
+  color: "#fff",
+  fontSize: 13,
+  fontWeight: 800,
+  cursor: "pointer",
+};
+
+const emptyPageStyle: CSSProperties = {
+  flex: 1,
+  display: "grid",
+  placeItems: "center",
+  color: "#7c8792",
+  fontSize: 12,
+};
+
+/* =========================================================
+   MODAL
+========================================================= */
+
+const modalOverlayStyle: CSSProperties = {
+  position: "absolute",
+  inset: 0,
+  zIndex: 9999,
+  background: "rgba(0, 0, 0, 0.55)",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  padding: 20,
+  boxSizing: "border-box",
+};
+
+const modalStyle: CSSProperties = {
+  width: "100%",
+  maxWidth: 360,
+  background: "#fff",
+  borderWidth: 1,
+  borderStyle: "solid",
+  borderColor: "#1499c7",
+  borderRadius: 15,
+  overflow: "hidden",
+  boxShadow: "0 10px 30px rgba(0,0,0,.30)",
+};
+
+const modalHeaderStyle: CSSProperties = {
+  display: "flex",
+  alignItems: "center",
+  gap: 11,
+  padding: "14px 16px",
+  borderBottomWidth: 1,
+  borderBottomStyle: "solid",
+  borderBottomColor: "#dce5e9",
+};
+
+const modalIconStyle: CSSProperties = {
+  width: 40,
+  height: 40,
+  flex: "0 0 40px",
+  borderRadius: "50%",
+  background: "#1595ba",
+  color: "#fff",
+  display: "grid",
+  placeItems: "center",
+  fontSize: 20,
+  fontWeight: 900,
+};
+
+const modalHeaderTextStyle: CSSProperties = {
+  display: "flex",
+  flexDirection: "column",
+  gap: 2,
+  color: "#007ba5",
+  fontSize: 14,
+};
+
+const modalBodyStyle: CSSProperties = {
+  padding: 16,
+};
+
+const modalMessageStyle: CSSProperties = {
+  color: "#333",
+  fontSize: 12,
+  fontWeight: 700,
+  marginBottom: 12,
+};
+
+const modalIndicatorsStyle: CSSProperties = {
+  display: "grid",
+  gridTemplateColumns: "repeat(3, 1fr)",
+  gap: 6,
+  marginBottom: 12,
+};
+
+const modalIndicatorStyle: CSSProperties = {
+  minHeight: 58,
+  borderWidth: 1,
+  borderStyle: "solid",
+  borderColor: "#d5dfe4",
+  borderRadius: 6,
+  display: "flex",
+  flexDirection: "column",
+  alignItems: "center",
+  justifyContent: "center",
+  gap: 3,
+  color: "#59636e",
+  fontSize: 9,
+  textAlign: "center",
+};
+
+const modalTechnicianStyle: CSSProperties = {
+  fontSize: 11,
+  color: "#007ba5",
+};
+
+const modalWarningStyle: CSSProperties = {
+  display: "flex",
+  flexDirection: "column",
+  gap: 3,
+  background: "#e7f6fb",
+  color: "#007ba5",
+  borderRadius: 7,
+  padding: "10px",
+  marginBottom: 14,
+  fontSize: 10,
+  lineHeight: 1.35,
+};
+
+const modalButtonsStyle: CSSProperties = {
+  display: "grid",
+  gridTemplateColumns: "1fr 1fr",
+  gap: 8,
+};
+
+const modalCancelButtonStyle: CSSProperties = {
+  height: 42,
+  borderWidth: 1,
+  borderStyle: "solid",
+  borderColor: "#1595ba",
+  borderRadius: 4,
+  background: "#fff",
+  color: "#1595ba",
+  fontSize: 11,
+  fontWeight: 800,
+  cursor: "pointer",
+};
+
+const modalConfirmButtonStyle: CSSProperties = {
+  height: 42,
+  border: 0,
+  borderRadius: 4,
+  background: "#1595ba",
+  color: "#fff",
+  fontSize: 11,
+  fontWeight: 800,
+  cursor: "pointer",
+};

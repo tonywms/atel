@@ -2901,3 +2901,9 @@ body:has(.collector-app) { overflow: hidden; }
 .collector-phone .collector-operation-body::-webkit-scrollbar-thumb:hover {
   background: #666;
 }
+
+/* ATEL V07.9 — submenus do WMS Expert, sem links fictícios */
+.wms-menu-toggle { width: 100%; border: 0; font-family: inherit; text-align: left; cursor: pointer; background: transparent; }
+.wms-menu-toggle.open { background: #d9e5f4; color: #075a79; }
+.wms-submenu-pendente { min-height: 37px; border-radius: 20px; display: flex; align-items: center; padding: 0 15px; color: #a9c5d2; font-size: 13px; margin: 1px 0; cursor: default; }
+.wms-submenu-pendente::before { content: "•"; margin-right: 13px; font-size: 12px; }

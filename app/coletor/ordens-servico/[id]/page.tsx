@@ -19,6 +19,11 @@ import {
   carregarPatrimonioDisponivelRetirada,
   finalizarOrdemServico,
   iniciarOrdemServico,
+  obterEstadoFSMOS,
+  transicionarEstadoFSMOS,
+  registrarOcorrenciaFSMOS,
+  listarHistoricoFSMOS,
+  type TipoOcorrenciaFSMOS,
   obterOrdemServico,
   ouvirOrdensServico,
   removerMaterialOS,
@@ -36,6 +41,18 @@ import {
 /* =========================================================
    HELPERS
 ========================================================= */
+
+/** Formatação de apresentação; datas persistidas continuam ISO (AAAA-MM-DD). */
+function dataBR(valor?: string | null): string {
+  if (!valor) return "—";
+  const correspondencia = /^(\d{4})-(\d{2})-(\d{2})$/.exec(valor);
+  return correspondencia ? `${correspondencia[3]}/${correspondencia[2]}/${correspondencia[1]}` : valor;
+}
+
+/** Normaliza também textos históricos gravados antes desta correção. */
+function textoComDatasBR(valor?: string | null): string {
+  return (valor ?? "").replace(/\b(\d{4})-(\d{2})-(\d{2})\b/g, (_trecho, ano, mes, dia) => `${dia}/${mes}/${ano}`);
+}
 
 function statusNome(status: string) {
   if (status === "PENDENTE") return "PENDENTE";
@@ -110,6 +127,16 @@ export default function OrdemServicoDetalhePage() {
 
   const [erro, setErro] =
     useState("");
+  const [alertaBloqueioFSM, setAlertaBloqueioFSM] = useState<string | null>(null);
+  const [modalOcorrenciaFSM, setModalOcorrenciaFSM] = useState(false);
+  const [tipoOcorrenciaFSM, setTipoOcorrenciaFSM] = useState<TipoOcorrenciaFSMOS>("CLIENTE_AUSENTE");
+  const [motivoOcorrenciaFSM, setMotivoOcorrenciaFSM] = useState("");
+  const [dataOcorrenciaFSM, setDataOcorrenciaFSM] = useState("");
+  const [reagendarFSM, setReagendarFSM] = useState(false);
+  const [mostrarHistoricoFSM, setMostrarHistoricoFSM] = useState(false);
+  const [modalAntecipacaoFSM, setModalAntecipacaoFSM] = useState(false);
+  const [justificativaAntecipacaoFSM, setJustificativaAntecipacaoFSM] = useState("");
+
 
   type ModalDivergenciaOS = {
     materialId: number;
@@ -280,6 +307,69 @@ export default function OrdemServicoDetalhePage() {
           ? error.message
           : "Erro ao iniciar atendimento."
       );
+    }
+  }
+
+  /* FSM V03: etapas logísticas sem movimentação de estoque. */
+  function executarEtapaFSM(destino: "EM_DESLOCAMENTO" | "NO_LOCAL") {
+    if (!ordem) return;
+    setErro("");
+    try {
+      transicionarEstadoFSMOS(ordem.id, destino);
+      carregar();
+    } catch (error) {
+      const mensagem = error instanceof Error ? error.message : "Falha ao atualizar etapa da OS.";
+      if (destino === "EM_DESLOCAMENTO" && obterEstadoFSMOS(ordem) === "PENDENTE_REAGENDAMENTO") {
+        setAlertaBloqueioFSM(mensagem);
+      } else {
+        setErro(mensagem);
+      }
+    }
+  }
+
+  function solicitarRetomadaFSM() {
+    if (!ordem) return;
+    const estado = obterEstadoFSMOS(ordem);
+    const prevista = ordem.agendamentoFSM?.novaData ?? ordem.dataPrevista;
+    const agora = new Date();
+    const hoje = `${agora.getFullYear()}-${String(agora.getMonth()+1).padStart(2,"0")}-${String(agora.getDate()).padStart(2,"0")}`;
+    if (estado === "PENDENTE_REAGENDAMENTO" && /^\d{4}-\d{2}-\d{2}$/.test(prevista) && prevista > hoje) {
+      setErro("");
+      setJustificativaAntecipacaoFSM("");
+      setModalAntecipacaoFSM(true);
+      return;
+    }
+    executarEtapaFSM("EM_DESLOCAMENTO");
+  }
+
+  function confirmarAntecipacaoFSM() {
+    if (!ordem) return;
+    const justificativa = justificativaAntecipacaoFSM.trim();
+    if (justificativa.length < 10) { setErro("Informe justificativa com pelo menos 10 caracteres."); return; }
+    try {
+      transicionarEstadoFSMOS(ordem.id, "EM_DESLOCAMENTO", { justificativaAntecipacao: justificativa });
+      setModalAntecipacaoFSM(false);
+      setJustificativaAntecipacaoFSM("");
+      setErro("");
+      carregar();
+    } catch (error) { setErro(error instanceof Error ? error.message : "Falha ao antecipar atendimento."); }
+  }
+
+  function confirmarOcorrenciaFSM() {
+    if (!ordem) return;
+    setErro("");
+    try {
+      registrarOcorrenciaFSMOS(ordem.id, {
+        tipo: tipoOcorrenciaFSM,
+        motivo: motivoOcorrenciaFSM,
+        ...(reagendarFSM ? { novaData: dataOcorrenciaFSM } : {}),
+      });
+      setModalOcorrenciaFSM(false);
+      setMotivoOcorrenciaFSM("");
+      setDataOcorrenciaFSM("");
+      carregar();
+    } catch (error) {
+      setErro(error instanceof Error ? error.message : "Erro ao registrar ocorrência.");
     }
   }
 
@@ -818,7 +908,7 @@ export default function OrdemServicoDetalhePage() {
                 </div>
               </div>
               <span style={compactStatusStyle}>
-                {ordem.status === "EM_ATENDIMENTO" ? "● EM ATENDIMENTO" : statusNome(ordem.status)}
+                {statusNome(obterEstadoFSMOS(ordem))}
               </span>
             </div>
 
@@ -1267,12 +1357,68 @@ export default function OrdemServicoDetalhePage() {
           />
         </div>
 
+        {/* FSM V05: histórico operacional, somente leitura. */}
+        <section style={{margin: "12px 10px", padding: 12, background: "#fff", border: "1px solid #dbe6ec", borderRadius: 10}}>
+          <button type="button" onClick={() => setMostrarHistoricoFSM(!mostrarHistoricoFSM)} style={{width:"100%",background:"#eff8fb",border:"1px solid #cce8f0",borderRadius:7,padding:12,color:"#087da7",fontWeight:800,cursor:"pointer"}}>
+            {mostrarHistoricoFSM ? "OCULTAR HISTÓRICO" : "VER HISTÓRICO DA OS"} ({ordem.historicoFSM?.length ?? 0})
+          </button>
+          {mostrarHistoricoFSM && (
+            <div style={{marginTop:10,display:"grid",gap:8}}>
+              {listarHistoricoFSMOS(ordem.id).length === 0 && <div style={{fontSize:12}}>Sem eventos FSM registrados.</div>}
+              {listarHistoricoFSMOS(ordem.id).map(evento => (
+                <div key={evento.id} style={{padding:10,border:"1px solid #e3edf2",borderRadius:6,fontSize:11}}>
+                  <b>{evento.estadoAnterior.replaceAll("_"," ")} → {evento.estadoNovo.replaceAll("_"," ")}</b>
+                  <div>{new Date(evento.ocorridoEm).toLocaleString("pt-BR")} · {evento.tecnico}</div>
+                  {evento.tipoOcorrencia && <div>Ocorrência: {evento.tipoOcorrencia.replaceAll("_"," ")}</div>}
+                  {evento.motivo && <div>Motivo: {textoComDatasBR(evento.motivo)}</div>}
+                  {evento.novaData && <div>Nova data: {dataBR(evento.novaData)}</div>}
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
+
         {/* =================================================
             RODAPÉ
         ================================================= */}
 
         <div style={footerStyle}>
-          {ordem.status === "PENDENTE" && (() => {
+          {(["EM_DESLOCAMENTO", "NO_LOCAL", "EM_ATENDIMENTO"].includes(obterEstadoFSMOS(ordem))) && (
+            <button type="button" style={{...footerButtonStyle,background:"#b7791f",marginBottom:8}} onClick={() => {setErro("");setModalOcorrenciaFSM(true);}}>
+              REGISTRAR OCORRÊNCIA / REAGENDAR
+            </button>
+          )}
+          {(["PENDENTE_REAGENDAMENTO", "PENDENTE_TRATATIVA"].includes(obterEstadoFSMOS(ordem))) && (
+            <div style={{display:"grid",gap:8}}>
+              <div style={{padding:10,background:"#fff7e6",color:"#8b5c10",fontSize:12,fontWeight:700,textAlign:"center"}}>
+                OS aguardando tratativa {ordem.agendamentoFSM?.novaData ? `· Nova data: ${dataBR(ordem.agendamentoFSM.novaData)}` : ""}
+              </div>
+              <button type="button" style={footerButtonStyle} onClick={solicitarRetomadaFSM}>
+                RETOMAR DESLOCAMENTO
+              </button>
+            </div>
+          )}
+          {ordem.status === "PENDENTE" && obterEstadoFSMOS(ordem) === "PENDENTE" && (
+            <button type="button" style={footerButtonStyle}
+              onClick={() => executarEtapaFSM("EM_DESLOCAMENTO")}>
+              INICIAR DESLOCAMENTO
+            </button>
+          )}
+
+          {ordem.status === "PENDENTE" && obterEstadoFSMOS(ordem) === "EM_DESLOCAMENTO" && (
+            <button type="button" style={footerButtonStyle}
+              onClick={() => executarEtapaFSM("NO_LOCAL")}>
+              CHEGUEI AO CLIENTE
+            </button>
+          )}
+
+          {ordem.status === "PENDENTE" && obterEstadoFSMOS(ordem) === "NO_LOCAL" && (
+            <div style={{fontSize: 12, marginBottom: 8, textAlign: "center", color: "#167c83", fontWeight: 700}}>
+              Chegada registrada. Atendimento disponível após validação de materiais.
+            </div>
+          )}
+
+          {ordem.status === "PENDENTE" && obterEstadoFSMOS(ordem) === "NO_LOCAL" && (() => {
             const previstos = ordem.materiaisPrevistos ?? [];
 
             const semMateriais =
@@ -1356,6 +1502,57 @@ export default function OrdemServicoDetalhePage() {
             </button>
           )}
         </div>
+
+        {alertaBloqueioFSM && (
+          <div style={{...receiptOverlayStyle, alignItems:"center", justifyContent:"center", padding:16, boxSizing:"border-box"}} role="presentation" onMouseDown={() => setAlertaBloqueioFSM(null)}>
+            <div role="alertdialog" aria-modal="true" aria-labelledby="fsm-bloqueio-titulo" aria-describedby="fsm-bloqueio-texto" style={{width:"100%",maxWidth:380,background:"#fff",borderRadius:14,padding:20,boxSizing:"border-box",boxShadow:"0 16px 48px rgba(0,0,0,.25)"}} onMouseDown={e => e.stopPropagation()}>
+              <div id="fsm-bloqueio-titulo" style={{fontSize:17,fontWeight:900,color:"#a33327",marginBottom:12}}>Deslocamento não autorizado</div>
+              <div id="fsm-bloqueio-texto" style={{fontSize:13,lineHeight:1.55,color:"#334155",marginBottom:18}}>{alertaBloqueioFSM}</div>
+              <button type="button" autoFocus onClick={() => setAlertaBloqueioFSM(null)} style={{width:"100%",padding:13,border:0,borderRadius:8,background:"#1595ba",color:"#fff",fontWeight:900,cursor:"pointer"}}>ENTENDI</button>
+            </div>
+          </div>
+        )}
+
+        {modalAntecipacaoFSM && (
+          <div style={{...modalOverlayStyle,zIndex:9999}} role="presentation">
+            <div role="dialog" aria-modal="true" aria-label="Antecipar atendimento reagendado" style={{...modalStyle,maxWidth:410,padding:20}}>
+              <h3 style={{margin:"0 0 12px",color:"#087da7"}}>Antecipar atendimento</h3>
+              <p style={{fontSize:13,lineHeight:1.5}}>Esta OS está reagendada para <strong>{dataBR(ordem.agendamentoFSM?.novaData ?? ordem.dataPrevista)}</strong>. Para retomar antes dessa data, informe o motivo. A antecipação ficará registrada no histórico.</p>
+              <label style={{display:"block",fontWeight:700,fontSize:12,marginBottom:6}}>Justificativa obrigatória (mínimo 10 caracteres)</label>
+              <textarea value={justificativaAntecipacaoFSM} onChange={e => setJustificativaAntecipacaoFSM(e.target.value)} rows={4} maxLength={500} style={{width:"100%",boxSizing:"border-box",border:"1px solid #cbd5e1",borderRadius:8,padding:10,color:"#17253b"}} placeholder="Explique por que o atendimento será antecipado" />
+              {erro && <p role="alert" style={{color:"#b91c1c",fontSize:12}}>{erro}</p>}
+              <div style={{display:"flex",gap:8,marginTop:12}}>
+                <button type="button" style={{...modalCancelButtonStyle,flex:1}} onClick={() => {setModalAntecipacaoFSM(false);setErro("");}}>CANCELAR</button>
+                <button type="button" style={{...modalConfirmButtonStyle,flex:1}} disabled={justificativaAntecipacaoFSM.trim().length < 10} onClick={confirmarAntecipacaoFSM}>CONFIRMAR</button>
+              </div>
+            </div>
+          </div>
+        )}
+        {modalOcorrenciaFSM && (
+          <div style={receiptOverlayStyle} onMouseDown={() => setModalOcorrenciaFSM(false)}>
+            <div style={receiptModalStyle} onMouseDown={(e) => e.stopPropagation()}>
+              <div style={{fontSize:16,fontWeight:900,color:"#087da7",marginBottom:10}}>Ocorrência de atendimento</div>
+              <div style={{fontSize:12,marginBottom:12}}>Registre a situação real do cliente. Nenhum material será baixado por esta ação.</div>
+              <label style={{display:"block",fontSize:12,fontWeight:800,marginBottom:5}}>Tipo de ocorrência</label>
+              <select value={tipoOcorrenciaFSM} onChange={e=>setTipoOcorrenciaFSM(e.target.value as TipoOcorrenciaFSMOS)} style={{width:"100%",padding:10,border:"1px solid #ccdce4",borderRadius:6,marginBottom:12}}>
+                <option value="CLIENTE_AUSENTE">Cliente ausente</option>
+                <option value="IMPEDIMENTO_TECNICO">Impedimento técnico</option>
+                <option value="OUTRO">Outro impedimento</option>
+              </select>
+              <label style={{display:"block",fontSize:12,fontWeight:800,marginBottom:5}}>Justificativa obrigatória (mínimo 10 caracteres)</label>
+              <textarea value={motivoOcorrenciaFSM} onChange={e=>setMotivoOcorrenciaFSM(e.target.value)} rows={3} style={{width:"100%",padding:10,border:"1px solid #ccdce4",borderRadius:6,marginBottom:12,boxSizing:"border-box"}} placeholder="Descreva a tentativa e o motivo" />
+              <label style={{display:"flex",gap:8,alignItems:"center",fontSize:12,fontWeight:800,marginBottom:10}}>
+                <input type="checkbox" checked={reagendarFSM} onChange={e=>setReagendarFSM(e.target.checked)} /> Reagendar atendimento
+              </label>
+              {reagendarFSM && <><label style={{display:"block",fontSize:12,fontWeight:800,marginBottom:5}}>Nova data</label><input type="date" value={dataOcorrenciaFSM} onChange={e=>setDataOcorrenciaFSM(e.target.value)} style={{width:"100%",padding:10,border:"1px solid #ccdce4",borderRadius:6,marginBottom:12,boxSizing:"border-box"}} /></>}
+              {erro && <div style={{padding:8,color:"#b91c1c",fontSize:12}}>{erro}</div>}
+              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
+                <button type="button" onClick={() => {setModalOcorrenciaFSM(false);setErro("");}} style={{padding:12,border:"1px solid #087da7",background:"white",color:"#087da7",borderRadius:6,fontWeight:800}}>CANCELAR</button>
+                <button type="button" onClick={confirmarOcorrenciaFSM} style={{padding:12,border:0,background:"#1595ba",color:"white",borderRadius:6,fontWeight:800}}>REGISTRAR</button>
+              </div>
+            </div>
+          </div>
+        )}
 
         {materialConfirmacaoId !== null && (() => {
           const material = materiaisPrevistos.find((item) => item.id === materialConfirmacaoId);

@@ -18,3 +18,15 @@ BACKUP*/
 *.pfx
 id_rsa
 id_ed25519
+
+node_modules/
+.next/
+.env
+.env.*
+!.env.example
+*.log
+*.tsbuildinfo
+BACKUPS_ATEL/
+BACKUPS_OS_ADAPTER/
+
+repomix-output.xml

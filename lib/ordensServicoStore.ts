@@ -84,6 +84,32 @@ export type OrdemServico = {
 
   materiaisPrevistos: MaterialPrevistoOS[];
   itens: ItemOrdemServico[];
+
+  estadoFSM?: EstadoFSMOS;
+  historicoFSM?: EventoFSMOS[];
+  agendamentoFSM?: { novaData: string; motivo: string; registradoEm: string };
+  antecipacaoFSM?: { dataOriginal: string; justificativa: string; registradoEm: string; codigoTecnico: string; tecnico: string };
+  ocorrenciaFSM?: { tipo: "CLIENTE_AUSENTE" | "IMPEDIMENTO_TECNICO" | "OUTRO"; motivo: string; registradoEm: string };
+};
+
+
+/* FSM V02: estados operacionais independentes do estoque. */
+export type EstadoFSMOS =
+  | "PENDENTE" | "EM_DESLOCAMENTO" | "NO_LOCAL"
+  | "EM_ATENDIMENTO" | "PENDENTE_REAGENDAMENTO"
+  | "PENDENTE_TRATATIVA" | "FINALIZADA" | "CANCELADA";
+
+export type EventoFSMOS = {
+  id: string;
+  estadoAnterior: EstadoFSMOS;
+  estadoNovo: EstadoFSMOS;
+  ocorridoEm: string;
+  codigoTecnico: string;
+  tecnico: string;
+  motivo?: string;
+  observacao?: string;
+  tipoOcorrencia?: string;
+  novaData?: string;
 };
 
 export type PatrimonioCliente = {
@@ -835,6 +861,155 @@ export function obterOrdemServico(
 }
 
 /* =========================================================
+   FSM V02 - MOTOR DE ESTADOS E AUDITORIA
+   Nao altera estoque, patrimonio nem materiais.
+========================================================= */
+
+const TRANSICOES_FSM: Record<EstadoFSMOS, readonly EstadoFSMOS[]> = {
+  PENDENTE: ["EM_DESLOCAMENTO", "EM_ATENDIMENTO", "CANCELADA"],
+  EM_DESLOCAMENTO: ["NO_LOCAL", "PENDENTE_REAGENDAMENTO", "PENDENTE_TRATATIVA"],
+  NO_LOCAL: ["EM_ATENDIMENTO", "PENDENTE_REAGENDAMENTO", "PENDENTE_TRATATIVA"],
+  EM_ATENDIMENTO: ["PENDENTE_REAGENDAMENTO", "PENDENTE_TRATATIVA"],
+  PENDENTE_REAGENDAMENTO: ["EM_DESLOCAMENTO", "CANCELADA"],
+  PENDENTE_TRATATIVA: ["EM_DESLOCAMENTO", "CANCELADA"],
+  FINALIZADA: [],
+  CANCELADA: [],
+};
+
+function criarEventoFSM(
+  ordem: OrdemServico,
+  anterior: EstadoFSMOS,
+  novo: EstadoFSMOS,
+  observacao?: string,
+  motivo?: string
+): EventoFSMOS {
+  const ocorridoEm = new Date().toISOString();
+  const id = typeof crypto !== "undefined" && "randomUUID" in crypto
+    ? crypto.randomUUID()
+    : `${ordem.id}-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+  return {
+    id, estadoAnterior: anterior, estadoNovo: novo, ocorridoEm,
+    codigoTecnico: ordem.codigoTecnico, tecnico: ordem.tecnico,
+    ...(motivo ? { motivo } : {}),
+    ...(observacao ? { observacao } : {}),
+  };
+}
+
+export function obterEstadoFSMOS(ordem: OrdemServico): EstadoFSMOS {
+  return ordem.estadoFSM ?? ordem.status;
+}
+
+export function listarHistoricoFSMOS(id: number): EventoFSMOS[] {
+  const ordem = obterOrdemServico(id);
+  if (!ordem) throw new Error("Ordem de serviço não encontrada.");
+  return [...(ordem.historicoFSM ?? [])];
+}
+
+/**
+ * V02: altera apenas o estado operacional e registra auditoria.
+ * FINALIZADA nao e permitida aqui: a finalizacao real deve passar por
+ * finalizarOrdemServico, que valida e movimenta estoque/patrimonio.
+ */
+export function transicionarEstadoFSMOS(
+  id: number,
+  destino: EstadoFSMOS,
+  dados: { motivo?: string; observacao?: string; justificativaAntecipacao?: string } = {}
+): OrdemServico {
+  const ordem = obterOrdemServico(id);
+  if (!ordem) throw new Error("Ordem de serviço não encontrada.");
+  const atual = obterEstadoFSMOS(ordem);
+  if (atual === destino) throw new Error("A OS ja esta neste estado.");
+  if (destino === "FINALIZADA") {
+    throw new Error("Para concluir a OS, utilize a finalizacao com validacao de materiais.");
+  }
+  if (!TRANSICOES_FSM[atual].includes(destino)) {
+    throw new Error(`Transicao invalida: ${atual} -> ${destino}.`);
+  }
+  // V06: uma OS reagendada nao pode voltar ao deslocamento antes da data prevista.
+  // A data e comparada em calendario local, evitando deslocamentos por fuso horario.
+  if (atual === "PENDENTE_REAGENDAMENTO" && destino === "EM_DESLOCAMENTO") {
+    const dataPrevista = ordem.agendamentoFSM?.novaData ?? ordem.dataPrevista;
+    if (!dataPrevista || !/^\d{4}-\d{2}-\d{2}$/.test(dataPrevista)) {
+      throw new Error("A OS reagendada nao possui uma data valida. Regularize o agendamento antes de retomar.");
+    }
+    const hoje = new Date();
+    const dataHoje = `${hoje.getFullYear()}-${String(hoje.getMonth() + 1).padStart(2, "0")}-${String(hoje.getDate()).padStart(2, "0")}`;
+    if (dataPrevista > dataHoje && (dados.justificativaAntecipacao?.trim().length ?? 0) < 10) {
+      throw new Error(`Antecipacao da OS reagendada para ${formatarDataBRFSM(dataPrevista)}: informe justificativa de pelo menos 10 caracteres.`);
+    }
+  }
+  if (["PENDENTE_REAGENDAMENTO", "PENDENTE_TRATATIVA", "CANCELADA"].includes(destino)
+    && !dados.motivo?.trim()) {
+    throw new Error("Informe o motivo da transicao.");
+  }
+  const proxima: OrdemServico = {
+    ...ordem,
+    estadoFSM: destino,
+    ...(atual === "PENDENTE_REAGENDAMENTO" && destino === "EM_DESLOCAMENTO" && dados.justificativaAntecipacao?.trim()
+      ? { antecipacaoFSM: { dataOriginal: ordem.agendamentoFSM?.novaData ?? ordem.dataPrevista, justificativa: dados.justificativaAntecipacao.trim(), registradoEm: new Date().toISOString(), codigoTecnico: ordem.codigoTecnico, tecnico: ordem.tecnico } }
+      : {}),
+    historicoFSM: [
+      ...(ordem.historicoFSM ?? []),
+      { ...criarEventoFSM(ordem, atual, destino,
+          dados.justificativaAntecipacao?.trim()
+            ? `ANTECIPACAO JUSTIFICADA: ${dados.justificativaAntecipacao.trim()} | Data originalmente agendada: ${formatarDataBRFSM(ordem.agendamentoFSM?.novaData ?? ordem.dataPrevista)}`
+            : dados.observacao?.trim(),
+          dados.justificativaAntecipacao?.trim() ? "ANTECIPACAO_REAGENDAMENTO" : dados.motivo?.trim()),
+        ...(dados.justificativaAntecipacao?.trim() ? { novaData: ordem.agendamentoFSM?.novaData ?? ordem.dataPrevista } : {}) },
+    ],
+    // Estado legado permanece coerente, sem concluir nem baixar estoque.
+    status: destino === "CANCELADA" ? "CANCELADA" :
+      destino === "EM_ATENDIMENTO" ? "EM_ATENDIMENTO" : "PENDENTE",
+    iniciadoEm: destino === "EM_ATENDIMENTO"
+      ? (ordem.iniciadoEm ?? new Date().toISOString()) : ordem.iniciadoEm,
+  };
+  // O historico ja foi registrado; evita evento duplicado na camada de salvamento.
+  return salvarOrdemServico(proxima);
+}
+
+/* FSM V05: ocorrencias de campo sem consumo de materiais. */
+export type TipoOcorrenciaFSMOS = "CLIENTE_AUSENTE" | "IMPEDIMENTO_TECNICO" | "OUTRO";
+
+export function registrarOcorrenciaFSMOS(
+  id: number,
+  dados: { tipo: TipoOcorrenciaFSMOS; motivo: string; novaData?: string }
+): OrdemServico {
+  const ordem = obterOrdemServico(id);
+  if (!ordem) throw new Error("Ordem de serviço não encontrada.");
+  const atual = obterEstadoFSMOS(ordem);
+  if (atual !== "NO_LOCAL" && atual !== "EM_DESLOCAMENTO" && atual !== "EM_ATENDIMENTO") {
+    throw new Error("Registre ocorrências somente durante deslocamento, chegada ou atendimento.");
+  }
+  const motivo = dados.motivo.trim();
+  if (motivo.length < 10) throw new Error("Informe uma justificativa com pelo menos 10 caracteres.");
+  // Não permitir encerramento por ocorrência quando já há materiais registrados.
+  // Evita deixar consumo/patrimônio pendentes sem uma tratativa específica.
+  if ((ordem.itens ?? []).length > 0) {
+    throw new Error("Esta OS já possui materiais registrados. Resolva os materiais antes de registrar a ocorrência.");
+  }
+  const reagendar = Boolean(dados.novaData);
+  if (reagendar) {
+    const novaData = dados.novaData!;
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(novaData) || Number.isNaN(new Date(`${novaData}T12:00:00`).getTime())) {
+      throw new Error("Informe uma data válida para o reagendamento.");
+    }
+    const hoje = new Date(); hoje.setHours(0,0,0,0);
+    if (new Date(`${novaData}T12:00:00`) < hoje) throw new Error("A nova data não pode ser anterior a hoje.");
+  }
+  const destino: EstadoFSMOS = reagendar ? "PENDENTE_REAGENDAMENTO" : "PENDENTE_TRATATIVA";
+  const ocorridoEm = new Date().toISOString();
+  const evento = criarEventoFSM(ordem, atual, destino, motivo, dados.tipo);
+  return salvarOrdemServico({
+    ...ordem,
+    estadoFSM: destino,
+    status: "PENDENTE",
+    ocorrenciaFSM: { tipo: dados.tipo, motivo, registradoEm: ocorridoEm },
+    ...(reagendar ? { agendamentoFSM: { novaData: dados.novaData!, motivo, registradoEm: ocorridoEm }, dataPrevista: dados.novaData! } : {}),
+    historicoFSM: [...(ordem.historicoFSM ?? []), { ...evento, tipoOcorrencia: dados.tipo, ...(reagendar ? { novaData: dados.novaData } : {}) }],
+  });
+}
+
+/* =========================================================
    SALVAR OS
 ========================================================= */
 
@@ -850,10 +1025,27 @@ function salvarOrdemServico(
         item.id === ordem.id
     );
 
+  // Compatibilidade: registra transicoes feitas pelo fluxo legado.
+  const anterior = indice >= 0 ? ordens[indice] : undefined;
+  let proxima = ordem;
+  if (anterior && anterior.status !== ordem.status &&
+      (ordem.historicoFSM?.length ?? 0) === (anterior.historicoFSM?.length ?? 0)) {
+    const novoEstado: EstadoFSMOS = ordem.status;
+    const anteriorEstado: EstadoFSMOS = anterior.estadoFSM ?? anterior.status;
+    const historico = Array.isArray(ordem.historicoFSM)
+      ? ordem.historicoFSM
+      : (Array.isArray(anterior.historicoFSM) ? anterior.historicoFSM : []);
+    proxima = {
+      ...ordem,
+      estadoFSM: novoEstado,
+      historicoFSM: [...historico, criarEventoFSM(anterior, anteriorEstado, novoEstado, "Transicao pelo fluxo existente")],
+    };
+  }
+
   if (indice >= 0) {
-    ordens[indice] = ordem;
+    ordens[indice] = proxima;
   } else {
-    ordens.push(ordem);
+    ordens.push(proxima);
   }
 
   salvar(
@@ -863,7 +1055,7 @@ function salvarOrdemServico(
 
   disparar();
 
-  return ordem;
+  return proxima;
 }
 
 /* =========================================================
@@ -882,12 +1074,13 @@ export function iniciarOrdemServico(
     );
   }
 
-  if (
-    ordem.status === "FINALIZADA"
-  ) {
-    throw new Error(
-      "A ordem de serviço já foi finalizada."
-    );
+  if (ordem.status === "FINALIZADA" || ordem.status === "CANCELADA") {
+    throw new Error("Nao e possivel iniciar uma OS finalizada ou cancelada.");
+  }
+
+  const estadoAtual = obterEstadoFSMOS(ordem);
+  if (!["PENDENTE", "NO_LOCAL", "EM_ATENDIMENTO"].includes(estadoAtual)) {
+    throw new Error(`Nao e possivel iniciar atendimento no estado ${estadoAtual}.`);
   }
 
   const atualizada: OrdemServico = {
@@ -899,6 +1092,10 @@ export function iniciarOrdemServico(
     iniciadoEm:
       ordem.iniciadoEm ??
       new Date().toISOString(),
+    estadoFSM: "EM_ATENDIMENTO",
+    historicoFSM: estadoAtual === "EM_ATENDIMENTO"
+      ? (ordem.historicoFSM ?? [])
+      : [...(ordem.historicoFSM ?? []), criarEventoFSM(ordem, estadoAtual, "EM_ATENDIMENTO", "Inicio de atendimento")],
   };
 
   return salvarOrdemServico(
@@ -1394,6 +1591,10 @@ export function finalizarOrdemServico(
     );
   }
 
+  if (obterEstadoFSMOS(ordem) !== "EM_ATENDIMENTO") {
+    throw new Error("A OS deve estar em atendimento para finalizar.");
+  }
+
   if (ordem.tipo === "RETIRADA") {
     return finalizarOrdemRetirada(ordem);
   }
@@ -1688,3 +1889,10 @@ export function ouvirOrdensServico(
     );
   };
 }
+/** Formata datas ISO para mensagens e histórico em português brasileiro. */
+function formatarDataBRFSM(valor?: string): string {
+  if (!valor) return "—";
+  const partes = /^(\d{4})-(\d{2})-(\d{2})$/.exec(valor);
+  return partes ? `${partes[3]}/${partes[2]}/${partes[1]}` : valor;
+}
+

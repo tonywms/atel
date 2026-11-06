@@ -1,0 +1,193 @@
+/* V24: mesma escala visual de /admin/ordens-servico. CSS escopado. */
+.root{padding:18px 18px 28px;color:#12344b;font-family:Arial,Helvetica,sans-serif;min-width:0}.root *{box-sizing:border-box}
+.heading{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px}.eyebrow{font-size:10px;font-weight:800;letter-spacing:1px;color:#087dab}.heading h1{font-size:22px;margin:4px 0 3px;color:#10384f}.heading p{font-size:12px;margin:0;color:#6c8597}.readonly{font-size:11px;color:#688398;background:#fff;border:1px solid #c8dfeb;padding:8px 10px;border-radius:18px;white-space:nowrap}
+.root :global(.stock-summary){display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:7px;margin-bottom:13px}
+.root :global(.summary-card){background:#fff;border:1px solid #8bc4e0;border-radius:13px;overflow:hidden;min-width:0;box-shadow:none;padding:0}
+.root :global(.summary-card)::before{display:none}
+.root :global(.summary-card .top){font-size:12px;font-weight:700;color:#fff;padding:8px 9px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;letter-spacing:0;text-transform:none;background:#3686ac}
+.root :global(.summary-card.c2 .top){background:#df8b0a}.root :global(.summary-card.c3 .top){background:#65a8bd}.root :global(.summary-card.c4 .top){background:#28a79b}.root :global(.summary-card.c5 .top){background:#6d9d7d}
+.root :global(.summary-card .value){font-size:25px;font-weight:500;color:#0c2d44;line-height:1.1;margin:0;padding:12px 10px 0}
+.root :global(.summary-card .detail){font-size:10px;color:#8b9eac;padding:0 10px 12px;min-height:28px}
+.root :global(.wms-page-header){background:#fff;border:1px solid #5ab0dc;border-radius:15px;padding:11px 14px;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;gap:12px;box-shadow:none}
+.root :global(.wms-page-title){display:flex;flex-direction:column;align-items:flex-start;gap:4px;color:#087bad;font-size:14px;font-weight:700;letter-spacing:0}
+.root :global(.wms-page-title small){font-size:10px;color:#718c9c;font-weight:400}
+.root :global(.wms-header-actions){display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+.root :global(.wms-search){display:flex;align-items:center;background:transparent;border:0;padding:0}
+.root :global(.wms-search input){border:1px solid #c4dce8;border-radius:16px;padding:8px 10px;font-size:11px;width:230px;min-width:0;max-width:100%;background:#fff;color:#24465a;outline:none}
+.root :global(.wms-icon-button){border:1px solid #7fc2e1;background:#f5fbff;border-radius:15px;color:#087baa;font-size:11px;padding:8px 12px;height:auto;min-width:0;cursor:pointer}
+.root :global(.req-layout){display:grid;grid-template-columns:minmax(285px,340px) minmax(0,1fr);gap:10px;align-items:stretch;min-height:550px}
+.root :global(.req-sidebar-panel),.root :global(.req-detail){background:#fff;border:1px solid #50a9d8;border-radius:14px;overflow:hidden;min-width:0;box-shadow:none}
+.root :global(.req-sidebar-panel){display:flex;flex-direction:column}
+.root :global(.req-sidebar-title){background:#087eb2;color:#fff;padding:12px 14px;font-size:13px;font-weight:700;display:flex;justify-content:space-between;align-items:center;border:0}
+.root :global(.req-sidebar-title span){background:#fff;color:#087eb2;border-radius:15px;padding:0 8px;font-weight:700}
+.root :global(.req-list){overflow-y:auto;max-height:660px;padding:7px;display:block}
+.root :global(.req-card){display:block;width:100%;text-align:left;border:1px solid #58a9d3;border-radius:12px;background:#fff;padding:11px 12px;margin-bottom:8px;color:#18384b;min-width:0;box-shadow:none;cursor:pointer}
+.root :global(.req-card:hover),.root :global(.req-card.selected){background:#e9f4fc;border-color:#087fb7}
+.root :global(.req-card.selected){box-shadow:inset 4px 0 #0788be}
+.root :global(.req-card-main){display:flex;gap:7px;min-width:0;align-items:start;justify-content:space-between}
+.root :global(.req-card-content){min-width:0;flex:1}
+.root :global(.req-card-top){display:flex;align-items:center;justify-content:space-between;gap:6px;margin-bottom:6px}
+.root :global(.req-card-top strong){font-size:13px;color:#007eae}
+.root :global(.req-card-tech){font-size:12px;font-weight:700;color:#203e51;margin:7px 0}
+.root :global(.req-card-line){font-size:10px;color:#5b7181;line-height:1.6;overflow-wrap:anywhere}
+.root :global(.req-card-bottom){margin-top:8px;display:flex;align-items:center;justify-content:space-between;gap:6px;flex-wrap:wrap}
+.root :global(.req-status),.root :global(.req-priority){font-size:10px;font-weight:700;padding:5px 8px;border-radius:13px;background:#eef2f6;color:#566f7e;white-space:normal;text-align:center}
+.root :global(.req-status.pending),.root :global(.req-priority.high){background:#fff0d3;color:#996400}
+.root :global(.req-priority.urgent){background:#ffe6df;color:#a44c32}
+.root :global(.req-status.finished),.root :global(.req-status.checked){background:#ddf4e7;color:#158053}
+.root :global(.req-status.transit){background:#dff1fc;color:#0b77aa}
+.root :global(.req-card-indicators){display:flex;flex-direction:column;align-items:center;gap:4px;flex:none}
+.root :global(.req-indicator-row){display:flex;gap:4px}
+.root :global(.req-stage-dot),.root :global(.req-alert-dot){width:22px;height:22px;font-size:10px;display:inline-flex;align-items:center;justify-content:center;flex:none}
+.root :global(.req-detail){padding:0;min-height:550px}
+.root :global(.req-detail-header){padding:14px 17px;border-bottom:1px solid #dce9f0;margin:0;display:flex;align-items:center;justify-content:space-between;gap:10px}
+.root :global(.req-detail-code){font-size:19px;color:#007eaf;font-weight:800}
+.root :global(.req-detail-description){font-size:11px;color:#637d8e}
+.root :global(.integration-strip){margin:12px 14px;padding:10px 12px;border-radius:9px}
+.root :global(.integration-icon){width:38px;height:38px;font-size:11px}
+.root :global(.req-info-grid){padding:12px 14px;gap:8px;margin:0;display:grid;grid-template-columns:repeat(3,minmax(0,1fr))}
+.root :global(.req-flow){padding:8px 14px;gap:7px}
+.root :global(.req-flow-step){padding:8px 10px}
+.root :global(.req-products-scroll){overflow-x:auto;max-width:100%}
+.root :global(table){width:100%;border-collapse:collapse}
+.root :global(th){font-size:10px;padding:12px 9px;color:#173447;border-bottom:2px solid #cfe2ee;background:#f2f8fc}
+.root :global(td){padding:13px 9px;font-size:11px;color:#344c5c;border-bottom:1px solid #e7eff4}
+.root :global(button:focus-visible),.root :global([role="button"]:focus-visible){outline:3px solid #76cce0;outline-offset:2px}
+@media(max-width:1100px){.root :global(.req-layout){grid-template-columns:minmax(260px,300px) minmax(0,1fr)}}
+@media(max-width:850px){.root :global(.stock-summary){grid-template-columns:repeat(2,minmax(0,1fr))}.root :global(.req-layout){grid-template-columns:1fr}.root :global(.req-list){max-height:350px}.root :global(.wms-page-header){flex-wrap:wrap}}
+@media(max-width:500px){.root{padding:14px}.root :global(.stock-summary){grid-template-columns:1fr}.root :global(.req-info-grid){grid-template-columns:1fr}.heading{align-items:flex-start;flex-direction:column}}
+
+/* V25: densidade igual a Gestao de OS. Sem estilos JSX concorrentes. */
+.root :global(.req-layout){grid-template-columns:minmax(0, 30%) minmax(0, 1fr);gap:10px}
+.root :global(.req-sidebar-title){padding:10px 14px;font-size:13px;line-height:1.25}
+.root :global(.req-list){padding:7px;max-height:680px}
+.root :global(.req-card){padding:10px 11px;margin-bottom:8px;border-radius:11px}
+.root :global(.req-card-main){gap:7px}
+.root :global(.req-card-top){margin-bottom:4px}
+.root :global(.req-card-top strong){font-size:12px;line-height:1.25}
+.root :global(.req-card-tech){font-size:11px;margin:5px 0;font-weight:700;line-height:1.3}
+.root :global(.req-card-line){font-size:10px;line-height:1.35;margin:1px 0}
+.root :global(.req-card-bottom){margin-top:6px;font-size:10px}
+.root :global(.req-priority),.root :global(.req-status){font-size:9px;padding:4px 7px}
+.root :global(.req-card-indicators){gap:3px}
+.root :global(.req-indicator-row){gap:3px}
+.root :global(.req-stage-dot),.root :global(.req-alert-dot){width:19px;height:19px;min-width:19px;font-size:9px}
+.root :global(.req-card-gear){width:24px;height:24px;min-width:24px;padding:2px}
+.root :global(.req-detail){min-height:550px}
+.root :global(.integration-strip){min-height:0;padding:9px 12px;gap:9px;margin:11px 12px}
+.root :global(.integration-icon){width:34px;height:34px;min-width:34px;font-size:10px}
+.root :global(.integration-info){min-width:100px;padding-left:9px}
+.root :global(.integration-info strong){font-size:10px}
+.root :global(.req-products th){height:auto;font-size:10px;padding:9px 7px}
+.root :global(.req-products td){height:auto;font-size:11px;padding:9px 7px}
+.root :global(.req-product-name){font-size:11px;line-height:1.3}
+.root :global(.req-products td button){min-width:0;height:auto;font-size:10px}
+.root :global(.req-flow){min-height:0;margin-top:0;padding:9px 12px}
+.root :global(.req-flow-step){font-size:10px;padding:7px 8px}
+.root :global(.req-flow-message){min-height:0;font-size:10px;padding:7px 9px;white-space:normal}
+.root :global(.wms-page-header){min-height:0}
+.root :global(.summary-card .value){font-size:24px}
+@media(max-width:1000px){.root :global(.req-layout){grid-template-columns:minmax(240px, 35%) minmax(0,1fr)}}
+@media(max-width:760px){.root :global(.req-layout){grid-template-columns:1fr}}
+
+
+/* V26 — restauracao de estilos funcionais perdidos na V25.
+   Escopo limitado ao modulo de Gestao; portal da engrenagem e global
+   porque React createPortal renderiza fora da raiz da pagina. */
+.root :global(.req-card-main){display:grid;grid-template-columns:minmax(0,1fr) 58px;align-items:start;gap:7px}
+.root :global(.req-card-indicators){border-left:1px solid #d7e4ed;padding-left:7px;min-width:0;display:flex;flex-direction:column;align-items:center;gap:5px}
+.root :global(.req-indicator-row){display:flex;justify-content:center;gap:4px;width:100%}
+.root :global(.req-stage-dot){display:inline-grid;place-items:center;width:21px;height:21px;min-width:21px;border-radius:50%;font-size:10px;font-weight:900;line-height:1;color:white;box-shadow:inset 0 0 0 1px rgba(0,0,0,.08)}
+.root :global(.req-stage-dot.stage-green){background:#08a525;color:#fff}
+.root :global(.req-stage-dot.stage-gray){background:#92979d;color:#fff}
+.root :global(.req-stage-dot.stage-orange){background:#e89500;color:#fff}
+.root :global(.req-stage-dot.stage-blue){background:#1389b4;color:#fff}
+.root :global(.req-stage-dot.stage-red){background:#d64545;color:#fff}
+.root :global(.req-stage-dot.stage-yellow){background:#e7a300;color:#fff}
+.root :global(.req-alert-dot){display:inline-grid;place-items:center;width:21px;height:21px;min-width:21px;border:1.5px solid #e99a00;border-radius:50%;background:#fff;color:#dc8800;font-size:11px;font-weight:900}
+.root :global(.req-gear-wrap){display:flex;justify-content:center;width:100%;margin-top:2px}
+.root :global(.req-card-gear){width:27px;height:27px;min-width:27px;border:0;background:transparent;color:#1d2935;display:grid;place-items:center;font-size:20px;line-height:1;cursor:pointer;padding:0}
+.root :global(.req-card-gear:hover){background:#e5f2f8;border-radius:7px}
+.root :global(.req-detail-status){font-size:10px;font-weight:800;border-radius:99px;padding:5px 9px;background:#e7f6ed;color:#137a50}
+.root :global(.req-flow){display:flex;flex-wrap:wrap;align-items:center;gap:6px;padding:11px 14px;min-width:0}
+.root :global(.req-flow-step){display:inline-flex;align-items:center;gap:5px;padding:5px 7px;white-space:nowrap;font-size:10px;font-weight:700;color:#7b8d9b}
+.root :global(.req-flow-step span){display:inline-grid;place-items:center;width:21px;height:21px;min-width:21px;border-radius:50%;background:#e5ebef;color:#85939e;font-size:10px;font-weight:800}
+.root :global(.req-flow-step.active){background:transparent;color:#007fa8}
+.root :global(.req-flow-step.active span){background:#008eb9;color:white}
+.root :global(.req-flow-line){width:15px;min-width:8px;height:2px;background:#d8e3ea;flex:0 1 15px}
+.root :global(.separation-generated){display:inline-flex;align-items:center;justify-content:center;max-width:100%;min-width:0;white-space:normal;overflow-wrap:anywhere;text-align:center;border-radius:99px;padding:7px 11px;background:#e3f6eb;color:#0a814d;font-size:11px;font-weight:800;line-height:1.4;margin:7px 14px 12px}
+.root :global(.generate-separation){display:inline-flex;align-items:center;justify-content:center;border:0;border-radius:9px;background:#0b8fb4;color:#fff;padding:10px 14px;margin:8px 14px;font-size:11px;font-weight:800;cursor:pointer}
+.root :global(.req-footer){display:flex;align-items:center;justify-content:flex-start;flex-wrap:wrap;gap:9px;padding:12px 14px;border-top:1px solid #dce9ef;background:#f9fcfe}
+.root :global(.req-footer button){appearance:none;border:1px solid #c9dfe9;border-radius:8px;background:#fff;color:#176783;font-size:11px;font-weight:750;padding:9px 11px;cursor:pointer}
+.root :global(.req-footer button:hover){background:#eaf6fb}
+:global(.req-menu-backdrop){position:fixed;inset:0;z-index:2147483600;background:transparent}
+:global(.req-card-menu.req-card-menu-floating){position:fixed;z-index:2147483640;width:245px;max-width:calc(100vw - 24px);padding:7px 0;background:#fff;border:1px solid #d6dde3;border-radius:9px;box-shadow:0 10px 28px rgba(12,45,63,.23);margin:0;transform:none}
+:global(.req-card-menu.req-card-menu-floating button){display:flex;align-items:center;justify-content:space-between;width:100%;min-height:39px;padding:8px 13px;border:0;background:#fff;color:#264b60;font-size:12px;font-weight:650;text-align:left;cursor:pointer}
+:global(.req-card-menu.req-card-menu-floating button:hover){background:#eaf5fa}
+:global(.req-card-menu.req-card-menu-floating .menu-red){color:#ce4450}
+:global(.req-card-menu.req-card-menu-floating .menu-blue){color:#078bb2}
+@media(max-width:1050px){.root :global(.req-card-main){grid-template-columns:minmax(0,1fr) 52px}.root :global(.req-stage-dot),.root :global(.req-alert-dot){width:19px;height:19px;min-width:19px;font-size:9px}}
+
+
+/* V27: lista lateral mais estreita, detalhes mais largos e timeline estável. */
+.root :global(.req-layout){grid-template-columns:minmax(265px,27%) minmax(0,1fr);gap:12px}
+.root :global(.req-footer){display:flex;flex-direction:column;align-items:stretch;justify-content:flex-start;gap:0;padding:10px 12px 12px;min-width:0}
+.root :global(.req-footer .req-flow){display:flex;flex-wrap:nowrap;align-items:center;justify-content:space-between;gap:5px;width:100%;min-width:0;margin:0;padding:2px 0 6px}
+.root :global(.req-footer .req-flow-step){display:inline-flex;flex:0 1 auto;min-width:0;align-items:center;justify-content:center;gap:5px;white-space:nowrap;padding:6px 2px;font-size:10px;line-height:1.2;font-weight:750}
+.root :global(.req-footer .req-flow-step span){width:22px;height:22px;min-width:22px;flex:none;border-radius:50%}
+.root :global(.req-footer .req-flow-line){display:block;flex:1 1 10px;min-width:5px;max-width:35px;height:2px;background:#d4e3eb;margin:0 1px}
+.root :global(.req-footer .separation-generated){align-self:flex-end;display:inline-flex;flex:none;max-width:100%;width:max-content;margin:5px 0 0;padding:7px 12px;border-radius:9px;white-space:normal;overflow-wrap:normal;text-align:left;line-height:1.35;font-size:11px}
+.root :global(.req-footer .generate-separation){align-self:flex-end;margin:7px 0 0}
+@media(max-width:1120px){
+ .root :global(.req-layout){grid-template-columns:minmax(245px,30%) minmax(0,1fr)}
+ .root :global(.req-footer .req-flow){flex-wrap:wrap;justify-content:flex-start;column-gap:5px;row-gap:4px}
+ .root :global(.req-footer .req-flow-line){flex:0 1 10px}
+}
+@media(max-width:850px){
+ .root :global(.req-layout){grid-template-columns:1fr}
+ .root :global(.req-footer .req-flow){justify-content:space-between;flex-wrap:nowrap}
+}
+@media(max-width:570px){
+ .root :global(.req-footer .req-flow){flex-wrap:wrap;justify-content:flex-start}
+ .root :global(.req-footer .req-flow-step){font-size:9px}
+ .root :global(.req-footer .separation-generated){align-self:stretch;width:100%}
+}
+
+/* V28 — timeline compacta, sem separadores excessivamente largos. */
+.root :global(.req-footer .req-flow){justify-content:flex-start;gap:3px;flex-wrap:nowrap;width:100%;padding:2px 0 5px}
+.root :global(.req-footer .req-flow-step){flex:0 0 auto;padding:5px 3px;gap:4px;white-space:nowrap}
+.root :global(.req-footer .req-flow-line){flex:0 0 13px;width:13px;min-width:8px;max-width:13px;margin:0 3px}
+.root :global(.req-products-scroll table){table-layout:auto;width:100%;min-width:740px}
+.root :global(.req-products-scroll th),.root :global(.req-products-scroll td){white-space:nowrap;padding:10px 8px}
+.root :global(.req-products-scroll th:nth-child(3)),.root :global(.req-products-scroll td:nth-child(3)){white-space:normal;min-width:160px}
+@media(max-width:1100px){.root :global(.req-footer .req-flow){flex-wrap:wrap;row-gap:3px}}
+@media(max-width:850px){.root :global(.req-footer .req-flow){flex-wrap:nowrap}}
+@media(max-width:570px){.root :global(.req-footer .req-flow){flex-wrap:wrap}}
+
+/* V29 — rodape identico ao padrao visual da Gestao de OS: apenas fluxo. */
+.root :global(.req-footer){display:flex;flex-direction:column;justify-content:center;align-items:stretch;min-height:60px;padding:10px 14px;background:#fff;border-top:1px solid #dce9ef;gap:4px}
+.root :global(.req-footer .req-flow){display:flex;align-items:center;justify-content:space-between;flex-wrap:nowrap;width:100%;min-width:0;margin:0;padding:4px 0;gap:6px}
+.root :global(.req-footer .req-flow-step){display:inline-flex;align-items:center;justify-content:center;flex:0 0 auto;min-width:0;gap:7px;padding:5px 2px;font-size:11px;font-weight:650;white-space:nowrap;color:#748899}
+.root :global(.req-footer .req-flow-step.active){color:#0783a8}
+.root :global(.req-footer .req-flow-step span){display:inline-grid;place-items:center;flex:none;width:23px;height:23px;min-width:23px;border-radius:50%;background:#e6edf1;color:#83929e;font-size:10px;font-weight:800}
+.root :global(.req-footer .req-flow-step.active span){background:#008bb6;color:#fff}
+.root :global(.req-footer .req-flow-line){display:block;flex:1 1 18px;width:auto;min-width:8px;max-width:none;height:2px;background:#d8e4ec;margin:0 5px}
+.root :global(.req-footer .generate-separation){align-self:flex-end;margin:5px 0 0}
+@media(max-width:1100px){.root :global(.req-footer .req-flow){flex-wrap:wrap;justify-content:flex-start;gap:4px}.root :global(.req-footer .req-flow-line){flex:0 0 12px;margin:0 3px}}
+@media(max-width:850px){.root :global(.req-footer .req-flow){flex-wrap:nowrap;justify-content:space-between}}
+@media(max-width:570px){.root :global(.req-footer .req-flow){flex-wrap:wrap;justify-content:flex-start}}
+
+
+/* V30 — origem da requisicao no cabecalho, sem faixa API redundante. */
+.root :global(.req-detail-header){min-height:75px;padding:13px 17px;align-items:center;gap:16px}
+.root :global(.req-header-main){display:flex;align-items:center;flex-wrap:wrap;gap:16px;min-width:0;flex:1}
+.root :global(.req-header-identity){min-width:0}
+.root :global(.req-header-received){display:flex;flex-direction:column;justify-content:center;gap:4px;padding-left:16px;border-left:1px solid #d6e5ee;min-width:0}
+.root :global(.req-header-received small){font-size:9px;letter-spacing:.6px;font-weight:800;color:#66879b}
+.root :global(.req-header-received strong){font-size:12px;font-weight:750;color:#153b51;white-space:nowrap}
+.root :global(.req-detail-status){flex:none;margin-left:auto}
+@media(max-width:680px){
+ .root :global(.req-detail-header){align-items:flex-start;flex-wrap:wrap}
+ .root :global(.req-header-main){gap:10px}
+ .root :global(.req-header-received){padding-left:10px}
+}

@@ -1,74 +1,92 @@
+
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
+import { House, CirclePlus, FileText, ArrowLeftRight, Truck, ListOrdered, Globe2, Monitor, ShieldCheck, RefreshCw, Smartphone, ChevronRight, ChevronDown, LogOut } from "lucide-react";
+import "./atel-sidebar-v18.css";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { atelSupabase } from "@/lib/atelSupabaseV08";
+import { ATEL_GRUPOS, ATEL_MASTER, rotaLiberada } from "@/lib/atelPermissoesMenu";
 
-const painel = [
-  ["Operador Logístico", "/operacao"],
-  ["Pedidos", null],
-  ["Painel de Pedidos", null],
-  ["Expedição", "/expedicoes"],
-  ["Painel de Rotas", null],
-  ["Painel de Embarque", null],
-  ["Painel de Produtividade", null],
-  ["Visão Operacional", "/"],
-  ["Painel de Controle", "/admin/governanca-operacional"],
-] as const;
+// Navegacao exclusivamente WEB. Rotas /coletor/* so existem na interface mobile.
+// Nao incluir rotas do coletor nos grupos administrativos.
+const grupos = ATEL_GRUPOS;
 
-const expedicoes = [
-  ["Dashboard", "/expedicoes"],
-  ["Gestão", "/expedicoes/gestao"],
-  ["Gestão OS", "/admin/ordens-servico"],  ["OS Adapter", "/expedicoes/os-adapter"],
-
-  ["Conferência", null],
-  ["Rel. Expedição", null],
-  ["Gerar Pedidos", null],
-  ["Comparação Pedidos", null],
-  ["Liberação de Pedidos", null],
-  ["Retornos / Devoluções", "/expedicoes/retornos"],
-  ["Pendências de Retorno", "/expedicoes/pendencias"],
-] as const;
-
-const relatorios = [
-  ["Estoque Técnico", "/relatorios/estoque-tecnico"],
-  ["Patrimônio Cliente", "/relatorios/patrimonio-cliente"],
-] as const;
-
-function MenuEntries({items, pathname}:{items:readonly (readonly [string,string|null])[];pathname:string}) {
-  return <div className="wms-submenu">{items.map(([name,url]) => url ?
-    <Link key={name} href={url} className={pathname === url ? "active" : ""}>{name}</Link> :
-    <span key={name} title="Rotina ainda não identificada no código recebido" className="wms-submenu-pendente" aria-disabled="true">{name}</span>
+function MenuEntries({items, pathname}:{items:readonly (readonly [string,string])[];pathname:string}) {
+  return <div className="wms-submenu">{items.map(([name,url]) =>
+    <Link key={url} href={url} className={pathname === url ? "active" : ""}>{name}</Link>
   )}</div>;
 }
 
 export function Sidebar() {
   const pathname = usePathname();
-  const [painelManual, setPainelManual] = useState<boolean|null>(null);
-  const [expManual, setExpManual] = useState<boolean|null>(null);
-  const [relManual, setRelManual] = useState<boolean|null>(null);
-  const painelAberto = painelManual ?? (pathname === "/" || pathname === "/operacao" || pathname === "/admin/governanca-operacional");
-  const expedicoesAberto = expManual ?? (pathname.startsWith("/expedicoes") || pathname === "/admin/ordens-servico");
-  const relatoriosAberto = relManual ?? pathname.startsWith("/relatorios");
-  return <aside>
-    <div className="brand"><div className="brand-logo"><div className="brand-symbol">W</div><div className="brand-text">WMS<span>EXPERT</span></div></div></div>
+  const router = useRouter();
+  const [collapsed, setCollapsed] = useState(false);
+  const [email, setEmail] = useState<string | null>(null);
+  const [saindo, setSaindo] = useState(false);
+  const [regras, setRegras] = useState<Record<string, boolean>>({});
+  useEffect(() => {
+    const client = atelSupabase();
+    if (!client) return;
+    let active = true;
+    void client.auth.getUser().then(({ data }) => { if (active) setEmail(data.user?.email ?? null); });
+    const { data: { subscription } } = client.auth.onAuthStateChange((_event, session) => {
+      if (active) setEmail(session?.user?.email ?? null);
+    });
+    return () => { active = false; subscription.unsubscribe(); };
+  }, []);
+  useEffect(() => {
+    const client = atelSupabase();
+    if (!client || !email || email.toLowerCase() === ATEL_MASTER) return;
+    let alive = true;
+    void client.from("atel_menu_permissoes").select("rota,liberado").then(({data,error}) => {
+      if (alive && !error) setRegras(Object.fromEntries((data ?? []).map(p => [p.rota, p.liberado])));
+    });
+    return () => { alive = false; };
+  }, [email, pathname]);
+  async function sair() {
+    const client = atelSupabase();
+    if (!client || saindo) return;
+    setSaindo(true);
+    try { await client.auth.signOut(); router.replace("/login"); router.refresh(); }
+    finally { setSaindo(false); }
+  }
+  const [abertos, setAbertos] = useState<Record<string, boolean>>({});
+  const iconProps = {size:17, strokeWidth:1.9, "aria-hidden":true as const};
+  const icon = (Comp: typeof House) => <span className="wms-menu-icon"><Comp {...iconProps}/></span>;
+  const chevron = (opened = false) => <span className="wms-chevron">{opened ? <ChevronDown size={16}/> : <ChevronRight size={16}/>}</span>;
+  const itens = [
+    ["Cadastros", CirclePlus], ["Relatórios", FileText],
+    ["Movimentações", ArrowLeftRight], ["Expedições", Truck], ["Auditoria", ListOrdered],
+    ["ERP", Globe2], ["Painel", Monitor],
+  ] as const;
+  return <aside className={`atel-sidebar ${collapsed ? "collapsed" : ""}`}>
+    <button type="button" className="brand atel-brand-toggle" aria-label={collapsed ? "Expandir menu" : "Recolher menu"} title={collapsed ? "Expandir menu" : "Recolher menu"} onClick={() => setCollapsed(v => !v)}>
+      <Image src={collapsed ? "/atel-sidebar/logo-icon.png" : "/atel-sidebar/logo-full.png"} alt="WMS Expert" width={collapsed ? 40 : 172} height={collapsed ? 40 : 46} priority />
+    </button>
     <div className="wms-nav">
-      <Link href="/" className={`wms-menu-item ${pathname === "/" ? "active" : ""}`}><span className="wms-menu-icon">⌂</span>Início</Link>
-      <div className="wms-menu-parent"><span className="wms-menu-icon">⊕</span>Cadastros<span className="wms-chevron">›</span></div>
-      <button type="button" className={`wms-menu-parent wms-menu-toggle ${relatoriosAberto ? "open" : ""}`} onClick={()=>setRelManual(!relatoriosAberto)} aria-expanded={relatoriosAberto}><span className="wms-menu-icon">▣</span>Relatórios<span className="wms-chevron">{relatoriosAberto ? "⌄" : "›"}</span></button>
-      {relatoriosAberto && <MenuEntries items={relatorios} pathname={pathname}/>}
-      <div className="wms-menu-parent"><span className="wms-menu-icon">⌁</span>Entradas<span className="wms-chevron">›</span></div>
-      <div className="wms-menu-parent"><span className="wms-menu-icon">↔</span>Movimentações<span className="wms-chevron">›</span></div>
-      <button type="button" className={`wms-menu-parent wms-menu-toggle ${expedicoesAberto ? "open" : ""}`} onClick={()=>setExpManual(!expedicoesAberto)} aria-expanded={expedicoesAberto}><span className="wms-menu-icon">▱</span>Expedições<span className="wms-chevron">{expedicoesAberto ? "⌄" : "›"}</span></button>
-      {expedicoesAberto && <MenuEntries items={expedicoes} pathname={pathname}/>}
-      <div className="wms-menu-parent"><span className="wms-menu-icon">☷</span>Auditoria<span className="wms-chevron">›</span></div>
-      <div className="wms-menu-parent"><span className="wms-menu-icon">◉</span>ERP<span className="wms-chevron">›</span></div>
-      <button type="button" className={`wms-menu-parent wms-menu-toggle ${painelAberto ? "open" : ""}`} onClick={()=>setPainelManual(!painelAberto)} aria-expanded={painelAberto}><span className="wms-menu-icon">▣</span>Painel<span className="wms-chevron">{painelAberto ? "⌄" : "›"}</span></button>
-      {painelAberto && <MenuEntries items={painel} pathname={pathname}/>}
-      <div className="wms-menu-parent"><span className="wms-menu-icon">♢</span>Permissões<span className="wms-chevron">›</span></div>
-      <div className="wms-menu-parent"><span className="wms-menu-icon">↻</span>Atualizações<span className="wms-chevron">›</span></div>
+      <Link href="/" title="Início" className={`wms-menu-item ${pathname === "/" ? "active" : ""}`}>{icon(House)}<span className="atel-nav-label">Início</span></Link>
+      {itens.map(([nome, Icone]) => {
+        const links = grupos[nome].filter(([,url]) => email?.toLowerCase() === ATEL_MASTER || rotaLiberada(url, regras));
+        if (!links.length) return null;
+        const ativo = links.some(([, url]) => pathname === url || (url !== "/" && pathname.startsWith(url + "/")));
+        const aberto = abertos[nome] ?? ativo;
+        return <div key={nome}>
+          <button type="button" title={nome} className={`wms-menu-parent wms-menu-toggle ${aberto ? "open" : ""}`} onClick={() => { if (collapsed) setCollapsed(false); setAbertos(prev => ({...prev, [nome]: !aberto})); }} aria-expanded={!collapsed && aberto}>
+            {icon(Icone)}<span className="atel-nav-label">{nome}</span>{chevron(aberto)}
+          </button>
+          {!collapsed && aberto && <MenuEntries items={links} pathname={pathname}/>}
+        </div>;
+      })}
+      {(email?.toLowerCase() === ATEL_MASTER || rotaLiberada("/coletor", regras)) && <a href="/coletor" target="_blank" rel="noopener noreferrer" title="Abrir coletor em nova aba" className="wms-menu-item wms-coletor-link">
+        {icon(Smartphone)}<span className="atel-nav-label">Abrir coletor</span><span className="wms-chevron" aria-hidden="true">↗</span>
+      </a>}
+      {email?.toLowerCase() === ATEL_MASTER && <Link href="/admin/parametros" className={`wms-menu-item ${pathname === "/admin/parametros" ? "active" : ""}`} title="Parâmetros">{icon(ShieldCheck)}<span className="atel-nav-label">Parâmetros</span></Link>}
     </div>
-    <div className="sidebar-user"><div className="user-line"><div className="user-avatar">AD</div><div className="user-info"><strong>WMS TELECOM - ADM</strong><span>admin@wmsexpert.com.br</span></div></div><div className="logout">↪ &nbsp; Sair</div></div>
+    <div className="sidebar-user"><div className="user-line"><div className="user-avatar">{email?.toLowerCase() === ATEL_MASTER ? "M" : "T"}</div><div className="user-info"><strong>{email?.toLowerCase() === ATEL_MASTER ? "Administrador Master" : "Homologação WMS Expert"}</strong><span>{email ?? "Validando sessão..."}</span></div></div><button type="button" className="logout atel-logout-button" onClick={() => void sair()} disabled={saindo}><LogOut size={18}/><span>{saindo ? "Saindo..." : "Sair"}</span></button></div>
   </aside>;
 }
 export function Top(){return null;}

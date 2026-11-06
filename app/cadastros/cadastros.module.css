@@ -1,0 +1,41 @@
+.page{padding:clamp(18px,2.5vw,36px);max-width:1550px;margin:0 auto;color:#142b3a}
+.header{display:flex;justify-content:space-between;align-items:flex-start;gap:18px;flex-wrap:wrap;margin-bottom:24px}
+.eyebrow{font-size:11px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:#087da2;margin-bottom:8px}
+.heading{font-size:clamp(24px,2.4vw,34px);line-height:1.2;letter-spacing:-.035em;margin:0 0 8px;font-weight:800}
+.subtitle{margin:0;color:#627989;font-size:14px;line-height:1.55}
+.tag{border:1px solid #bedbe5;background:#eaf6fa;color:#075d7b;border-radius:100px;padding:9px 13px;font-size:12px;font-weight:700;white-space:nowrap}
+.stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin-bottom:20px}
+.stat{border:1px solid #dce7ed;background:#fff;border-radius:14px;padding:19px 21px;box-shadow:0 5px 18px rgba(11,59,81,.04)}
+.statLabel{font-size:11px;letter-spacing:.08em;font-weight:800;color:#72899a;text-transform:uppercase}
+.statValue{font-size:28px;font-weight:800;color:#0b5975;margin-top:7px;line-height:1.15}
+.statNote{font-size:12px;color:#7c90a0;margin-top:6px}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}
+.card{min-width:0;border:1px solid #dce7ed;background:#fff;border-radius:16px;padding:22px;box-shadow:0 5px 22px rgba(11,59,81,.045)}
+.cardTitle{font-size:16px;font-weight:800;margin:0 0 16px;color:#16364a}
+.cardSub{font-size:13px;color:#72899a;margin-top:-9px;margin-bottom:16px}
+.cardFull{grid-column:1/-1}
+.row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 0;border-bottom:1px solid #eaf0f4;flex-wrap:wrap}
+.row:last-child{border-bottom:0}
+.primary{font-size:13px;font-weight:800;color:#143e53}
+.secondary{font-size:12px;color:#6c8393;margin-top:3px}
+.pill{display:inline-flex;align-items:center;border-radius:100px;padding:5px 10px;background:#e9f5f8;color:#0a6b87;font-size:11px;font-weight:800;white-space:nowrap}
+.pillGreen{background:#e7f7ef;color:#167b52}
+.pillAmber{background:#fff4df;color:#966313}
+.tableWrap{overflow-x:auto;width:100%}
+.table{width:100%;border-collapse:collapse;text-align:left;min-width:780px}
+.table th{background:#f2f7fa;color:#6d8494;font-size:11px;text-transform:uppercase;letter-spacing:.055em;padding:13px 12px;white-space:nowrap}
+.table td{padding:15px 12px;border-bottom:1px solid #edf2f5;font-size:13px;color:#3c5666}
+.table tr:last-child td{border-bottom:0}
+.table tbody tr:hover{background:#f8fbfd}
+.mono{font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-weight:700;color:#164f68}
+.empty{border:1px dashed #b9d4df;background:#f5fafc;border-radius:12px;padding:23px;color:#607c8d;font-size:13px;line-height:1.6}
+.stockHead{display:flex;justify-content:space-between;gap:12px;align-items:start;margin-bottom:18px}
+.stockName{font-size:17px;font-weight:800;color:#153c51;margin:6px 0 0}
+.stockMetrics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.metric{background:#f3f8fa;border-radius:11px;padding:15px 10px;text-align:center}
+.metricLabel{font-size:10px;color:#728b99;text-transform:uppercase;font-weight:800;letter-spacing:.045em}
+.metricValue{font-size:25px;font-weight:800;margin-top:7px;color:#1b5068}
+.available{color:#16875e}
+.notice{margin-top:18px;padding:16px 19px;background:#eaf5f9;border:1px solid #c9e4ed;color:#2e647c;border-radius:12px;font-size:13px;line-height:1.55}
+@media(max-width:850px){.stats{grid-template-columns:1fr}.grid{grid-template-columns:1fr}.cardFull{grid-column:auto}}
+@media(max-width:500px){.page{padding:16px}.card{padding:16px}.stockMetrics{gap:6px}.metric{padding:12px 5px}.metricValue{font-size:21px}}

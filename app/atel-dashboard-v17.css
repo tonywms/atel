@@ -1,0 +1,39 @@
+/* ATEL V17: layout restrito ao dashboard, sem interferir nas outras rotas. */
+.atel-dashboard-v17 {display:flex; flex-direction:column; gap:20px; width:100%; max-width:1600px; margin:0 auto; color:#12263b;}
+.atel-dashboard-v17 .title {display:flex; align-items:flex-start; justify-content:space-between; gap:16px; margin-bottom:0;}
+.atel-dashboard-v17 .title em {display:block; font-size:11px; font-style:normal; letter-spacing:.14em; font-weight:800; color:#0b7595; margin-bottom:7px;}
+.atel-dashboard-v17 .title h1 {font-size:clamp(24px,2.3vw,34px); line-height:1.2; margin:0 0 7px; letter-spacing:-.025em;}
+.atel-dashboard-v17 .title p {margin:0; font-size:14px; color:#607386;}
+.atel-dashboard-v17 .hero {background:linear-gradient(115deg,#075a79,#087fa3); color:white; padding:25px 28px; border-radius:16px; box-shadow:0 8px 24px #12364a12;}
+.atel-dashboard-v17 .hero em {font-style:normal; letter-spacing:.16em; font-size:10px; font-weight:800; opacity:.75;}
+.atel-dashboard-v17 .hero h2 {font-size:clamp(21px,2vw,28px); line-height:1.25; margin:9px 0; color:white;}
+.atel-dashboard-v17 .hero p {font-size:14px; line-height:1.5; margin:0; opacity:.9;}
+.atel-dashboard-v17 .grid4 {display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:14px;}
+.atel-dashboard-v17 .kpi {min-width:0; background:white; border:1px solid #dbe5ed; border-radius:14px; padding:18px 19px; display:flex; flex-direction:column; gap:7px; box-shadow:0 4px 14px #133f5210;}
+.atel-dashboard-v17 .kpi span {font-size:11px; letter-spacing:.06em; font-weight:800; color:#4d697b;}
+.atel-dashboard-v17 .kpi strong {font-size:32px; line-height:1.1; font-variant-numeric:tabular-nums; color:#075a79;}
+.atel-dashboard-v17 .kpi small {font-size:12px; color:#6e8090;}
+.atel-dashboard-v17 .grid2 {display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:16px;}
+.atel-dashboard-v17 .section {margin-top:0;}
+.atel-dashboard-v17 .panel {min-width:0; background:white; border:1px solid #dbe5ed; border-radius:14px; padding:22px; box-shadow:0 4px 14px #133f5210; overflow-x:auto;}
+.atel-dashboard-v17 .panel h2 {font-size:18px; margin:0 0 5px; line-height:1.3;}
+.atel-dashboard-v17 .sub {font-size:12px; color:#788a98; margin-bottom:18px;}
+.atel-dashboard-v17 .flow {display:flex; flex-direction:column; gap:8px;}
+.atel-dashboard-v17 .step {display:flex; align-items:center; justify-content:space-between; gap:12px; background:#f1f7fa; border:1px solid #e0edf2; border-radius:9px; padding:10px 12px; font-size:12px;}
+.atel-dashboard-v17 .step b {color:#0b5e7a; white-space:nowrap;}
+.atel-dashboard-v17 .step span {color:#5f7281; text-align:right;}
+.atel-dashboard-v17 .timeline {display:flex; flex-direction:column; gap:12px;}
+.atel-dashboard-v17 .event {padding:11px 14px; border-left:3px solid #0c91b7; background:#f5f9fb; border-radius:0 9px 9px 0;}
+.atel-dashboard-v17 .event b {display:block; font-size:13px;}
+.atel-dashboard-v17 .event p {margin:5px 0; font-size:12px; color:#5b6c7b; line-height:1.5;}
+.atel-dashboard-v17 .event time {font-size:11px; color:#7e8c98;}
+.atel-dashboard-v17 table {width:100%; border-collapse:collapse; font-size:13px;}
+.atel-dashboard-v17 td {padding:13px 11px; border-bottom:1px solid #edf1f5; white-space:nowrap;}
+.atel-dashboard-v17 tr:last-child td {border-bottom:0;}
+.atel-logout-button {width:100%; color:white; border:1px solid #ffffff40; border-radius:9px; background:#ffffff14; padding:8px; cursor:pointer;}
+.atel-logout-button:hover {background:#ffffff25;}
+.atel-logout-button:disabled {opacity:.6; cursor:wait;}
+.sidebar-user .user-info {min-width:0;}
+.sidebar-user .user-info span {overflow-wrap:anywhere;}
+@media(max-width:1100px){.atel-dashboard-v17 .grid4{grid-template-columns:repeat(2,minmax(0,1fr));}.atel-dashboard-v17 .grid2{grid-template-columns:1fr;}}
+@media(max-width:600px){.atel-dashboard-v17 .grid4{grid-template-columns:1fr;}.atel-dashboard-v17 .hero,.atel-dashboard-v17 .panel{padding:18px;}.atel-dashboard-v17 .step{align-items:flex-start;flex-direction:column;}.atel-dashboard-v17 .step span{text-align:left;}}

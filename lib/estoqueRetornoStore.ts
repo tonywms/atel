@@ -657,6 +657,8 @@ function processarItem(
     );
   }
 
+  const itemSeguro = item;
+
   const agora =
     new Date().toISOString();
 
@@ -715,12 +717,12 @@ function processarItem(
     const chaveIdempotencia =
       chave(
         retorno,
-        item.id,
+        itemSeguro.id,
         destinoTipo
       );
 
     /*
-     * Impede processar novamente o mesmo item/destino.
+     * Impede processar novamente o mesmo itemSeguro/destino.
      */
     const jaExiste =
       movimentacoes.some(
@@ -745,7 +747,7 @@ function processarItem(
         "MOV",
         Date.now(),
         retorno.id,
-        item.id,
+        itemSeguro.id,
         destinoTipo,
       ].join("-"),
 
@@ -763,19 +765,19 @@ function processarItem(
         retorno.documentoOrigem,
 
       itemRetornoId:
-        item.id,
+        itemSeguro.id,
 
       itemIdOrigem:
-        item.itemIdOrigem,
+        itemSeguro.itemIdOrigem,
 
       codigoProduto:
-        item.codigoProduto,
+        itemSeguro.codigoProduto,
 
       produto:
-        item.produto,
+        itemSeguro.produto,
 
       unidade:
-        item.unidade,
+        itemSeguro.unidade,
 
       quantidade,
 
@@ -843,7 +845,7 @@ function processarItem(
 
         cd,
 
-        item,
+        itemSeguro,
 
         "DISPONIVEL",
 
@@ -866,7 +868,7 @@ function processarItem(
       `QUARENTENA - ${cd}`;
 
     /*
-     * No modelo atual o item inteiro recebe um único destino
+     * No modelo atual o itemSeguro inteiro recebe um único destino
      * na conferência. Portanto, quando é QUARENTENA, os
      * seriais recebidos pertencem à quarentena.
      */
@@ -895,7 +897,7 @@ function processarItem(
 
         localQuarentena,
 
-        item,
+        itemSeguro,
 
         "QUARENTENA",
 
@@ -924,7 +926,7 @@ function processarItem(
     const chaveIdempotencia =
       chave(
         retorno,
-        item.id,
+        itemSeguro.id,
         "DIVERGENCIA"
       );
 
@@ -969,7 +971,7 @@ function processarItem(
             "PEND",
             Date.now(),
             retorno.id,
-            item.id,
+            itemSeguro.id,
           ].join("-"),
 
           chaveIdempotencia,
@@ -984,16 +986,16 @@ function processarItem(
             retorno.documentoOrigem,
 
           itemRetornoId:
-            item.id,
+            itemSeguro.id,
 
           codigoProduto:
-            item.codigoProduto,
+            itemSeguro.codigoProduto,
 
           produto:
-            item.produto,
+            itemSeguro.produto,
 
           unidade:
-            item.unidade,
+            itemSeguro.unidade,
 
           quantidade:
             quantidadeDivergente,
@@ -1011,12 +1013,12 @@ function processarItem(
             retorno.base,
 
           motivo:
-            item.motivo ||
+            itemSeguro.motivo ||
             "DIVERGÊNCIA NO RECEBIMENTO DO RETORNO",
 
           observacao:
             conferencia.observacao ||
-            item.observacao,
+            itemSeguro.observacao,
 
           status:
             "ABERTA",
@@ -1072,9 +1074,9 @@ export function processarEntradaRetornoNoEstoque(
 
   const faltam =
     retorno.itens.filter(
-      (item) =>
+      (itemSeguro) =>
         !conferencias[
-          item.id
+          itemSeguro.id
         ]
     );
 
@@ -1082,7 +1084,7 @@ export function processarEntradaRetornoNoEstoque(
     faltam.length > 0
   ) {
     throw new Error(
-      `Existem ${faltam.length} item(ns) sem conferência.`
+      `Existem ${faltam.length} itemSeguro(ns) sem conferência.`
     );
   }
 

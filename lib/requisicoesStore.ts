@@ -348,6 +348,7 @@ function normalizarEstado(
       ...(estado.recebimentoTecnico ?? {}),
 
       volumesLidos: estado.recebimentoTecnico?.volumesLidos ?? {},
+      itensConferidos: estado.recebimentoTecnico?.itensConferidos ?? {},
 
     },
 

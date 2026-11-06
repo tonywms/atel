@@ -2,14 +2,7 @@
    STATUS / TIPOS
 ========================================================= */
 
-export type StatusRequisicao =
-  | "PENDENTE"
-  | "EM_SEPARACAO"
-  | "SEPARADA"
-  | "CONFERIDA"
-  | "EMBARCADA"
-  | "EM_TRANSITO"
-  | "RECEBIDA_TECNICO";
+export type StatusRequisicao = import("./requisicoesStore").StatusRequisicao;
 
 export type PrioridadeRequisicao =
   | "NORMAL"

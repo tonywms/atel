@@ -211,6 +211,8 @@ export default function Page() {
     );
   }
 
+  const retornoSeguro = retorno;
+
   /* =========================================================
      LEITURA
   ========================================================= */
@@ -235,7 +237,7 @@ export default function Page() {
       setMensagem(
         erro instanceof Error
           ? erro.message
-          : "Erro ao validar retorno."
+          : "Erro ao validar retornoSeguro."
       );
     }
   }
@@ -246,11 +248,11 @@ export default function Page() {
 
   function simularLeitura() {
     setCodigo(
-      retorno.codigo
+      retornoSeguro.codigo
     );
 
     validarCodigo(
-      retorno.codigo
+      retornoSeguro.codigo
     );
   }
 
@@ -471,7 +473,7 @@ export default function Page() {
       setMensagem(
         erro instanceof Error
           ? erro.message
-          : "Erro ao finalizar retorno."
+          : "Erro ao finalizar retornoSeguro."
       );
     }
   }
@@ -529,19 +531,19 @@ export default function Page() {
             <div style={returnHeader}>
               <div>
                 <div style={returnCode}>
-                  {retorno.codigo}
+                  {retornoSeguro.codigo}
                 </div>
 
                 <div style={returnType}>
                   {formatarTipo(
-                    retorno.tipo
+                    retornoSeguro.tipo
                   )}
                 </div>
               </div>
 
               <span style={statusPill}>
                 {formatarStatus(
-                  retorno.status
+                  retornoSeguro.status
                 )}
               </span>
             </div>
@@ -550,25 +552,25 @@ export default function Page() {
 
             <InfoRow
               label="Técnico"
-              value={`${retorno.tecnico} • ${retorno.codigoTecnico}`}
+              value={`${retornoSeguro.tecnico} • ${retornoSeguro.codigoTecnico}`}
             />
 
             <InfoRow
               label="Documento"
               value={
-                retorno.documentoOrigem
+                retornoSeguro.documentoOrigem
               }
             />
 
             <InfoRow
               label="Base"
-              value={retorno.base}
+              value={retornoSeguro.base}
             />
 
             <InfoRow
               label="Destino"
               value={
-                retorno.destinoFisico
+                retornoSeguro.destinoFisico
               }
             />
 
@@ -579,7 +581,7 @@ export default function Page() {
                 </span>
 
                 <strong style={miniValue}>
-                  {retorno.itens.length}
+                  {retornoSeguro.itens.length}
                 </strong>
               </div>
 
@@ -589,7 +591,7 @@ export default function Page() {
                 </span>
 
                 <strong style={miniValue}>
-                  {retorno.itens.reduce(
+                  {retornoSeguro.itens.reduce(
                     (total, item) =>
                       total +
                       Number(
@@ -614,7 +616,7 @@ export default function Page() {
               </div>
 
               <div style={sectionDescription}>
-                Leia o código do retorno ou utilize a simulação abaixo para testar a operação.
+                Leia o código do retornoSeguro ou utilize a simulação abaixo para testar a operação.
               </div>
 
               <div style={scanLabel}>
@@ -663,7 +665,7 @@ export default function Page() {
                 </span>
 
                 <strong>
-                  {retorno.codigo}
+                  {retornoSeguro.codigo}
                 </strong>
               </button>
 
@@ -758,7 +760,7 @@ export default function Page() {
                       fontSize: 9,
                     }}
                   >
-                    {retorno.codigo} liberado para conferência
+                    {retornoSeguro.codigo} liberado para conferência
                   </span>
                 </div>
               </div>
@@ -786,7 +788,7 @@ export default function Page() {
 
                 <span style={countBadge}>
                   {resumo.avaliados}/
-                  {retorno.itens.length}
+                  {retornoSeguro.itens.length}
                 </span>
               </div>
 
@@ -794,7 +796,7 @@ export default function Page() {
                   ITENS
               ======================================= */}
 
-              {retorno.itens.map(
+              {retornoSeguro.itens.map(
                 (itemRetorno) => {
                   const conferencia =
                     conferencias[
@@ -941,7 +943,7 @@ export default function Page() {
                 <div style={summaryGrid}>
                   <SummaryItem
                     label="AVALIADOS"
-                    value={`${resumo.avaliados}/${retorno.itens.length}`}
+                    value={`${resumo.avaliados}/${retornoSeguro.itens.length}`}
                   />
 
                   <SummaryItem
@@ -976,20 +978,20 @@ export default function Page() {
                 onClick={finalizar}
                 disabled={
                   resumo.avaliados !==
-                  retorno.itens.length
+                  retornoSeguro.itens.length
                 }
                 style={{
                   ...finishButton,
 
                   opacity:
                     resumo.avaliados ===
-                    retorno.itens.length
+                    retornoSeguro.itens.length
                       ? 1
                       : 0.42,
 
                   cursor:
                     resumo.avaliados ===
-                    retorno.itens.length
+                    retornoSeguro.itens.length
                       ? "pointer"
                       : "not-allowed",
                 }}

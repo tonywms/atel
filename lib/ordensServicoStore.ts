@@ -1746,7 +1746,7 @@ export function finalizarOrdemServico(
             quantidade: 1,
 
             tipo:
-              item.destino,
+              item.destino as "COMODATO" | "VENDA",
 
             tecnico:
               ordem.tecnico,
@@ -1799,7 +1799,7 @@ export function finalizarOrdemServico(
         item.quantidade,
 
       tipo:
-        item.destino,
+        item.destino as "COMODATO" | "VENDA",
 
       tecnico:
         ordem.tecnico,
@@ -1895,4 +1895,3 @@ function formatarDataBRFSM(valor?: string): string {
   const partes = /^(\d{4})-(\d{2})-(\d{2})$/.exec(valor);
   return partes ? `${partes[3]}/${partes[2]}/${partes[1]}` : valor;
 }
-

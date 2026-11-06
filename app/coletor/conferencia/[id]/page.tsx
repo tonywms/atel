@@ -182,7 +182,9 @@ export default function ConferenciaDetalhePage() {
     );
   }
 
-  const item = requisicao.itens[itemAtual];
+  const requisicaoSeguro = requisicao;
+
+  const item = requisicaoSeguro.itens[itemAtual];
 
   const separado =
     quantidadesSeparadas[item.id] ?? 0;
@@ -202,7 +204,7 @@ export default function ConferenciaDetalhePage() {
 
   function atualizarVolumes() {
     setVolumes(
-      listarVolumes(requisicao)
+      listarVolumes(requisicaoSeguro)
     );
   }
 
@@ -229,14 +231,14 @@ export default function ConferenciaDetalhePage() {
   }
 
   const todosConferidos =
-    requisicao.itens.every(
+    requisicaoSeguro.itens.every(
       (produto) =>
         (quantidades[produto.id] ?? 0) >=
         (quantidadesSeparadas[produto.id] ?? 0)
     );
 
   const todosVolumados =
-    requisicao.itens.every(
+    requisicaoSeguro.itens.every(
       (produto) =>
         saldoParaVolume(produto.id) === 0
     );
@@ -368,7 +370,7 @@ export default function ConferenciaDetalhePage() {
     }));
 
     registrarConferenciaItem(
-      requisicao,
+      requisicaoSeguro,
       item.id,
       novos.length,
       novos
@@ -412,7 +414,7 @@ export default function ConferenciaDetalhePage() {
       }
 
       registrarConferenciaItem(
-        requisicao,
+        requisicaoSeguro,
         item.id,
         lista.length,
         lista
@@ -434,7 +436,7 @@ export default function ConferenciaDetalhePage() {
     }));
 
     registrarConferenciaItem(
-      requisicao,
+      requisicaoSeguro,
       item.id,
       separado,
       []
@@ -465,7 +467,7 @@ export default function ConferenciaDetalhePage() {
     }
 
     registrarConferenciaItem(
-      requisicao,
+      requisicaoSeguro,
       item.id,
       quantidadeConferida,
       seriais[item.id] ?? []
@@ -476,7 +478,7 @@ export default function ConferenciaDetalhePage() {
      */
     if (
       itemAtual <
-      requisicao.itens.length - 1
+      requisicaoSeguro.itens.length - 1
     ) {
       setItemAtual(
         (atual) => atual + 1
@@ -519,7 +521,7 @@ export default function ConferenciaDetalhePage() {
   function gerarVolume() {
     try {
       const volume =
-        criarVolume(requisicao);
+        criarVolume(requisicaoSeguro);
 
       setVolumeAtualId(
         volume.id
@@ -561,7 +563,7 @@ export default function ConferenciaDetalhePage() {
     }
 
     const produto =
-      requisicao.itens.find(
+      requisicaoSeguro.itens.find(
         (item) =>
           item.id === itemId
       );
@@ -590,7 +592,7 @@ export default function ConferenciaDetalhePage() {
 
     try {
       adicionarItemAoVolume(
-        requisicao,
+        requisicaoSeguro,
         volumeAtualId,
         itemId,
         saldo,
@@ -627,7 +629,7 @@ export default function ConferenciaDetalhePage() {
     }
 
     try {
-      requisicao.itens.forEach(
+      requisicaoSeguro.itens.forEach(
         (produto) => {
           const saldo =
             saldoParaVolume(
@@ -646,7 +648,7 @@ export default function ConferenciaDetalhePage() {
               : [];
 
           adicionarItemAoVolume(
-            requisicao,
+            requisicaoSeguro,
             volumeAtualId,
             produto.id,
             saldo,
@@ -689,7 +691,7 @@ export default function ConferenciaDetalhePage() {
     try {
       const volume =
         fecharVolume(
-          requisicao,
+          requisicaoSeguro,
           volumeAtualId
         );
 
@@ -737,11 +739,11 @@ export default function ConferenciaDetalhePage() {
       );
 
     const tipoOperacao =
-      requisicao.tipo ||
+      requisicaoSeguro.tipo ||
       "ABASTECIMENTO";
 
     const origem =
-      requisicao.origem ||
+      requisicaoSeguro.origem ||
       "CD FORTALEZA";
 
     /*
@@ -752,9 +754,9 @@ export default function ConferenciaDetalhePage() {
      */
     const conteudoQR = [
       `VOLUME=${volume.codigo}`,
-      `REQUISICAO=${requisicao.codigo}`,
+      `REQUISICAO=${requisicaoSeguro.codigo}`,
       `TIPO=${tipoOperacao}`,
-      `DESTINO=${requisicao.codigoTecnico}`,
+      `DESTINO=${requisicaoSeguro.codigoTecnico}`,
     ].join("|");
 
     const janela = window.open(
@@ -834,13 +836,13 @@ export default function ConferenciaDetalhePage() {
               overflow-wrap: anywhere;
             }
 
-            .requisicao {
+            .requisicaoSeguro {
               padding-bottom: 1.5mm;
               margin-bottom: 1.8mm;
               border-bottom: 0.25mm solid #777;
             }
 
-            .requisicao .valor {
+            .requisicaoSeguro .valor {
               font-weight: 900;
             }
 
@@ -953,13 +955,13 @@ export default function ConferenciaDetalhePage() {
 
             <div class="dados">
 
-              <div class="linha requisicao">
+              <div class="linha requisicaoSeguro">
                 <span class="label">
                   Requisição:
                 </span>
 
                 <span class="valor">
-                  ${requisicao.codigo}
+                  ${requisicaoSeguro.codigo}
                 </span>
               </div>
 
@@ -979,7 +981,7 @@ export default function ConferenciaDetalhePage() {
                 </span>
 
                 <span class="valor">
-                  ${requisicao.tecnico}
+                  ${requisicaoSeguro.tecnico}
                 </span>
               </div>
 
@@ -989,7 +991,7 @@ export default function ConferenciaDetalhePage() {
                 </span>
 
                 <span class="valor">
-                  ${requisicao.codigoTecnico}
+                  ${requisicaoSeguro.codigoTecnico}
                 </span>
               </div>
 
@@ -999,7 +1001,7 @@ export default function ConferenciaDetalhePage() {
                 </span>
 
                 <span class="valor">
-                  ${requisicao.base}
+                  ${requisicaoSeguro.base}
                 </span>
               </div>
 
@@ -1044,7 +1046,7 @@ export default function ConferenciaDetalhePage() {
 
               <div class="destino">
                 DESTINO:
-                ${requisicao.codigoTecnico}
+                ${requisicaoSeguro.codigoTecnico}
               </div>
 
             </div>
@@ -1131,7 +1133,7 @@ export default function ConferenciaDetalhePage() {
       setFinalizando(true);
 
       finalizarConferencia(
-        requisicao
+        requisicaoSeguro
       );
 
       setMensagem(
@@ -1184,7 +1186,7 @@ export default function ConferenciaDetalhePage() {
 
             <div>
               <strong>
-                #{requisicao.codigo.replace(
+                #{requisicaoSeguro.codigo.replace(
                   "REQ-",
                   ""
                 )}
@@ -1197,7 +1199,7 @@ export default function ConferenciaDetalhePage() {
                   marginTop: 2,
                 }}
               >
-                {requisicao.tecnico.toUpperCase()}
+                {requisicaoSeguro.tecnico.toUpperCase()}
               </div>
 
               <div
@@ -1207,9 +1209,9 @@ export default function ConferenciaDetalhePage() {
                   marginTop: 1,
                 }}
               >
-                {requisicao.codigoTecnico}
+                {requisicaoSeguro.codigoTecnico}
                 {" • "}
-                {requisicao.base}
+                {requisicaoSeguro.base}
               </div>
             </div>
 
@@ -1302,7 +1304,7 @@ export default function ConferenciaDetalhePage() {
 
                 <div className="collector-product-position">
                   Produto {itemAtual + 1} de{" "}
-                  {requisicao.itens.length}
+                  {requisicaoSeguro.itens.length}
                 </div>
 
                 {/* DESCRIÇÃO */}
@@ -1618,7 +1620,7 @@ export default function ConferenciaDetalhePage() {
                   }}
                   onClick={proximo}
                 >
-                  {itemAtual === requisicao.itens.length - 1
+                  {itemAtual === requisicaoSeguro.itens.length - 1
                     ? "FORMAR VOLUMES"
                     : "PRÓXIMO PRODUTO"}
                 </button>
@@ -1708,7 +1710,7 @@ export default function ConferenciaDetalhePage() {
                       }}
                     >
                       {
-                        requisicao
+                        requisicaoSeguro
                           .itens
                           .length
                       }
@@ -1765,7 +1767,7 @@ export default function ConferenciaDetalhePage() {
                       }}
                     >
                       {
-                        requisicao.codigoTecnico
+                        requisicaoSeguro.codigoTecnico
                       }
                     </div>
                   </div>
@@ -1784,7 +1786,7 @@ export default function ConferenciaDetalhePage() {
                   PRODUTOS CONFERIDOS
                 </div>
 
-                {requisicao.itens.map(
+                {requisicaoSeguro.itens.map(
                   (produto) => {
                     const qtdConferida =
                       quantidades[
@@ -2085,7 +2087,7 @@ export default function ConferenciaDetalhePage() {
                           itemVolume
                         ) => {
                           const produto =
-                            requisicao.itens.find(
+                            requisicaoSeguro.itens.find(
                               (produto) =>
                                 produto.id ===
                                 itemVolume.itemId

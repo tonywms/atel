@@ -169,7 +169,9 @@ export default function SeparacaoDetalhePage() {
     );
   }
 
-  const item = requisicao.itens[itemAtual];
+  const requisicaoSeguro = requisicao;
+
+  const item = requisicaoSeguro.itens[itemAtual];
 
   if (!item) {
     return (
@@ -194,13 +196,13 @@ export default function SeparacaoDetalhePage() {
   const solicitado = item.solicitado;
   const listaSeriais = seriais[item.id] ?? [];
 
-  const itensSeparados = requisicao.itens.filter(
+  const itensSeparados = requisicaoSeguro.itens.filter(
     (produto) =>
       (quantidades[produto.id] ?? 0) >=
       produto.solicitado
   ).length;
 
-  const todosSeparados = requisicao.itens.every(
+  const todosSeparados = requisicaoSeguro.itens.every(
     (produto) =>
       (quantidades[produto.id] ?? 0) >=
       produto.solicitado
@@ -356,7 +358,7 @@ export default function SeparacaoDetalhePage() {
     }));
 
     registrarSeparacaoItem(
-      requisicao,
+      requisicaoSeguro,
       item.id,
       novos.length,
       novos
@@ -409,7 +411,7 @@ export default function SeparacaoDetalhePage() {
       }
 
       registrarSeparacaoItem(
-        requisicao,
+        requisicaoSeguro,
         item.id,
         listaSeriais.length,
         listaSeriais
@@ -423,7 +425,7 @@ export default function SeparacaoDetalhePage() {
     }
 
     registrarSeparacaoItem(
-      requisicao,
+      requisicaoSeguro,
       item.id,
       solicitado,
       []
@@ -440,7 +442,7 @@ export default function SeparacaoDetalhePage() {
   }
 
   function irProximoProduto() {
-    const estado = obterEstado(requisicao);
+    const estado = obterEstado(requisicaoSeguro);
 
     const qtd =
       estado.itens[item.id]
@@ -454,7 +456,7 @@ export default function SeparacaoDetalhePage() {
     }
 
     const proximoPendente =
-      requisicao.itens.findIndex(
+      requisicaoSeguro.itens.findIndex(
         (produto, indice) =>
           indice > itemAtual &&
           (estado.itens[produto.id]
@@ -470,7 +472,7 @@ export default function SeparacaoDetalhePage() {
     }
 
     const qualquerPendente =
-      requisicao.itens.findIndex(
+      requisicaoSeguro.itens.findIndex(
         (produto) =>
           (estado.itens[produto.id]
             ?.quantidadeSeparada ??
@@ -491,7 +493,7 @@ export default function SeparacaoDetalhePage() {
 
   function pularProduto() {
     if (
-      requisicao.itens.length <= 1
+      requisicaoSeguro.itens.length <= 1
     ) {
       setMensagem(
         "Não existe outro produto para pular."
@@ -501,7 +503,7 @@ export default function SeparacaoDetalhePage() {
 
     const proximo =
       itemAtual >=
-      requisicao.itens.length - 1
+      requisicaoSeguro.itens.length - 1
         ? 0
         : itemAtual + 1;
 
@@ -520,7 +522,7 @@ export default function SeparacaoDetalhePage() {
       setFinalizando(true);
 
       finalizarSeparacao(
-        requisicao
+        requisicaoSeguro
       );
 
       setMensagem(
@@ -635,7 +637,7 @@ export default function SeparacaoDetalhePage() {
               <strong>
                 Pedido:
               </strong>{" "}
-              {requisicao.codigo.replace(
+              {requisicaoSeguro.codigo.replace(
                 "REQ-",
                 ""
               )}
@@ -646,7 +648,7 @@ export default function SeparacaoDetalhePage() {
                 Itens:
               </strong>{" "}
               {itemAtual + 1}/
-              {requisicao.itens.length}
+              {requisicaoSeguro.itens.length}
             </div>
 
             <div>
@@ -654,7 +656,7 @@ export default function SeparacaoDetalhePage() {
                 Separados:
               </strong>{" "}
               {itensSeparados}/
-              {requisicao.itens.length}
+              {requisicaoSeguro.itens.length}
             </div>
           </div>
 
@@ -667,7 +669,7 @@ export default function SeparacaoDetalhePage() {
             <strong>
               Cliente:
             </strong>{" "}
-            {requisicao.tecnico}
+            {requisicaoSeguro.tecnico}
           </div>
         </div>
 
@@ -1191,7 +1193,7 @@ export default function SeparacaoDetalhePage() {
                       type="button"
                       onClick={() =>
                         setSerialDigitado(
-                          `SN-${requisicao.id}-${item.id}-${String(
+                          `SN-${requisicaoSeguro.id}-${item.id}-${String(
                             listaSeriais.length +
                               1
                           ).padStart(

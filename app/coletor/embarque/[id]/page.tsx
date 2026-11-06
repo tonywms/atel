@@ -124,6 +124,8 @@ export default function EmbarqueDetalhePage() {
     );
   }
 
+  const requisicaoSeguro = requisicao;
+
   const volumesLidos =
     volumes.filter(
       (volume) =>
@@ -162,7 +164,7 @@ export default function EmbarqueDetalhePage() {
     try {
       const volume =
         registrarVolumeEmbarque(
-          requisicao,
+          requisicaoSeguro,
           codigo
         );
 
@@ -187,7 +189,7 @@ export default function EmbarqueDetalhePage() {
       setFinalizando(true);
 
       finalizarEmbarque(
-        requisicao
+        requisicaoSeguro
       );
 
       setMensagem(
@@ -282,7 +284,7 @@ export default function EmbarqueDetalhePage() {
               }}
             >
               #
-              {requisicao.codigo.replace(
+              {requisicaoSeguro.codigo.replace(
                 "REQ-",
                 ""
               )}
@@ -295,7 +297,7 @@ export default function EmbarqueDetalhePage() {
                 fontWeight: 800,
               }}
             >
-              {requisicao.tecnico.toUpperCase()}
+              {requisicaoSeguro.tecnico.toUpperCase()}
             </div>
 
             <div
@@ -304,8 +306,8 @@ export default function EmbarqueDetalhePage() {
                 fontSize: 9,
               }}
             >
-              {requisicao.codigoTecnico} •{" "}
-              {requisicao.base}
+              {requisicaoSeguro.codigoTecnico} •{" "}
+              {requisicaoSeguro.base}
             </div>
           </div>
 
@@ -424,7 +426,7 @@ export default function EmbarqueDetalhePage() {
                 fontWeight: 900,
               }}
             >
-              {requisicao.tecnico}
+              {requisicaoSeguro.tecnico}
             </div>
 
             <div
@@ -435,8 +437,8 @@ export default function EmbarqueDetalhePage() {
                 fontWeight: 800,
               }}
             >
-              {requisicao.codigoTecnico} •{" "}
-              {requisicao.base}
+              {requisicaoSeguro.codigoTecnico} •{" "}
+              {requisicaoSeguro.base}
             </div>
 
             <div
@@ -448,7 +450,7 @@ export default function EmbarqueDetalhePage() {
             >
               Tipo:{" "}
               <strong>
-                {requisicao.tipo}
+                {requisicaoSeguro.tipo}
               </strong>
             </div>
           </section>

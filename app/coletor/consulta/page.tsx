@@ -1,61 +1,38 @@
 "use client";
 
-import React from "react";
 import { useRouter } from "next/navigation";
+import styles from "./consulta.module.css";
+
+function ArrowLeft() {
+  return <svg viewBox="0 0 24 24" width="23" height="23" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="m14 5-7 7 7 7"/><path d="M8 12h12"/></svg>;
+}
+function InventoryIcon({ technician = false }: { technician?: boolean }) {
+  return <svg viewBox="0 0 24 24" width="23" height="23" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{technician ? <><circle cx="12" cy="5" r="2.5"/><path d="M7 21v-5a5 5 0 0 1 10 0v5M4 21h16M5 12l-2 3 2 2M19 12l2 3-2 2"/></> : <><path d="m4 7 8-4 8 4v10l-8 4-8-4z"/><path d="m4 7 8 4 8-4M12 11v10M8 5l8 4"/></>}</svg>;
+}
+const options = [
+  { title: "Estoque", route: "/coletor/consulta/estoque", technician: false },
+  { title: "Estoque Técnico", route: "/coletor/consulta/estoque-tecnico", technician: true },
+] as const;
 
 export default function ConsultaPage() {
   const router = useRouter();
-
   return (
-    <div className="collector-screen">
-      <div className="collector-phone">
-        <div style={{ height: 40, background: "#000", flex: "0 0 auto" }} />
-
-        <div className="collector-header" style={{ justifyContent: "center" }}>
-          <div className="collector-header-title">
-            <button
-              type="button"
-              className="collector-back-button"
-              onClick={() => router.push("/coletor")}
-            >
-              ‹
+    <div className={styles.screen}>
+      <main className={styles.phone}>
+        <header className={styles.header}>
+          <button type="button" className={styles.back} aria-label="Voltar ao menu do coletor" onClick={() => router.push("/coletor")}><ArrowLeft /></button>
+          <h1>Consulta</h1>
+        </header>
+        <section className={styles.content} aria-label="Opções de consulta">
+          {options.map((option) => (
+            <button key={option.route} type="button" className={styles.card} onClick={() => router.push(option.route)}>
+              <span className={styles.icon}><InventoryIcon technician={option.technician}/></span>
+              <span className={styles.name}>{option.title}</span>
+              <span className={styles.counter} aria-label="Indicador visual sem contagem disponível" />
             </button>
-            <strong>Consulta</strong>
-          </div>
-        </div>
-
-        <div style={S.body}>
-          <button
-            type="button"
-            style={S.menu}
-            onClick={() => router.push("/coletor/consulta/estoque")}
-          >
-            <span style={S.circle}>▦</span>
-            <span style={S.text}>Estoque</span>
-            <span style={S.arrow}>☷</span>
-          </button>
-
-          <button
-            type="button"
-            style={S.menu}
-            onClick={() => router.push("/coletor/consulta/estoque-tecnico")}
-          >
-            <span style={S.circle}>▦</span>
-            <span style={S.text}>Estoque Técnico</span>
-            <span style={S.arrow}>☷</span>
-          </button>
-        </div>
-
-        <div style={{ height: 36, background: "#000", flex: "0 0 auto" }} />
-      </div>
+          ))}
+        </section>
+      </main>
     </div>
   );
 }
-
-const S: Record<string, React.CSSProperties> = {
-  body: { flex: 1, padding: "18px 14px", background: "#f4f4f4", display: "flex", flexDirection: "column", gap: 12 },
-  menu: { position: "relative", width: "100%", minHeight: 68, border: "1px solid #1687b0", borderRadius: 7, background: "#fff", display: "grid", gridTemplateColumns: "48px 1fr", alignItems: "center", gap: 8, padding: "9px 12px", boxShadow: "0 2px 4px rgba(0,0,0,.15)", textAlign: "left", cursor: "pointer" },
-  circle: { width: 34, height: 34, borderRadius: "50%", background: "#d9f3fb", color: "#1287ae", display: "grid", placeItems: "center", fontSize: 20, fontWeight: 700 },
-  text: { fontSize: 16, color: "#333" },
-  arrow: { position: "absolute", right: 18, bottom: 8, color: "#1287ae", fontSize: 12 },
-};

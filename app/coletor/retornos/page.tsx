@@ -1,5 +1,8 @@
 "use client";
 
+import "./atel-v47.css";
+import "./atel-v47-2.css";
+
 import {
   useEffect,
   useMemo,
@@ -78,14 +81,14 @@ export default function Page() {
   ========================================================= */
 
   return (
-    <div className="collector-screen">
+    <div className="collector-screen atel-v47-screen atel-v47-retornos">
       <div
         className="collector-phone"
         style={phone}
       >
         {/* BARRA PRETA SUPERIOR */}
 
-        <div style={topBar} />
+        
 
         {/* ===================================================
             HEADER
@@ -99,9 +102,7 @@ export default function Page() {
             }
             style={backButton}
             aria-label="Voltar"
-          >
-            ‹
-          </button>
+          ><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M19 12H5"/><path d="m12 19-7-7 7-7"/></svg></button>
 
           <div style={headerTitle}>
             Retornos ao CD
@@ -114,9 +115,7 @@ export default function Page() {
 
         <div style={searchArea}>
           <div style={searchContainer}>
-            <span style={searchIcon}>
-              ⌕
-            </span>
+            <span style={searchIcon}><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg></span>
 
             <input
               value={busca}

@@ -1,0 +1,21 @@
+/* ATEL V39: coletor Expedição com a mesma estrutura da Consulta. */
+.screen{min-height:100dvh;background:#e8eef5;display:flex;align-items:center;justify-content:center;padding:20px;box-sizing:border-box}
+.phone{position:relative;isolation:isolate;width:390px;max-width:100%;height:min(800px,calc(100dvh - 40px));min-height:460px;box-sizing:border-box;background:#f6f9fc;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 12px 34px #12354d26;padding:26px 0 30px!important;margin:0!important;align-items:stretch}
+.phone:before{content:"";position:absolute;z-index:2;top:0;left:0;right:0;height:26px;background:#080a0c}
+.header{height:66px;min-height:66px;width:100%;background:linear-gradient(110deg,#087da7,#1598bb);color:#fff;display:flex;align-items:center;gap:10px;padding:0 14px;box-sizing:border-box;margin:0!important;border-radius:0!important;flex-shrink:0}
+.header h1{font-size:20px;font-weight:700;line-height:1.2;margin:0}
+.back{width:38px;height:38px;display:grid;place-items:center;background:transparent;color:#fff;border:0;border-radius:9px;cursor:pointer;flex:none;padding:0}
+.back:hover,.back:focus-visible{background:#ffffff25;outline:2px solid #ffffff80}
+.content{width:100%;box-sizing:border-box;padding:12px 10px;display:flex;flex-direction:column;justify-content:flex-start;gap:10px;overflow-y:auto;flex:1;min-height:0;margin:0;background:#f6f9fc}
+.card{width:100%;min-height:72px;border:1px solid #5ba7c7;border-radius:9px;background:#fff;box-shadow:0 2px 6px #164f6b13;display:flex;align-items:center;gap:12px;padding:10px 12px;text-align:left;cursor:pointer;transition:background .15s,border-color .15s,transform .15s;flex-shrink:0;font-family:inherit}
+.card:hover{background:#effaff;border-color:#1687b0;transform:translateY(-1px)}
+.card:focus-visible{outline:3px solid #1a94c0;outline-offset:2px}
+.icon{width:36px;height:36px;display:grid;place-items:center;flex:none;border-radius:50%;background:#e1f5fc;color:#1293ba;font-size:20px;font-weight:700}
+.name{flex:1;color:#26323c;font-size:15px;font-weight:600;min-width:0}
+.counter{min-width:34px;height:26px;padding:0 7px;box-sizing:border-box;background:#1084ab;border-radius:6px;flex:none;color:#fff;font-size:12px;font-weight:700;display:grid;place-items:center}
+.androidNav{position:absolute;z-index:3;bottom:0;left:0;right:0;height:30px;background:#080a0c;display:flex;align-items:center;justify-content:space-around}
+.androidBack{width:9px;height:9px;border-left:1.5px solid #fff;border-bottom:1.5px solid #fff;transform:rotate(45deg)}
+.androidHome{width:9px;height:9px;border:1.5px solid #fff;border-radius:50%}
+.androidRecent{width:11px;height:10px;border-left:2px solid #fff;border-right:2px solid #fff;position:relative}
+.androidRecent:after{content:"";position:absolute;left:3px;top:0;height:10px;border-left:1px solid #fff}
+@media(max-width:500px){.screen{padding:0;background:#f6f9fc;min-height:100dvh}.phone{width:100%;max-width:none;height:100dvh;min-height:0;box-shadow:none;padding:0!important}.phone:before,.androidNav{display:none}.header{height:65px;min-height:65px}}

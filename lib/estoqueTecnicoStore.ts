@@ -23,7 +23,25 @@ export function registrarAceiteEstoqueTecnico(requisicao:RequisicaoTecnica,avali
   movs.unshift({id:`MOV-TEC-${Date.now()}-${requisicao.id}-${item.id}`,chaveIdempotencia:chave,criadoEm:agora,tipo:"ENTRADA_ACEITE_TECNICO",requisicaoId:requisicao.id,documentoOrigem:requisicao.codigo,codigoTecnico:requisicao.codigoTecnico,tecnico:requisicao.tecnico,base:requisicao.base,codigoProduto:item.codigoProduto,produto:item.produto,unidade:item.unidade,quantidade:qtd,seriais,origem:requisicao.origem||"CD",destino:`${requisicao.codigoTecnico} - ${requisicao.tecnico}`});alterou=true}
  if(alterou){salvar(STORAGE_ESTOQUE,estoque);salvar(STORAGE_MOVIMENTOS,movs);emitir()}
 }
-export function baixarEstoqueTecnico(d:{codigoTecnico:string;codigoProduto:string;quantidade:number;documentoOrigem:string;seriais?:string[]}){const e=carregarEstoqueTecnico(),m=carregarMovimentacoesEstoqueTecnico();const ix=e.findIndex(x=>x.codigoTecnico===d.codigoTecnico&&x.codigoProduto===d.codigoProduto);if(ix<0)throw new Error("Produto não encontrado no estoque do técnico.");const q=Number(d.quantidade);if(!Number.isFinite(q)||q<=0)throw new Error("Quantidade inválida.");if(e[ix].quantidade<q)throw new Error("Saldo insuficiente no estoque do técnico.");const s=[...new Set(d.seriais??[])];if(s.some(x=>!e[ix].seriais.includes(x)))throw new Error("Serial não pertence ao técnico.");e[ix]={...e[ix],quantidade:e[ix].quantidade-q,seriais:e[ix].seriais.filter(x=>!s.includes(x)),atualizadoEm:new Date().toISOString()};m.unshift({id:`MOV-TEC-${Date.now()}`,chaveIdempotencia:`SAIDA|${d.documentoOrigem}|${d.codigoTecnico}|${d.codigoProduto}`,criadoEm:new Date().toISOString(),tipo:"SAIDA_OS",documentoOrigem:d.documentoOrigem,codigoTecnico:e[ix].codigoTecnico,tecnico:e[ix].tecnico,base:e[ix].base,codigoProduto:e[ix].codigoProduto,produto:e[ix].produto,unidade:e[ix].unidade,quantidade:q,seriais:s,origem:`${e[ix].codigoTecnico} - ${e[ix].tecnico}`,destino:d.documentoOrigem});salvar(STORAGE_ESTOQUE,e);salvar(STORAGE_MOVIMENTOS,m);emitir();return e[ix]}
+export function baixarEstoqueTecnico(d:{codigoTecnico:string;codigoProduto:string;quantidade:number;documentoOrigem:string;seriais?:string[]}){
+ if(!ok())throw new Error("Operacao disponivel somente no navegador.");
+ const e=carregarEstoqueTecnico(),m=carregarMovimentacoesEstoqueTecnico();
+ const chaveBaixa=`SAIDA|${d.documentoOrigem}|${d.codigoTecnico}|${d.codigoProduto}`;
+ if(!d.documentoOrigem?.trim()||!d.codigoTecnico?.trim()||!d.codigoProduto?.trim())throw new Error("Identificacao da baixa incompleta.");
+ if(m.some(x=>x.chaveIdempotencia===chaveBaixa))throw new Error("Baixa ja registrada para esta OS, tecnico e produto.");
+ const ix=e.findIndex(x=>x.codigoTecnico===d.codigoTecnico&&x.codigoProduto===d.codigoProduto);
+ if(ix<0)throw new Error("Produto nao encontrado no estoque do tecnico.");
+ const q=Number(d.quantidade);
+ if(!Number.isSafeInteger(q)||q<=0)throw new Error("Quantidade invalida.");
+ if(e[ix].quantidade<q)throw new Error("Saldo insuficiente no estoque do tecnico.");
+ const s=[...new Set(d.seriais??[])];
+ if(s.some(x=>!e[ix].seriais.includes(x)))throw new Error("Serial nao pertence ao tecnico.");
+ if(e[ix].seriais.length>0&&s.length!==q)throw new Error("Informe todos os seriais para esta baixa.");
+ const agora=new Date().toISOString();
+ e[ix]={...e[ix],quantidade:e[ix].quantidade-q,seriais:e[ix].seriais.filter(x=>!s.includes(x)),atualizadoEm:agora};
+ m.unshift({id:`MOV-TEC-${Date.now()}`,chaveIdempotencia:chaveBaixa,criadoEm:agora,tipo:"SAIDA_OS",documentoOrigem:d.documentoOrigem,codigoTecnico:e[ix].codigoTecnico,tecnico:e[ix].tecnico,base:e[ix].base,codigoProduto:e[ix].codigoProduto,produto:e[ix].produto,unidade:e[ix].unidade,quantidade:q,seriais:s,origem:`${e[ix].codigoTecnico} - ${e[ix].tecnico}`,destino:d.documentoOrigem});
+ salvar(STORAGE_ESTOQUE,e);salvar(STORAGE_MOVIMENTOS,m);emitir();return e[ix];
+}
 export function ouvirEstoqueTecnico(cb:()=>void){if(!ok())return()=>{};const a=()=>cb();const s=(ev:StorageEvent)=>{if(!ev.key||ev.key===STORAGE_ESTOQUE||ev.key===STORAGE_MOVIMENTOS)cb()};window.addEventListener(EVENTO,a);window.addEventListener("storage",s);return()=>{window.removeEventListener(EVENTO,a);window.removeEventListener("storage",s)}}
 
 export type DevolucaoTecnicoCD = {

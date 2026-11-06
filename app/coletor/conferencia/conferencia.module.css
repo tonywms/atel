@@ -1,0 +1,21 @@
+/* V46 — ajuste isolado da lista de conferência; sem alterar regras operacionais. */
+.screen { min-height: 100dvh; }
+.phone { display: flex !important; flex-direction: column !important; min-height: min(850px, 100dvh); overflow: hidden; background: #f4f8fb; }
+.header { width: 100% !important; flex: 0 0 68px; min-height: 68px; padding: 0 18px !important; margin: 0 !important; box-sizing: border-box; background: linear-gradient(105deg,#087ba4,#1598b4) !important; display: flex; align-items: center; border-radius: 0 !important; }
+.headerTitle { display: flex !important; justify-content: flex-start !important; align-items: center !important; gap: 12px !important; width: 100%; color: white; }
+.headerTitle strong { font-size: 19px; font-weight: 750; letter-spacing: -.35px; }
+.backButton { flex: 0 0 38px !important; width: 38px !important; height: 38px !important; min-width: 38px !important; min-height: 38px !important; padding: 0 !important; border: 0 !important; border-radius: 11px !important; background: rgba(255,255,255,.12) !important; color: #fff !important; display: inline-flex !important; align-items: center !important; justify-content: center !important; cursor: pointer; }
+.backButton:hover { background: rgba(255,255,255,.22) !important; }
+.backButton:focus-visible { outline: 2px solid white; outline-offset: 2px; }
+.searchArea { padding: 15px 14px 12px !important; flex: 0 0 auto; background: #f4f8fb; }
+.searchBox { display: flex !important; align-items: center !important; gap: 10px !important; height: 48px !important; padding: 0 14px !important; box-sizing: border-box; border: 1px solid #d0e0e9 !important; border-radius: 12px !important; background: white !important; box-shadow: 0 2px 7px rgba(13,75,110,.035); }
+.searchIcon { display: inline-flex; align-items: center; justify-content: center; flex: 0 0 20px; color: #138cb1; }
+.searchBox input { width: 100%; min-width: 0; border: 0 !important; outline: 0 !important; background: transparent !important; font-size: 14px; color: #19394b; }
+.searchBox:focus-within { border-color: #138db4 !important; box-shadow: 0 0 0 3px rgba(19,141,180,.11); }
+.requestList { flex: 1 1 auto !important; min-height: 0 !important; overflow-y: auto !important; padding: 4px 0 12px !important; background: #f4f8fb; }
+.emptyState { min-height: 280px; padding: 64px 28px 30px; box-sizing: border-box; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; text-align: center; gap: 10px; color: #597489; }
+.emptyIcon { width: 58px; height: 58px; border-radius: 18px; background: #e1f2f8; color: #108db0; display: flex; align-items: center; justify-content: center; margin-bottom: 7px; }
+.emptyState strong { color: #173d53; font-size: 14px; font-weight: 750; line-height: 1.4; }
+.emptyState span { font-size: 12px; line-height: 1.5; max-width: 275px; }
+.footer { flex: 0 0 auto; padding: 11px 14px !important; background: white !important; border-top: 1px solid #e2eaf0; text-align: center; font-size: 11px; color: #6c8597; }
+@media (max-width: 480px) { .screen { min-height: 100dvh; } .phone { width: 100% !important; max-width: none !important; min-height: 100dvh; height: 100dvh; border-radius: 0 !important; } }

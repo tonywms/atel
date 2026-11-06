@@ -1,0 +1,34 @@
+/* V47.2 — Corrige alinhamento do header de Retornos sem alterar funcionalidades. */
+.atel-v47-retornos > .collector-phone > div:first-child {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+  gap: 12px !important;
+  width: 100% !important;
+  padding: 0 16px !important;
+  box-sizing: border-box !important;
+}
+.atel-v47-retornos > .collector-phone > div:first-child > button {
+  position: static !important;
+  left: auto !important;
+  top: auto !important;
+  transform: none !important;
+  margin: 0 !important;
+  flex: 0 0 38px !important;
+}
+.atel-v47-retornos > .collector-phone > div:first-child > div {
+  position: static !important;
+  left: auto !important;
+  top: auto !important;
+  right: auto !important;
+  transform: none !important;
+  width: auto !important;
+  max-width: calc(100% - 50px) !important;
+  flex: 0 1 auto !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  text-align: left !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}

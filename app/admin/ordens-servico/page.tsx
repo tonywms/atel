@@ -1,8 +1,10 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { carregarOrdensServico, ouvirOrdensServico, obterEstadoFSMOS, type OrdemServico } from "@/lib/ordensServicoStore";
+import { obterEstadoFSMOS, type OrdemServico } from "@/lib/ordensServicoStore";
 import styles from "./page.module.css";
+import { consultarOsErpV52, type OsErpV52 } from "@/lib/erpOperacionalV52";
+import { atelSupabase } from "@/lib/atelSupabaseV08";
 
 const estados: Record<string, string> = { PENDENTE: "Pendente", EM_DESLOCAMENTO: "Em deslocamento", NO_LOCAL: "No local", EM_ATENDIMENTO: "Em atendimento", PENDENTE_REAGENDAMENTO: "Pendente reagendamento", PENDENTE_TRATATIVA: "Pendente tratativa", FINALIZADA: "Finalizada", CANCELADA: "Cancelada" };
 const rotulo = (v: string) => estados[v] ?? v.replaceAll("_", " ");
@@ -11,6 +13,33 @@ const dataBR = (v?: string) => { if (!v) return "—"; const d = new Date(/^\d{4
 const dataHora = (v?: string) => { if (!v) return "—"; const d = new Date(v); return Number.isNaN(d.getTime()) ? v : d.toLocaleString("pt-BR"); };
 const prevista = (o: OrdemServico) => o.agendamentoFSM?.novaData ?? o.dataPrevista;
 const temOcorrencia = (o: OrdemServico) => Boolean(o.ocorrenciaFSM) || ["PENDENTE_TRATATIVA", "PENDENTE_REAGENDAMENTO"].includes(estado(o));
+type ApontamentoV525 = { cod_produto: number; produto?: string; quantidade: number; patrimonio?: string | number | null; mac?: string | null; unidade?: string };
+type RascunhoV525 = { atendimento: number; itens: ApontamentoV525[]; versao: number; atualizado_em: string | null };
+type AndamentoAdminERP = { atendimento_erp:number;etapa:string;versao:number;atualizado_em:string };
+type OcorrenciaAdminERP = { atendimento_erp:number;tipo:"CLIENTE_AUSENTE"|"IMPEDIMENTO_TECNICO"|"OUTRO";motivo:string;nova_data:string|null;criado_em:string;ativa:boolean };
+type EventoAdminERP = {id:string;atendimento_erp:number;tipo:string;etapa_anterior:string;etapa_nova:string;tipo_ocorrencia:string|null;motivo:string|null;nova_data:string|null;ocorrido_em:string;versao:number};
+type PainelStatusERP = {andamentos:AndamentoAdminERP[];ocorrencias:OcorrenciaAdminERP[];eventos:EventoAdminERP[]};
+const estadoEtapaERP=(v:string) => ({PENDENTE:"PENDENTE",DESLOCAMENTO:"EM_DESLOCAMENTO",NO_CLIENTE:"NO_LOCAL",ATENDIMENTO:"EM_ATENDIMENTO"} as Record<string,string>)[v]??"PENDENTE";
+function enriquecerOsERP(ordens:OrdemServico[],dados:PainelStatusERP):OrdemServico[]{
+ const andamentos=new Map(dados.andamentos.map(x=>[Number(x.atendimento_erp),x]));
+ const ocorrencias=new Map<number,OcorrenciaAdminERP>();
+ dados.ocorrencias.forEach(x=>{const id=Number(x.atendimento_erp);if(!ocorrencias.has(id))ocorrencias.set(id,x)});
+ const eventos=new Map<number,EventoAdminERP[]>();
+ dados.eventos.forEach(x=>{const id=Number(x.atendimento_erp);const lista=eventos.get(id)??[];lista.push(x);eventos.set(id,lista)});
+ return ordens.map(os=>{
+  const atual=andamentos.get(os.id),oc=ocorrencias.get(os.id),hist=eventos.get(os.id)??[];
+  const ativo=oc?.ativa??false;
+  const estadoFSM=(ativo?(oc?.nova_data?"PENDENTE_REAGENDAMENTO":"PENDENTE_TRATATIVA"):(atual?estadoEtapaERP(atual.etapa):"PENDENTE")) as OrdemServico["estadoFSM"];
+  const mapped=hist.map(h=>{
+   const origem=estadoEtapaERP(h.etapa_anterior);
+   const destino=h.tipo==="OCORRENCIA"?(h.nova_data?"PENDENTE_REAGENDAMENTO":"PENDENTE_TRATATIVA"):
+     h.tipo==="RETOMADA"?"EM_DESLOCAMENTO":estadoEtapaERP(h.etapa_nova);
+   const anterior=origem;
+   return {id:h.id,estadoAnterior:anterior as NonNullable<OrdemServico["estadoFSM"]>,estadoNovo:destino as NonNullable<OrdemServico["estadoFSM"]>,ocorridoEm:h.ocorrido_em,codigoTecnico:os.codigoTecnico,tecnico:os.tecnico,...(h.tipo_ocorrencia?{tipoOcorrencia:h.tipo_ocorrencia as "CLIENTE_AUSENTE"|"IMPEDIMENTO_TECNICO"|"OUTRO"}:{}),...(h.motivo?{motivo:h.motivo}:{}),...(h.nova_data?{novaData:h.nova_data}:{})};
+  });
+  return {...os,estadoFSM,historicoFSM:mapped,...(oc?{ocorrenciaFSM:{tipo:oc.tipo,motivo:oc.motivo,registradoEm:oc.criado_em}}:{}),...(ativo&&oc?.nova_data?{agendamentoFSM:{novaData:oc.nova_data,motivo:oc.motivo,registradoEm:oc.criado_em}}:{})};
+ });
+}
 const porPagina = 8;
 
 
@@ -70,17 +99,89 @@ export default function PainelOrdensServico() {
   const [selecionada, setSelecionada] = useState<number | null>(null);
   const [aba, setAba] = useState<"materiais" | "historico">("materiais");
   useEffect(() => {
-    const carregar = () => { try { const dados = carregarOrdensServico(); setLista(Array.isArray(dados) ? dados : []); setErro(""); } catch { setErro("Não foi possível carregar as ordens deste navegador."); } };
-    carregar(); const parar = ouvirOrdensServico(carregar); window.addEventListener("focus", carregar);
-    return () => { parar(); window.removeEventListener("focus", carregar); };
+    let ativo = true;
+    const carregar = async () => {
+      try {
+        const dados = await consultarOsErpV52();
+        if (!Array.isArray(dados)) throw new Error("Resposta ERP inválida");
+        const ordens: OrdemServico[] = dados.map((os: OsErpV52) => {
+          const partes = String(os.cliente ?? "").match(/^(\d+)\s*-\s*(.+)$/);
+          return {
+            id: Number(os.atendimento), codigo: String(os.atendimento),
+            tipo: String(os.servico || "SERVICO_ERP") as OrdemServico["tipo"],
+            status: "PENDENTE", codigoTecnico: String(os.tecnico),
+            tecnico: `Técnico ERP ${os.tecnico}`, base: "ERP",
+            codigoCliente: partes?.[1] ?? "", cliente: partes?.[2] ?? String(os.cliente ?? ""),
+            endereco: os.endereco ?? "", cidade: "",
+            dataPrevista: String(os.data_inicio ?? "").slice(0, 10),
+            observacao: `Protocolo: ${os.protocolo}`, materiaisPrevistos: [], itens: [],
+          };
+        });
+        ordens.sort((x,y) => (y.dataPrevista || "").localeCompare(x.dataPrevista || "") || y.id-x.id);
+        // O ERP permanece origem das OS; o WMS fornece apenas os estados e eventos operacionais.
+        let sincronizadas = ordens;
+        let avisoStatus = "";
+        try {
+          const supabase=atelSupabase();
+          if(!supabase)throw new Error("Supabase não configurado");
+          const {data:{session}}=await supabase.auth.getSession();
+          if(!session?.access_token)throw new Error("Sessão expirada");
+          const resposta=await fetch("/api/os-painel-status",{headers:{Authorization:`Bearer ${session.access_token}`},cache:"no-store"});
+          if(!resposta.ok)throw new Error("Status operacionais temporariamente indisponíveis");
+          const dados=await resposta.json() as PainelStatusERP;
+          sincronizadas=enriquecerOsERP(ordens,dados);
+        }catch { avisoStatus="Andamentos WMS não sincronizados nesta consulta. Os dados da OS permanecem do ERP."; }
+        if (ativo) { setLista(sincronizadas); setErro(avisoStatus); }
+      } catch (e) {
+        if (ativo) { setLista([]); setErro(e instanceof Error ? e.message : "Falha ao consultar ERP"); }
+      }
+    };
+    void carregar();
+    const aoFoco = () => { void carregar(); };
+    window.addEventListener("focus", aoFoco);
+    const timer=window.setInterval(()=>{if(document.visibilityState==="visible")void carregar();},15000);
+    return () => { ativo = false; window.removeEventListener("focus", aoFoco);window.clearInterval(timer); };
   }, []);
   const tecnicos = useMemo(() => [...new Set(lista.map(o => o.tecnico).filter(Boolean))].sort(), [lista]);
   const status = useMemo(() => [...new Set(lista.map(estado))].sort(), [lista]);
-  const filtradas = useMemo(() => lista.filter(o => (filtroStatus === "TODOS" || estado(o) === filtroStatus) && (filtroTecnico === "TODOS" || o.tecnico === filtroTecnico) && [o.codigo, o.cliente, o.codigoCliente, o.tecnico, o.codigoTecnico, o.cidade, estado(o)].join(" ").toLocaleLowerCase("pt-BR").includes(busca.trim().toLocaleLowerCase("pt-BR"))), [lista, busca, filtroStatus, filtroTecnico]);
+  const filtradas = useMemo(() => lista.filter(o => (filtroStatus === "TODOS" || estado(o) === filtroStatus) && (filtroTecnico === "TODOS" || o.tecnico === filtroTecnico) && [o.codigo, o.observacao, o.tipo, o.cliente, o.codigoCliente, o.tecnico, o.codigoTecnico, o.cidade, estado(o)].join(" ").toLocaleLowerCase("pt-BR").includes(busca.trim().toLocaleLowerCase("pt-BR"))), [lista, busca, filtroStatus, filtroTecnico]);
   const totalPaginas = Math.max(1, Math.ceil(filtradas.length / porPagina));
   const paginaAtual = Math.min(pagina, totalPaginas);
   const exibidas = filtradas.slice((paginaAtual - 1) * porPagina, paginaAtual * porPagina);
-  const ordem = selecionada === null ? null : lista.find(o => o.id === selecionada) ?? null;
+  // A seleção deve pertencer ao resultado filtrado e à página visível.
+  // Se a pesquisa excluir a OS selecionada, o detalhe acompanha o primeiro card visível.
+  const ordem = exibidas.find(o => o.id === selecionada) ?? exibidas[0] ?? null;
+  const [rascunho, setRascunho] = useState<RascunhoV525 | null>(null);
+  const [erroMateriais, setErroMateriais] = useState("");
+  const [carregandoMateriais, setCarregandoMateriais] = useState(false);
+  const [revisaoMateriais, setRevisaoMateriais] = useState(0);
+  useEffect(() => {
+    const atendimento = ordem?.id ?? null;
+    if (!atendimento) { setRascunho(null); setErroMateriais(""); return; }
+    let ativo = true;
+    const consultar = async () => {
+      try {
+        if (ativo) setCarregandoMateriais(true);
+        const supabase = atelSupabase();
+        if (!supabase) throw new Error("Supabase não configurado.");
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session?.access_token) throw new Error("Sessão expirada. Faça login novamente.");
+        const response = await fetch(`/api/os-materiais?atendimento=${atendimento}`, {
+          headers: { Authorization: `Bearer ${session.access_token}` }, cache: "no-store"
+        });
+        const payload = await response.json() as RascunhoV525 & { error?: string };
+        if (!response.ok) throw new Error(payload.error || "Falha ao consultar materiais.");
+        if (ativo) { setRascunho(payload); setErroMateriais(""); }
+      } catch (e) {
+        if (ativo) { setRascunho(null); setErroMateriais(e instanceof Error ? e.message : "Erro de consulta."); }
+      } finally { if (ativo) setCarregandoMateriais(false); }
+    };
+    setRascunho(null);
+    void consultar();
+    const interval = setInterval(() => { if (document.visibilityState === "visible") void consultar(); }, 15000);
+    return () => { ativo = false; clearInterval(interval); };
+  }, [ordem?.id, revisaoMateriais]);
+
   const contagem = (fn: (o: OrdemServico) => boolean) => lista.filter(fn).length;
   const indicadores = [
     { nome: "Total de OS", valor: lista.length, cor: "azul" },
@@ -91,19 +192,34 @@ export default function PainelOrdensServico() {
     { nome: "Finalizadas", valor: contagem(o => estado(o) === "FINALIZADA"), cor: "turquesa" },
   ];
   return <main className={styles.root}>
-    <header className={styles.heading}><div><span className={styles.eyebrow}>EXPEDIÇÕES / GESTÃO OS</span><h1>Gestão de Ordens de Serviço</h1><p>Acompanhamento dos atendimentos, materiais e histórico técnico.</p></div><span className={styles.readonly}>Consulta operacional · dados locais</span></header>
+    <header className={styles.heading}><div><span className={styles.eyebrow}>EXPEDIÇÕES / GESTÃO OS</span><h1>Gestão de Ordens de Serviço</h1><p>Acompanhamento dos atendimentos, materiais e histórico técnico.</p></div><span className={styles.readonly}>Consulta ERP · homologação</span></header>
     <section className={styles.kpis} aria-label="Indicadores de ordens de serviço">{indicadores.map(i=><div className={styles.kpi} key={i.nome}><div className={`${styles.kpiHead} ${styles[i.cor]}`}>{i.nome}</div><div className={styles.kpiBody}><strong>{i.valor}</strong><span>{lista.length ? Math.round(i.valor / lista.length * 100) : 0}% do total</span></div></div>)}</section>
     <section className={styles.toolbar}><div><strong>Acompanhamento de Ordens de Serviço</strong><small>{filtradas.length} de {lista.length} OS</small></div><div className={styles.filters}><input aria-label="Pesquisar OS" value={busca} onChange={e=>{setBusca(e.target.value);setPagina(1)}} placeholder="Pesquisar OS, cliente, técnico..."/><select aria-label="Filtrar status" value={filtroStatus} onChange={e=>{setFiltroStatus(e.target.value);setPagina(1)}}><option value="TODOS">Todos os status</option>{status.map(x=><option key={x} value={x}>{rotulo(x)}</option>)}</select><select aria-label="Filtrar técnico" value={filtroTecnico} onChange={e=>{setFiltroTecnico(e.target.value);setPagina(1)}}><option value="TODOS">Todos os técnicos</option>{tecnicos.map(x=><option key={x} value={x}>{x}</option>)}</select><button onClick={()=>{setBusca("");setFiltroStatus("TODOS");setFiltroTecnico("TODOS");setPagina(1)}}>Limpar</button></div></section>
     {erro && <p role="alert" className={styles.error}>{erro}</p>}
     <div className={styles.workspace}>
-      <div className={styles.listPane}><div className={styles.paneTitle}>Ordens de serviço <span>{filtradas.length}</span></div><div className={styles.osList}>{exibidas.map(o=><button key={o.id} onClick={()=>{setSelecionada(o.id);setAba("materiais")}} className={`${styles.osCard} ${ordem?.id===o.id?styles.selected:""}`} aria-pressed={ordem?.id===o.id}><div className={styles.osTop}><strong>{o.codigo}</strong><span className={`${styles.state} ${styles[estado(o).toLowerCase()] ?? ""}`}>{rotulo(estado(o))}</span></div><div className={styles.client}>{o.cliente}</div><div className={styles.osMeta}><span>Cliente: {o.codigoCliente}</span><span>Tipo: {rotulo(o.tipo)}</span><span>Técnico: {o.tecnico}</span><span>Data: {dataBR(prevista(o))}</span><span>Base: {o.base} · {o.codigoTecnico}</span></div></button>)}{!exibidas.length&&<div className={styles.empty}>Nenhuma OS encontrada.</div>}</div><footer className={styles.pager}><button disabled={paginaAtual<=1} onClick={()=>setPagina(p=>p-1)}>‹</button><span>{paginaAtual} / {totalPaginas}</span><button disabled={paginaAtual>=totalPaginas} onClick={()=>setPagina(p=>p+1)}>›</button></footer></div>
-      <section className={styles.detailPane} aria-label="Detalhamento da ordem de serviço">{ordem?<><div className={styles.detailHead}><div><span>ORDEM DE SERVIÇO</span><h2>{ordem.codigo}</h2><p>{ordem.cliente} · {ordem.cidade}</p></div><div className={styles.detailActions}><span className={`${styles.state} ${styles[estado(ordem).toLowerCase()]??""}`}>{rotulo(estado(ordem))}</span></div></div><div className={styles.infoGrid}><div><small>Técnico responsável</small><strong>{ordem.tecnico}</strong><span>{ordem.codigoTecnico} · {ordem.base}</span></div><div><small>Tipo de serviço</small><strong>{rotulo(ordem.tipo)}</strong><span>Prevista: {dataBR(prevista(ordem))}</span></div><div><small>Endereço</small><strong>{ordem.endereco || "Não informado"}</strong><span>{ordem.cidade}</span></div></div>
+      <div className={styles.listPane}><div className={styles.paneTitle}>Ordens de serviço <span>{filtradas.length}</span></div><div className={styles.osList}>{exibidas.map(o=><button key={o.id} onClick={()=>{setSelecionada(o.id);setAba("materiais")}} className={`${styles.osCard} ${ordem?.id===o.id?styles.selected:""}`} aria-pressed={ordem?.id===o.id}><div className={styles.osTop}><strong>OS nº {o.codigo}</strong><span className={`${styles.state} ${styles[estado(o).toLowerCase()] ?? ""}`}>{rotulo(estado(o))}</span></div><div className={styles.client}>{o.cliente}</div><div className={styles.osMeta}><span>{o.observacao}</span><span>Cliente: {o.codigoCliente}</span><span>Tipo: {rotulo(o.tipo)}</span><span>Técnico: {o.tecnico}</span><span>Data: {dataBR(prevista(o))}</span><span>Base: {o.base} · {o.codigoTecnico}</span></div></button>)}{!exibidas.length&&<div className={styles.empty}>Nenhuma OS encontrada.</div>}</div><footer className={styles.pager}><button disabled={paginaAtual<=1} onClick={()=>setPagina(p=>p-1)}>‹</button><span>{paginaAtual} / {totalPaginas}</span><button disabled={paginaAtual>=totalPaginas} onClick={()=>setPagina(p=>p+1)}>›</button></footer></div>
+      <section className={styles.detailPane} aria-label="Detalhamento da ordem de serviço">{ordem?<><div className={styles.detailHead}><div><span>ORDEM DE SERVIÇO</span><h2>OS nº {ordem.codigo}</h2><p>{ordem.cliente} · {ordem.observacao}</p></div><div className={styles.detailActions}><span className={`${styles.state} ${styles[estado(ordem).toLowerCase()]??""}`}>{rotulo(estado(ordem))}</span></div></div><div className={styles.infoGrid}><div><small>Técnico responsável</small><strong>{ordem.tecnico}</strong><span>{ordem.codigoTecnico} · {ordem.base}</span></div><div><small>Tipo de serviço</small><strong>{rotulo(ordem.tipo)}</strong><span>Prevista: {dataBR(prevista(ordem))}</span></div><div><small>Endereço</small><strong>{ordem.endereco || "Não informado"}</strong><span>{ordem.cidade}</span></div></div>
       
       <nav className={styles.tabs} aria-label="Informações da OS"><button className={aba==="materiais"?styles.active:""} onClick={()=>setAba("materiais")}>Materiais e quantidades</button><button className={aba==="historico"?styles.active:""} onClick={()=>setAba("historico")}>Histórico operacional ({ordem.historicoFSM?.length??0})</button></nav>
-      {aba==="materiais"?<><div className={styles.summary}><div><small>Itens previstos</small><strong>{ordem.materiaisPrevistos?.length??0}</strong></div><div><small>Conferidos</small><strong>{ordem.materiaisPrevistos?.filter(m=>m.statusConferencia!=="PENDENTE").length??0}</strong></div><div><small>Itens utilizados</small><strong>{ordem.itens?.length??0}</strong></div><div><small>Quantidade utilizada</small><strong>{ordem.itens?.reduce((a,i)=>a+i.quantidade,0)??0}</strong></div></div><div className={styles.tableWrap}><table><thead><tr><th>STATUS</th><th>CÓDIGO</th><th>DESCRIÇÃO DO PRODUTO</th><th>UND</th><th>PREVISTO</th><th>CONFERIDO</th><th>UTILIZADO</th><th>DESTINO</th></tr></thead><tbody>{Array.from(new Set([...(ordem.materiaisPrevistos??[]).map(m=>m.codigoProduto),...(ordem.itens??[]).map(i=>i.codigoProduto)])).map(c=>{const m=ordem.materiaisPrevistos?.find(x=>x.codigoProduto===c);const usos=ordem.itens?.filter(x=>x.codigoProduto===c)??[];const usado=usos.reduce((n,x)=>n+x.quantidade,0);return <tr key={c}><td><span className={`${styles.dot} ${m?.statusConferencia==="OK"?styles.dotOk:m?.statusConferencia==="DIVERGENCIA"?styles.dotWarn:""}`}/></td><td><strong>{c}</strong></td><td>{m?.produto??usos[0]?.produto??"—"}</td><td>{m?.unidade??usos[0]?.unidade??"—"}</td><td>{m?.quantidade??0}</td><td>{m?.statusConferencia?rotulo(m.statusConferencia):"—"}</td><td>{usado}</td><td>{[...new Set(usos.map(x=>x.destino))].join(", ")||"—"}</td></tr>})}{!(ordem.materiaisPrevistos?.length||ordem.itens?.length)&&<tr><td colSpan={8} className={styles.empty}>Nenhum material registrado nesta OS.</td></tr>}</tbody></table></div></>:<div className={styles.timeline}>{ordem.historicoFSM?.length?[...ordem.historicoFSM].reverse().map((h,i)=><article key={h.id||i}><div className={styles.timelineDot}/><div><strong>{rotulo(h.estadoAnterior)} → {rotulo(h.estadoNovo)}</strong><small>{dataHora(h.ocorridoEm)} · {h.tecnico}</small>{h.tipoOcorrencia&&<p>Ocorrência: {rotulo(h.tipoOcorrencia)}</p>}{h.motivo&&<p>Motivo: {h.motivo}</p>}{h.observacao&&<p>{h.observacao}</p>}{h.novaData&&<p>Nova data: {dataBR(h.novaData)}</p>}</div></article>):<div className={styles.empty}>Nenhum evento FSM registrado.</div>}</div>}
+      {aba==="materiais"?<>
+      <div className={styles.summary}>
+        <div><small>Produtos apontados</small><strong>{rascunho?.itens.length ?? 0}</strong></div>
+        <div><small>Quantidade apontada</small><strong>{rascunho?.itens.reduce((a, i) => a + Number(i.quantidade || 0), 0) ?? 0}</strong></div>
+        <div><small>Versão do rascunho</small><strong>{rascunho?.versao ?? 0}</strong></div>
+        <div><small>Baixa de estoque</small><strong>Não realizada</strong></div>
+      </div>
+
+      {erroMateriais && <p role="alert" className={styles.error}>{erroMateriais}</p>}
+      <div className={styles.tableWrap}><table><thead><tr><th>STATUS</th><th>CÓDIGO</th><th>DESCRIÇÃO DO PRODUTO</th><th>UND</th><th>QUANTIDADE APONTADA</th><th>PATRIMÔNIO</th><th>MAC</th><th>BAIXA</th></tr></thead>
+      <tbody>{(rascunho?.itens ?? []).map((item, i) => <tr key={`${item.cod_produto}-${item.patrimonio ?? ""}-${item.mac ?? ""}-${i}`}>
+        <td>Rascunho</td><td><strong>{item.cod_produto}</strong></td><td>{item.produto || "Produto ERP"}</td><td>{item.unidade || "—"}</td><td>{item.quantidade}</td><td>{item.patrimonio ?? "—"}</td><td>{item.mac ?? "—"}</td><td>Não</td>
+      </tr>)}
+      {!rascunho?.itens.length && <tr><td colSpan={8} className={styles.empty}>{carregandoMateriais ? "Consultando..." : erroMateriais ? "Não foi possível consultar os apontamentos." : "Nenhum material apontado nesta OS."}</td></tr>}
+      </tbody></table></div>
+      </>:<div className={styles.timeline}>{ordem.historicoFSM?.length?[...ordem.historicoFSM].reverse().map((h,i)=><article key={h.id||i}><div className={styles.timelineDot}/><div><strong>{rotulo(h.estadoAnterior)} → {rotulo(h.estadoNovo)}</strong><small>{dataHora(h.ocorridoEm)} · {h.tecnico}</small>{h.tipoOcorrencia&&<p>Ocorrência: {rotulo(h.tipoOcorrencia)}</p>}{h.motivo&&<p>Motivo: {h.motivo}</p>}{h.observacao&&<p>{h.observacao}</p>}{h.novaData&&<p>Nova data: {dataBR(h.novaData)}</p>}</div></article>):<div className={styles.empty}>Nenhum evento FSM registrado.</div>}</div>}
       <FluxoTecnico ordem={ordem} />
       </>:<div className={styles.placeholder}><div className={styles.placeholderIcon}>▤</div><h2>Selecione uma ordem de serviço</h2><p>Escolha um cartão à esquerda para consultar os materiais, as quantidades e o histórico do atendimento.</p></div>}</section>
     </div>
-    <div className={styles.footnote}>Dados desta demonstração são armazenados no navegador. A consulta não altera OS, materiais ou estoque.</div>
+    <div className={styles.footnote}>Ordens obtidas do ERP. Etapas e histórico operacional sincronizados com o WMS quando disponíveis; nenhuma baixa de estoque ocorre neste painel.</div>
   </main>;
 }

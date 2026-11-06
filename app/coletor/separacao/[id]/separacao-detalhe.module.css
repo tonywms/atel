@@ -1,0 +1,56 @@
+/* V44 - UI polish, scoped to separation detail */
+.header { min-height:62px !important; padding:0 16px !important; background:linear-gradient(110deg,#087ba4,#1195b7) !important; }
+.header button { width:34px !important; height:38px !important; margin-right:7px !important; display:flex; align-items:center; justify-content:center; border-radius:9px; }
+.header strong { font-size:19px !important; letter-spacing:-.35px; }
+.summary { padding:12px 14px !important; border-bottom:1px solid #dceaf3 !important; box-shadow:none !important; }
+.summary > div:first-child { grid-template-columns:1.15fr .75fr 1fr !important; gap:6px !important; font-size:12px !important; line-height:1.4 !important; }
+.summary > div:first-child > div { min-width:0; }
+.summary > div:first-child strong { display:block; font-size:10px; color:#66849a; text-transform:uppercase; letter-spacing:.3px; }
+.summary > div:last-child { margin-top:8px !important; padding-top:8px; border-top:1px solid #e8f0f6; font-size:12px !important; }
+.summary > div:last-child strong { color:#66849a; }
+.content { padding:12px 12px 16px !important; }
+.card { padding:15px 13px 16px !important; margin-bottom:12px !important; border:1px solid #d2e6f2 !important; border-radius:15px !important; box-shadow:0 3px 14px rgba(19,80,112,.05); background:#fff !important; }
+.card > div:first-child strong { font-size:17px !important; letter-spacing:-.4px; }
+.card > div:first-child button { width:39px !important; height:39px !important; display:inline-flex; align-items:center; justify-content:center; }
+.addressGrid { gap:8px !important; margin-top:12px !important; grid-template-columns:repeat(4,minmax(0,1fr)) !important; }
+.addressGrid > div { box-sizing:border-box !important; width:100% !important; min-width:0 !important; max-width:100% !important; height:76px !important; min-height:76px !important; padding:8px !important; border-radius:11px !important; display:flex; flex-direction:column; justify-content:space-between; }
+.addressGrid > div > :first-child { font-size:13px !important; line-height:1.2 !important; }
+.addressGrid > div > :last-child { font-size:20px !important; line-height:1.2 !important; text-align:center; }
+.card input { min-width:0; }
+.card button:active { transform:scale(.98); }
+.footer { height:70px !important; flex:0 0 70px !important; padding:10px 12px !important; gap:10px !important; background:#fff !important; border-top:1px solid #dce8f1; grid-template-columns:1fr 48px 1fr !important; }
+.footer > button { display:flex; align-items:center; justify-content:center; gap:8px; height:46px !important; border-radius:11px !important; font-size:15px !important; font-weight:700; }
+.footer > div { width:48px !important; height:48px !important; margin-top:0 !important; border:1px solid #dce8f1; }
+@media(max-width:440px){.screen{padding:0 !important}.phone{width:100% !important;max-width:100% !important;height:100dvh !important;min-height:100dvh !important}}
+
+
+/* V45 - Controles de ação perfeitamente circulares, sem deformação por flexbox */
+.card > div:first-child { min-width:0; display:flex; align-items:center; justify-content:space-between; gap:8px; }
+.card > div:first-child > strong { min-width:0; flex:1 1 auto; line-height:1.22; }
+.card > div:first-child > div { display:flex !important; align-items:center !important; gap:8px !important; flex:0 0 auto !important; width:auto !important; min-width:max-content !important; }
+.card > div:first-child button,
+.card > div:first-child > div > button {
+  box-sizing:border-box !important;
+  width:40px !important;
+  height:40px !important;
+  min-width:40px !important;
+  min-height:40px !important;
+  max-width:40px !important;
+  max-height:40px !important;
+  flex:0 0 40px !important;
+  flex-shrink:0 !important;
+  aspect-ratio:1 / 1 !important;
+  border-radius:50% !important;
+  padding:0 !important;
+  margin:0 !important;
+  display:inline-flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  line-height:1 !important;
+  overflow:hidden !important;
+  vertical-align:middle !important;
+}
+.card > div:first-child button svg { width:19px !important; height:19px !important; flex-shrink:0; }
+@media(max-width:370px){
+  .card > div:first-child button,.card > div:first-child > div > button {width:36px !important;height:36px !important;min-width:36px !important;min-height:36px !important;max-width:36px !important;max-height:36px !important;flex-basis:36px !important;}
+}

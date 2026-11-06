@@ -1,5 +1,7 @@
 "use client";
 
+import styles from "./conferencia.module.css";
+
 import {
   useEffect,
   useMemo,
@@ -436,18 +438,18 @@ export default function ConferenciaListaPage() {
   }
 
   return (
-    <div className="collector-screen">
-      <div className="collector-phone">
+    <div className={`collector-screen ${styles.screen}`}>
+      <div className={`collector-phone ${styles.phone}`}>
 
         {/* =================================================
             CABEÇALHO
         ================================================= */}
 
-        <div className="collector-header">
-          <div className="collector-header-title">
+        <div className={`collector-header ${styles.header}`}>
+          <div className={`collector-header-title ${styles.headerTitle}`}>
             <button
               type="button"
-              className="collector-back-button"
+              className={`collector-back-button ${styles.backButton}`}
               onClick={() =>
                 router.push(
                   "/coletor/expedicoes"
@@ -455,11 +457,11 @@ export default function ConferenciaListaPage() {
               }
               aria-label="Voltar"
             >
-              ‹
+              <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M19 12H5"/><path d="m12 19-7-7 7-7"/></svg>
             </button>
 
             <strong>
-              Ordens - Conferência
+              Conferência
             </strong>
           </div>
         </div>
@@ -468,11 +470,9 @@ export default function ConferenciaListaPage() {
             PESQUISA
         ================================================= */}
 
-        <div className="collector-search-area">
-          <div className="collector-search-box">
-            <span>
-              ⌕
-            </span>
+        <div className={`collector-search-area ${styles.searchArea}`}>
+          <div className={`collector-search-box ${styles.searchBox}`}>
+            <span className={styles.searchIcon}><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><circle cx="10.8" cy="10.8" r="6.8"/><path d="m16 16 5 5"/></svg></span>
 
             <input
               value={busca}
@@ -490,23 +490,15 @@ export default function ConferenciaListaPage() {
             LISTA
         ================================================= */}
 
-        <div className="collector-request-list">
+        <div className={`collector-request-list ${styles.requestList}`}>
 
           {filtradas.length === 0 && (
-            <div
-              style={{
-                padding: "32px 20px",
-
-                textAlign: "center",
-
-                color: "#64748b",
-
-                fontSize: 13,
-                fontWeight: 600,
-              }}
-            >
-              Nenhuma ordem aguardando
-              conferência.
+            <div className={styles.emptyState} role="status">
+              <div className={styles.emptyIcon} aria-hidden="true">
+                <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><rect x="4" y="4" width="16" height="16" rx="4"/><path d="m8 12 2.5 2.5L16 9"/></svg>
+              </div>
+              <strong>Nenhuma ordem aguardando conferência</strong>
+              <span>As ordens separadas aparecerão aqui quando estiverem disponíveis.</span>
             </div>
           )}
 
@@ -735,7 +727,7 @@ export default function ConferenciaListaPage() {
             RODAPÉ
         ================================================= */}
 
-        <div className="collector-bottom-info">
+        <div className={`collector-bottom-info ${styles.footer}`}>
           {filtradas.length}{" "}
           {filtradas.length === 1
             ? "ordem disponível"

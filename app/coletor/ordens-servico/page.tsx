@@ -1,4 +1,7 @@
-﻿"use client";
+"use client";
+
+import "./atel-v47.css";
+import { consultarOsErpV52, type OsErpV52 } from "@/lib/erpOperacionalV52";
 
 import {
   useEffect,
@@ -517,19 +520,40 @@ export default function OrdensServicoPage() {
 
   const [busca, setBusca] = useState("");
   const [ordens, setOrdens] = useState<OrdemServico[]>([]);
+  const [erroERP, setErroERP] = useState("");
+  const [carregandoERP, setCarregandoERP] = useState(true);
 
   /* =======================================================
      CARREGAR
   ======================================================= */
 
-  function carregar() {
-    setOrdens(carregarOrdensServico());
-  }
-
   useEffect(() => {
-    carregar();
-
-    return ouvirOrdensServico(carregar);
+    let ativo = true;
+    consultarOsErpV52().then((lista) => {
+      if (!ativo) return;
+      if (!Array.isArray(lista)) throw new Error("Formato de OS invalido");
+      const convertidas: OrdemServico[] = lista.map((os: OsErpV52) => {
+        const partes = String(os.cliente ?? "").match(/^(\d+)\s*-\s*(.+)$/);
+        return {
+          id: Number(os.atendimento), codigo: String(os.protocolo || os.atendimento),
+          tipo: String(os.servico || "SERVICO_ERP") as OrdemServico["tipo"],
+          status: "PENDENTE", codigoTecnico: String(os.tecnico), tecnico: `Tecnico ERP ${os.tecnico}`,
+          base: "ERP", codigoCliente: partes?.[1] ?? "", cliente: partes?.[2] ?? String(os.cliente ?? ""),
+          endereco: os.endereco ?? "", cidade: "", dataPrevista: String(os.data_inicio ?? "").slice(0, 10),
+          observacao: String(os.servico ?? ""), materiaisPrevistos: [], itens: [],
+        };
+      });
+      setOrdens(convertidas.sort((a, b) => {
+        const data = String(b.dataPrevista ?? "").localeCompare(String(a.dataPrevista ?? ""));
+        return data || b.id - a.id;
+      }));
+      setErroERP("");
+    }).catch((e: unknown) => {
+      if (!ativo) return;
+      setOrdens([]); // Falha ERP nao deve exibir OS ficticias.
+      setErroERP(e instanceof Error ? e.message : "Falha na consulta ERP");
+    }).finally(() => { if (ativo) setCarregandoERP(false); });
+    return () => { ativo = false; };
   }, []);
 
   /* =======================================================
@@ -551,6 +575,7 @@ export default function OrdensServicoPage() {
 
     return ativas.filter((ordem) => {
       const campos = [
+        String(ordem.id),
         ordem.codigo,
         ordem.cliente,
         ordem.codigoCliente,
@@ -606,9 +631,7 @@ export default function OrdensServicoPage() {
   ======================================================= */
 
   function abrirOrdem(ordem: OrdemServico) {
-    router.push(
-      `/coletor/ordens-servico/${ordem.id}`
-    );
+    router.push(`/coletor/ordens-servico/${ordem.id}?origem=erp`);
   }
 
   /* =======================================================
@@ -616,7 +639,7 @@ export default function OrdensServicoPage() {
   ======================================================= */
 
   return (
-    <div className="collector-screen">
+    <div className="collector-screen atel-v47-screen atel-v47-ordens-servico">
       <div
         className="collector-phone"
         style={phoneStyle}
@@ -637,9 +660,7 @@ export default function OrdensServicoPage() {
                 router.push("/coletor/expedicoes")
               }
               aria-label="Voltar"
-            >
-              ‹
-            </button>
+            ><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M19 12H5"/><path d="m12 19-7-7 7-7"/></svg></button>
 
             <strong>
               Ordens de Serviço
@@ -656,9 +677,7 @@ export default function OrdensServicoPage() {
           style={searchAreaStyle}
         >
           <div style={searchBoxStyle}>
-            <span style={searchIconStyle}>
-              ⌕
-            </span>
+            <span style={searchIconStyle}><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg></span>
 
             <input
               value={busca}
@@ -679,7 +698,9 @@ export default function OrdensServicoPage() {
           className="collector-request-list"
           style={listStyle}
         >
-          {filtradas.length === 0 && (
+          {carregandoERP && <div style={emptyStyle}>Consultando ordens de servico no ERP...</div>}
+          {erroERP && <div role="alert" style={emptyStyle}>ERP indisponivel: {erroERP}. Nenhuma OS demonstrativa foi carregada.</div>}
+          {!carregandoERP && !erroERP && filtradas.length === 0 && (
             <div style={emptyStyle}>
               Nenhuma ordem de serviço encontrada.
             </div>
@@ -719,8 +740,11 @@ export default function OrdensServicoPage() {
                       </div>
 
                       <strong style={codigoStyle}>
-                        {ordem.codigo}
+                        OS nº {ordem.id}
                       </strong>
+                      <div style={{ fontSize: 10, color: "#64748b", marginTop: 3, overflowWrap: "anywhere" }}>
+                        Protocolo: {ordem.codigo}
+                      </div>
                     </div>
 
                     <span

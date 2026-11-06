@@ -239,28 +239,60 @@ export default function SeparacaoListaPage() {
 
         <div
           className="collector-header"
-          style={headerStyle}
+          style={{
+            ...headerStyle,
+            width: "100%",
+            boxSizing: "border-box",
+            padding: "0 18px",
+            minHeight: 66,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "flex-start",
+          }}
         >
-          <div className="collector-header-title">
+          <div
+            className="collector-header-title"
+            style={{
+              width: "100%",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "flex-start",
+              gap: 12,
+              margin: 0,
+              padding: 0,
+            }}
+          >
             <button
               type="button"
               className="collector-back-button"
-              onClick={() => {
-                console.log("VOLTAR SEPARAÇÃO -> /coletor/expedicoes");
-                window.location.href = "/coletor/expedicoes";
-                }}
-              aria-label="Voltar"
+              onClick={() => { window.location.href = "/coletor/expedicoes"; }}
+              aria-label="Voltar para Expedição"
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                justifyContent: "center",
+                flex: "0 0 24px",
+                width: 24,
+                height: 32,
+                margin: 0,
+                padding: 0,
+                border: 0,
+                background: "transparent",
+                color: "#ffffff",
+                cursor: "pointer",
+              }}
             >
-              ‹
+              <svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <path d="M19 12H5M12 19l-7-7 7-7" />
+              </svg>
             </button>
-
-            <strong>
+            <strong style={{ margin: 0, color: "#ffffff", fontSize: 21, lineHeight: 1.2, fontWeight: 700, textAlign: "left" }}>
               Ordens - Separação
             </strong>
           </div>
         </div>
 
-        {/* =================================================
+{/* =================================================
             PESQUISA
         ================================================= */}
 

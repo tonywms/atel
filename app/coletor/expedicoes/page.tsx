@@ -1,5 +1,7 @@
 "use client";
 
+import styles from "./expedicoes.module.css";
+
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
@@ -136,370 +138,46 @@ export default function ColetorExpedicaoPage() {
   }, []);
 
   return (
-    <div className="collector-screen">
-      <div className="collector-phone">
-
-        {/* =====================================================
-            BARRA SUPERIOR
-        ===================================================== */}
-
-        <div
-          style={{
-            height: 40,
-            background: "#000",
-          }}
-        />
-
-        {/* =====================================================
-            CABEÇALHO
-        ===================================================== */}
-
-        <div
-          className="collector-header"
-          style={{
-            position: "relative",
-            justifyContent: "center",
-          }}
-        >
-          {/* SETA À ESQUERDA */}
-          <button
-            type="button"
-            className="collector-back-button"
-            onClick={() =>
-              router.push("/coletor")
-            }
-            aria-label="Voltar"
-            style={{
-              position: "absolute",
-              left: 14,
-              top: "50%",
-              transform: "translateY(-50%)",
-              margin: 0,
-              zIndex: 2,
-            }}
-          >
-            ‹
+    <main className={styles.screen}>
+      <section className={styles.phone} aria-label="Coletor - Expedição">
+        <header className={styles.header}>
+          <button type="button" className={styles.back} onClick={() => router.push("/coletor")} aria-label="Voltar ao menu do coletor">
+            <svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
           </button>
-
-          {/* TÍTULO CENTRALIZADO */}
-          <div
-            className="collector-header-title"
-            style={{
-              width: "100%",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              textAlign: "center",
-            }}
-          >
-            <strong>Expedição</strong>
-          </div>
-        </div>
-
-        {/* =====================================================
-            MENU
-        ===================================================== */}
-
-        <div style={menuContainerStyle}>
-
-          {/* SEPARAÇÃO */}
-
-          <button
-            type="button"
-            onClick={() =>
-              router.push(
-                "/coletor/separacao"
-              )
-            }
-            style={menuStyle}
-          >
-            <span style={iconeStyle}>
-              ↗
-            </span>
-
-            <span style={textoStyle}>
-              Separação
-            </span>
-
-            <span style={contadorStyle}>
-              {contadores.separacao}
-            </span>
-
-            <span style={menuIconStyle}>
-              ☷
-            </span>
-          </button>
-
-          {/* CONFERÊNCIA */}
-
-          <button
-            type="button"
-            onClick={() =>
-              router.push(
-                "/coletor/conferencia"
-              )
-            }
-            style={menuStyle}
-          >
-            <span style={iconeStyle}>
-              ▣
-            </span>
-
-            <span style={textoStyle}>
-              Conferência
-            </span>
-
-            <span style={contadorStyle}>
-              {contadores.conferencia}
-            </span>
-
-            <span style={menuIconStyle}>
-              ☷
-            </span>
-          </button>
-
-          {/* EMBARQUE */}
-
-          <button
-            type="button"
-            onClick={() =>
-              router.push(
-                "/coletor/embarque"
-              )
-            }
-            style={menuStyle}
-          >
-            <span style={iconeStyle}>
-              ▤
-            </span>
-
-            <span style={textoStyle}>
-              Embarque
-            </span>
-
-            <span style={contadorStyle}>
-              {contadores.embarque}
-            </span>
-
-            <span style={menuIconStyle}>
-              ☷
-            </span>
-          </button>
-
-          {/* RECEBIMENTO */}
-
-          <button
-            type="button"
-            onClick={() =>
-              router.push(
-                "/coletor/recebimento"
-              )
-            }
-            style={menuStyle}
-          >
-            <span style={iconeStyle}>
-              ✓
-            </span>
-
-            <span style={textoStyle}>
-              Recebimento
-            </span>
-
-            <span style={contadorStyle}>
-              {contadores.recebimento}
-            </span>
-
-            <span style={menuIconStyle}>
-              ☷
-            </span>
-          </button>
-
-          {/* RETORNOS */}
-
-          <button
-            type="button"
-            onClick={() =>
-              router.push(
-                "/coletor/retornos"
-              )
-            }
-            style={menuStyle}
-          >
-            <span style={iconeStyle}>
-              ↩
-            </span>
-
-            <span style={textoStyle}>
-              Retornos ao CD
-            </span>
-
-            <span style={contadorStyle}>
-              {contadores.retornos}
-            </span>
-
-            <span style={menuIconStyle}>
-              ☷
-            </span>
-          </button>
-
-          {/* ORDENS DE SERVIÇO */}
-
-          <button
-            type="button"
-            onClick={() =>
-              router.push(
-                "/coletor/ordens-servico"
-              )
-            }
-            style={menuStyle}
-          >
-            <span style={iconeStyle}>
-              ⛭
-            </span>
-
-            <span style={textoStyle}>
-              Ordens de Serviço
-            </span>
-
-            <span style={contadorStyle}>
-              {
-                contadores.ordensServico
-              }
-            </span>
-
-            <span style={menuIconStyle}>
-              ☷
-            </span>
-          </button>
-        </div>
-
-        {/* =====================================================
-            BARRA INFERIOR
-        ===================================================== */}
-
-        <div
-          style={{
-            height: 36,
-            background: "#000",
-          }}
-        />
-      </div>
-    </div>
+          <h1>Expedição</h1>
+        </header>
+        <nav className={styles.content} aria-label="Rotinas de expedição">
+          {([
+            { label: "Separação", href: "/coletor/separacao", count: contadores.separacao, icon: "↗" },
+            { label: "Conferência", href: "/coletor/conferencia", count: contadores.conferencia, icon: "▣" },
+            { label: "Embarque", href: "/coletor/embarque", count: contadores.embarque, icon: "▤" },
+            { label: "Recebimento", href: "/coletor/recebimento", count: contadores.recebimento, icon: "✓" },
+            { label: "Retornos ao CD", href: "/coletor/retornos", count: contadores.retornos, icon: "↩" },
+            { label: "Ordens de Serviço", href: "/coletor/ordens-servico", count: contadores.ordensServico, icon: "⚙" },
+          ] as const).map((item) => (
+            <button key={item.href} type="button" className={styles.card} onClick={() => router.push(item.href)}>
+              <span className={styles.icon} aria-hidden="true"><IconeExpedicao rota={item.href} /></span>
+              <span className={styles.name}>{item.label}</span>
+              <span className={styles.counter} aria-label={`${item.count} registros`}>{item.count}</span>
+            </button>
+          ))}
+        </nav>
+        <div className={styles.androidNav} aria-hidden="true"><span className={styles.androidBack}/><span className={styles.androidHome}/><span className={styles.androidRecent}/></div>
+      </section>
+    </main>
   );
 }
 
-/* =========================================================
-   ESTILOS
-========================================================= */
-
-const menuContainerStyle: React.CSSProperties = {
-  flex: 1,
-
-  display: "flex",
-  flexDirection: "column",
-
-  justifyContent: "center",
-
-  gap: 12,
-
-  padding: "18px 14px",
-
-  background: "#f4f4f4",
-
-  overflowY: "auto",
-};
-
-const menuStyle: React.CSSProperties = {
-  position: "relative",
-
-  minHeight: 68,
-
-  borderWidth: 1,
-  borderStyle: "solid",
-  borderColor: "#1687b0",
-
-  borderRadius: 7,
-
-  background: "#fff",
-
-  display: "grid",
-
-  gridTemplateColumns:
-    "48px 1fr auto",
-
-  gridTemplateRows: "1fr",
-
-  alignItems: "center",
-
-  gap: 8,
-
-  padding: "9px 12px",
-
-  boxShadow:
-    "0 2px 4px rgba(0,0,0,.15)",
-
-  cursor: "pointer",
-
-  textAlign: "left",
-};
-
-const iconeStyle: React.CSSProperties = {
-  width: 34,
-  height: 34,
-
-  borderRadius: "50%",
-
-  background: "#d9f3fb",
-
-  color: "#1287ae",
-
-  display: "grid",
-
-  placeItems: "center",
-
-  fontSize: 20,
-
-  fontWeight: 700,
-};
-
-const textoStyle: React.CSSProperties = {
-  fontSize: 16,
-
-  color: "#333",
-};
-
-const contadorStyle: React.CSSProperties = {
-  alignSelf: "start",
-
-  background: "#1287ae",
-
-  color: "#fff",
-
-  borderRadius: 5,
-
-  minWidth: 32,
-
-  height: 26,
-
-  padding: "0 7px",
-
-  display: "grid",
-
-  placeItems: "center",
-
-  fontSize: 12,
-
-  fontWeight: 700,
-};
-
-const menuIconStyle: React.CSSProperties = {
-  position: "absolute",
-
-  right: 18,
-
-  bottom: 8,
-
-  color: "#1287ae",
-
-  fontSize: 12,
-};
+function IconeExpedicao({ rota }: { rota: string }) {
+  let desenho;
+  switch (rota) {
+    case "/coletor/separacao": desenho = <><path d="M4 7h10m-4-4 4 4-4 4"/><rect x="4" y="14" width="16" height="7" rx="2"/><path d="M8 17h8"/></>; break;
+    case "/coletor/conferencia": desenho = <><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h4m-4 4 2 2 5-5"/></>; break;
+    case "/coletor/embarque": desenho = <><path d="M3 7h11v11H3zM14 11h4l3 4v3h-7"/><circle cx="7" cy="19" r="2"/><circle cx="18" cy="19" r="2"/><path d="M6 10h5"/></>; break;
+    case "/coletor/recebimento": desenho = <><path d="M4 7 12 3l8 4v10l-8 4-8-4zM4 7l8 5 8-5M12 12v9"/><path d="m9 14 2 2 4-4"/></>; break;
+    case "/coletor/retornos": desenho = <><path d="M9 14 4 9l5-5M4 9h10a6 6 0 0 1 0 12h-3"/></>; break;
+    case "/coletor/ordens-servico": desenho = <><path d="M9 3h6l1 2 2 1 2-.5 2 5-2 1v3l2 1-2 5-2-.5-2 1-1 2H9l-1-2-2-1-2 .5-2-5 2-1v-3l-2-1 2-5 2 .5 2-1z"/><circle cx="12" cy="12" r="3"/></>; break;
+    default: desenho = <circle cx="12" cy="12" r="8"/>;
+  }
+  return <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.85" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{desenho}</svg>;
+}

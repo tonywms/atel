@@ -1,0 +1,331 @@
+/* V33: somente a tela inicial /coletor. Não altera o estilo das outras rotas. */
+.dispositivo {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: #0d96b7;
+}
+.barraSuperior {
+  width: 100%;
+  height: 35px;
+  min-height: 35px;
+  flex-shrink: 0;
+  background: #050505;
+}
+.painel {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  padding: 14px 7px 9px;
+  overflow: hidden;
+  background: linear-gradient(165deg, #1683ab 0%, #0b8fb3 58%, #079fb9 100%);
+}
+.marca {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 33px;
+  height: 33px;
+  flex-shrink: 0;
+  margin-bottom: 5px;
+}
+.logo {
+  display: block;
+  object-fit: contain;
+  width: 126px;
+  height: auto;
+  max-height: 33px;
+}
+.identificacao {
+  position: relative;
+  height: 43px;
+  flex-shrink: 0;
+  margin: 0 auto 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.avatar {
+  position: relative;
+  z-index: 2;
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  color: #1082a7;
+  background: #e9f8fc;
+  border: 1.5px solid rgba(255,255,255,.92);
+}
+.avatar svg { width: 25px; height: 25px; }
+.capsula {
+  position: relative;
+  margin-left: -7px;
+  height: 29px;
+  min-width: 165px;
+  max-width: 235px;
+  padding: 0 12px 0 17px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #fff;
+  border-radius: 19px;
+}
+.etiqueta {
+  position: absolute;
+  top: -8px;
+  left: 11px;
+  border: 1.5px solid #088bb2;
+  background: white;
+  color: #0885ae;
+  padding: 0 8px;
+  border-radius: 5px;
+  font-size: 10px;
+  line-height: 13px;
+  font-weight: 800;
+  letter-spacing: .4px;
+}
+.usuario {
+  min-width: 0;
+  max-width: 207px;
+  color: #087fa8;
+  font-size: 10.4px;
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.4;
+}
+.grade {
+  min-height: 0;
+  width: 100%;
+  flex: 1;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-rows: repeat(3, minmax(0, 1fr));
+  gap: 7px;
+}
+.cartao {
+  appearance: none;
+  min-width: 0;
+  min-height: 0;
+  border: 0;
+  border-radius: 10px;
+  padding: 12px 6px;
+  background: #fff;
+  color: #007ea8;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 14px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: box-shadow .15s ease, transform .15s ease;
+}
+.cartao:hover { box-shadow: inset 0 0 0 2px #b4e6f2; }
+.cartao:active { transform: scale(.98); }
+.cartao:focus-visible { outline: 3px solid #003f69; outline-offset: -4px; }
+.icone {
+  display: block;
+  flex: 0 0 auto;
+  width: 58px;
+  height: 58px;
+  object-fit: contain;
+}
+.tituloCartao {
+  display: block;
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: .05px;
+  line-height: 1.25;
+  text-align: center;
+}
+.rodape {
+  min-height: 69px;
+  height: 69px;
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 7px;
+  padding-top: 4px;
+}
+.sair {
+  min-width: 95px;
+  height: 30px;
+  border: 2px solid #fff;
+  border-radius: 7px;
+  background: rgba(255,255,255,.96);
+  color: #097ea5;
+  box-shadow: 0 0 0 2px #0e8bac inset;
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.sair:disabled { opacity: .65; cursor: wait; }
+.versao {
+  color: #fff;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: .02px;
+  line-height: 1.2;
+}
+.barraInferior {
+  height: 35px;
+  min-height: 35px;
+  flex: 0 0 auto;
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  background: #050505;
+  color: #babfc2;
+}
+.voltar {
+  width: 11px;
+  height: 11px;
+  border-bottom: 1.5px solid currentColor;
+  border-left: 1.5px solid currentColor;
+  transform: rotate(45deg);
+}
+.home { width: 12px; height: 12px; border-radius: 50%; border: 1.4px solid currentColor; }
+.recentes { display: flex; gap: 3px; height: 12px; align-items: center; }
+.recentes i { height: 12px; width: 2px; border: 1px solid currentColor; border-radius: 1px; }
+
+@media (max-width: 499px) {
+  .dispositivo { width: 100%; height: 100dvh; max-height: none; transform: none; }
+  .painel { padding-bottom: max(9px, env(safe-area-inset-bottom)); }
+}
+@media (max-height: 680px) {
+  .painel { padding-top: 6px; }
+  .marca { margin-bottom: 1px; min-height: 28px; height: 28px; }
+  .identificacao { height: 39px; margin-bottom: 4px; }
+  .cartao { gap: 6px; padding: 6px 4px; }
+  .icone { width: 48px; height: 48px; }
+  .rodape { height: 59px; min-height: 59px; gap: 3px; }
+}
+
+/* V34 — enquadramento idêntico ao coletor de referência.
+   Corrige a barra Android deslocada para o meio e o vazio azul inferior. */
+.dispositivo {
+  box-sizing: border-box !important;
+  width: min(329px, calc(100vw - 16px)) !important;
+  height: min(735px, calc(100dvh - 24px)) !important;
+  min-height: 0 !important;
+  max-height: none !important;
+  flex: 0 0 auto !important;
+  margin: 0 auto !important;
+  display: grid !important;
+  grid-template-rows: 35px minmax(0, 1fr) 35px !important;
+  overflow: hidden !important;
+}
+.barraSuperior { height: 35px !important; min-height: 0 !important; }
+.painel {
+  height: 100% !important;
+  min-height: 0 !important;
+  padding: 14px 10px 8px !important;
+  display: grid !important;
+  grid-template-rows: 33px 45px minmax(0, 1fr) 72px !important;
+  align-content: stretch !important;
+  overflow: hidden !important;
+}
+.marca { height: 33px !important; min-height: 0 !important; margin: 0 !important; }
+.identificacao { height: 40px !important; margin: 0 auto 5px !important; }
+.grade {
+  min-height: 0 !important;
+  height: 100% !important;
+  flex: none !important;
+  grid-template-rows: repeat(3, minmax(0, 1fr)) !important;
+  gap: 7px !important;
+}
+.cartao { padding: 8px 4px !important; gap: 12px !important; border-radius: 11px !important; }
+.icone { width: 51px !important; height: 51px !important; }
+.tituloCartao { font-size: 14px !important; }
+.rodape {
+  height: 72px !important;
+  min-height: 0 !important;
+  padding: 7px 0 0 !important;
+  gap: 5px !important;
+  justify-content: center !important;
+}
+.barraInferior { height: 35px !important; min-height: 0 !important; }
+@media (max-width: 499px) {
+  .dispositivo { width: 100vw !important; height: 100dvh !important; }
+  .painel { padding-left: 10px !important; padding-right: 10px !important; }
+}
+@media (max-height: 680px) {
+  .painel { grid-template-rows: 29px 40px minmax(0, 1fr) 60px !important; padding-top: 6px !important; }
+  .rodape { height: 60px !important; }
+  .cartao { gap: 5px !important; }
+  .icone { width: 43px !important; height: 43px !important; }
+}
+
+/* V35 — somente o conjunto Login/avatar/e-mail, proporcional ao original. */
+.painel { grid-template-rows: 33px 65px minmax(0, 1fr) 72px !important; }
+.identificacao {
+  box-sizing: border-box !important;
+  width: min(100%, 286px) !important;
+  height: 60px !important;
+  min-height: 60px !important;
+  margin: 2px auto 3px !important;
+  justify-content: center !important;
+  align-self: center !important;
+  z-index: 1 !important;
+}
+.avatar {
+  box-sizing: border-box !important;
+  width: 58px !important;
+  height: 58px !important;
+  border: 1px solid #d3eef8 !important;
+  background: #dff5fc !important;
+  color: #4aa6c5 !important;
+  flex: 0 0 58px !important;
+}
+.avatar svg { width: 38px !important; height: 38px !important; }
+.capsula {
+  box-sizing: border-box !important;
+  height: 45px !important;
+  min-width: 0 !important;
+  width: 222px !important;
+  max-width: calc(100% - 44px) !important;
+  margin-left: -10px !important;
+  padding: 4px 12px 0 20px !important;
+  border-radius: 25px !important;
+  background: #fff !important;
+}
+.etiqueta {
+  top: -12px !important;
+  left: 8px !important;
+  padding: 1px 11px 2px !important;
+  border: 2px solid #087ea5 !important;
+  border-radius: 8px !important;
+  color: #087ea5 !important;
+  font-size: 15px !important;
+  line-height: 19px !important;
+  letter-spacing: .4px !important;
+  font-weight: 800 !important;
+}
+.usuario {
+  max-width: 100% !important;
+  font-size: 13px !important;
+  line-height: 19px !important;
+  font-weight: 700 !important;
+  text-align: center !important;
+  color: #087da3 !important;
+}
+@media (max-height: 680px) {
+  .painel { grid-template-rows: 29px 58px minmax(0, 1fr) 60px !important; }
+  .identificacao { height: 55px !important; min-height: 55px !important; }
+  .avatar { width: 51px !important; height: 51px !important; flex-basis: 51px !important; }
+  .avatar svg { width: 33px !important; height: 33px !important; }
+  .capsula { height: 40px !important; }
+}

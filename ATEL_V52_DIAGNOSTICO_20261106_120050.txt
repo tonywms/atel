@@ -1,0 +1,45 @@
+ATEL V52 - PRECHECK SOMENTE LEITURA
+Data: 2026-11-06 12:00:50
+Projeto: C:\wms-atel
+OK | app/coletor/ordens-servico/page.tsx | 21653 bytes | SHA256 355C273DD719B473C28B3B394603569AC7276B74B7584C2F6F29D8E56A55E4A5
+OK | app/coletor/ordens-servico/[id]/page.tsx | 96625 bytes | SHA256 D4EE6C04E8600642E033E1BF0B8FD2E1A2F6DFE595A5E584B73EF6EFCB0F1488
+OK | app/coletor/consulta/estoque-tecnico/page.tsx | 28929 bytes | SHA256 70F06CB60EAA9F45747DA2A59D9D4046020883745B3A6BE76FC8F22569F0301B
+OK | app/api/adapter-homologacao/route.ts | 3557 bytes | SHA256 D6434A5C453A1268ADBCA43DFF505F57CC4FA78B376B226924D2C17B757DCFE9
+OK | lib/ordensServicoStore.ts | 50774 bytes | SHA256 65585099A6388B4DD50B6F9EE082437B34551158BAEA87DD9A4509A1EB03FDB2
+OK | lib/estoqueTecnicoStore.ts | 9663 bytes | SHA256 8A59D7EB4BD15F43559C3DD874E079B9BD0CF208B6BB4566BBF37352958EB38E
+OK | lib/supabase.ts | 267 bytes | SHA256 AE56B501841E907575FD7A268AAC93D9F0EACDCC3764E74594F53E149644515A
+
+Git status:
+ M app/coletor/conferencia/page.tsx
+ M app/coletor/consulta/page.tsx
+ M app/coletor/embarque/page.tsx
+ M app/coletor/expedicoes/page.tsx
+ M app/coletor/ordens-servico/page.tsx
+ M app/coletor/page.tsx
+ M app/coletor/recebimento/page.tsx
+ M app/coletor/retornos/page.tsx
+ M app/coletor/separacao/[id]/page.tsx
+ M app/coletor/separacao/page.tsx
+?? ATEL_CODIGO_ATUAL.xml
+?? ATEL_V52_CODIGO_ATUAL.xml
+?? app/admin/adapter-homologacao/
+?? app/api/
+?? app/coletor/coletor-home.module.css
+?? app/coletor/conferencia/conferencia.module.css
+?? app/coletor/consulta/consulta.module.css
+?? app/coletor/embarque/atel-v47.css
+?? app/coletor/erp-real/
+?? app/coletor/expedicoes/expedicoes.module.css
+?? app/coletor/ordens-servico/atel-v47.css
+?? app/coletor/recebimento/atel-v47.css
+?? app/coletor/retornos/atel-v47-2.css
+?? app/coletor/retornos/atel-v47.css
+?? app/coletor/separacao/[id]/separacao-detalhe.module.css
+?? public/atel-coletor/
+
+Rotinas detectadas (nomes apenas):
+finalizarOrdemServico : True
+adicionarMaterialOS : True
+removerMaterialOS : True
+baixarEstoqueTecnico : True
+carregarOrdensServico : True

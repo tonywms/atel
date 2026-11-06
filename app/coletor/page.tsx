@@ -1,639 +1,128 @@
 "use client";
 
+import Image from "next/image";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { atelSupabase } from "@/lib/atelSupabaseV08";
+import styles from "./coletor-home.module.css";
+
+// Preserva os destinos originais do menu do coletor.
+// A V33 muda somente a apresentação e a identificação de login.
+const menu = [
+  { id: "cadastro", titulo: "Cadastro", href: "/coletor/cadastro" },
+  { id: "consulta", titulo: "Consulta", href: "/coletor/consulta" },
+  { id: "recepcao", titulo: "Recepção", href: "/coletor/recepcao" },
+  { id: "movimentacao", titulo: "Movimentação", href: "/coletor/movimentacao" },
+  { id: "expedicao", titulo: "Expedição", href: "/coletor/expedicoes" },
+  { id: "auditoria", titulo: "Auditoria", href: "/coletor/auditoria" },
+] as const;
 
 export default function ColetorMenuPage() {
   const router = useRouter();
+  const [email, setEmail] = useState<string>("");
+  const [saindo, setSaindo] = useState(false);
+
+  useEffect(() => {
+    const supabase = atelSupabase();
+    if (!supabase) return;
+    let ativo = true;
+
+    void supabase.auth.getUser().then(({ data }) => {
+      if (ativo) setEmail(data.user?.email ?? "");
+    }).catch(() => {
+      if (ativo) setEmail("");
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_evento, sessao) => {
+      if (ativo) setEmail(sessao?.user?.email ?? "");
+    });
+
+    return () => { ativo = false; subscription.unsubscribe(); };
+  }, []);
+
+  async function sair() {
+    if (saindo) return;
+    setSaindo(true);
+    try {
+      const supabase = atelSupabase();
+      if (supabase) await supabase.auth.signOut();
+      router.replace("/login");
+    } catch {
+      setSaindo(false);
+    }
+  }
 
   return (
     <div className="collector-screen">
-      <div className="collector-phone">
-        {/* BARRA SUPERIOR */}
-        <div style={topBarStyle} />
+      <div className={`collector-phone ${styles.dispositivo}`}>
+        <div className={styles.barraSuperior} aria-hidden="true" />
 
-        {/* ÁREA PRINCIPAL */}
-        <div style={mainStyle}>
-          {/* LOGO */}
-          <div style={logoStyle}>
-            <div style={logoSymbolStyle}>
-              <span style={logoLeftStyle} />
-              <span style={logoCenterStyle} />
-              <span style={logoRightStyle} />
-            </div>
+        <div className={styles.painel}>
+          <div className={styles.marca}>
+            <Image
+              src="/atel-coletor/logo-wmsexpert.png"
+              alt="WMS Expert"
+              width={125}
+              height={34}
+              priority
+              className={styles.logo}
+            />
+          </div>
 
-            <span style={logoTextStyle}>
-              WMSEXPERT
+          <div className={styles.identificacao}>
+            <span className={styles.avatar} aria-hidden="true">
+              <svg viewBox="0 0 32 32" fill="none" aria-hidden="true">
+                <circle cx="16" cy="11" r="5.2" stroke="currentColor" strokeWidth="1.65" />
+                <path d="M7.2 27v-3.8c0-5.2 3.6-8 8.8-8s8.8 2.8 8.8 8V27" stroke="currentColor" strokeWidth="1.65" strokeLinecap="round" />
+              </svg>
             </span>
-          </div>
-
-          {/* LOGIN */}
-          <div style={loginContainerStyle}>
-            <div style={avatarStyle}>
-              <span style={avatarHeadStyle} />
-              <span style={avatarBodyStyle} />
-            </div>
-
-            <div style={loginBoxStyle}>
-              <div style={loginLabelStyle}>
-                Login
-              </div>
-
-              <div style={loginEmailStyle}>
-                adm@wmsexpert.com.br
-              </div>
+            <div className={styles.capsula}>
+              <span className={styles.etiqueta}>Login</span>
+              <span className={styles.usuario} title={email || "Carregando sessão"}>
+                {email || "Carregando sessão..."}
+              </span>
             </div>
           </div>
 
-          {/* MENU PRINCIPAL */}
-          <div style={menuGridStyle}>
-            {/* CADASTRO */}
-            <button
-              type="button"
-              style={menuCardStyle}
-              onClick={() =>
-                router.push("/coletor/cadastro")
-              }
-            >
-              <div style={iconAreaStyle}>
-                <div style={plusCircleStyle}>
-                  <span style={plusHorizontalStyle} />
-                  <span style={plusVerticalStyle} />
-                </div>
-              </div>
-
-              <span style={menuTextStyle}>
-                Cadastro
-              </span>
-            </button>
-
-            {/* CONSULTA */}
-            <button
-              type="button"
-              style={menuCardStyle}
-              onClick={() =>
-                router.push("/coletor/consulta")
-              }
-            >
-              <div style={iconAreaStyle}>
-                <div style={searchIconStyle}>
-                  <span style={searchHandleStyle} />
-                </div>
-              </div>
-
-              <span style={menuTextStyle}>
-                Consulta
-              </span>
-            </button>
-
-            {/* RECEPÇÃO */}
-            <button
-              type="button"
-              style={menuCardStyle}
-              onClick={() =>
-                router.push("/coletor/recepcao")
-              }
-            >
-              <div style={iconAreaStyle}>
-                <span style={largeIconStyle}>
-                  ♟♟
-                </span>
-              </div>
-
-              <span style={menuTextStyle}>
-                Recepção
-              </span>
-            </button>
-
-            {/* MOVIMENTAÇÃO */}
-            <button
-              type="button"
-              style={menuCardStyle}
-              onClick={() =>
-                router.push("/coletor/movimentacao")
-              }
-            >
-              <div style={iconAreaStyle}>
-                <span style={largeIconStyle}>
-                  ▥
-                </span>
-              </div>
-
-              <span style={menuTextStyle}>
-                Movimentação
-              </span>
-            </button>
-
-            {/* EXPEDIÇÃO */}
-            <button
-              type="button"
-              style={menuCardStyle}
-              onClick={() =>
-                router.push("/coletor/expedicoes")
-              }
-            >
-              <div style={iconAreaStyle}>
-                <span
-                  style={{
-                    ...largeIconStyle,
-                    transform: "rotate(-8deg)",
-                  }}
-                >
-                  ◩
-                </span>
-              </div>
-
-              <span style={menuTextStyle}>
-                Expedição
-              </span>
-            </button>
-
-            {/* AUDITORIA */}
-            <button
-              type="button"
-              style={menuCardStyle}
-              onClick={() =>
-                router.push("/coletor/auditoria")
-              }
-            >
-              <div style={iconAreaStyle}>
-                <span style={largeIconStyle}>
-                  ♜
-                </span>
-              </div>
-
-              <span style={menuTextStyle}>
-                Auditoria
-              </span>
-            </button>
+          <div className={styles.grade} aria-label="Menu principal do coletor">
+            {menu.map((item) => (
+              <button
+                key={item.id}
+                type="button"
+                className={styles.cartao}
+                onClick={() => router.push(item.href)}
+                aria-label={item.titulo}
+              >
+                <Image
+                  src={`/atel-coletor/${item.id}.png`}
+                  alt=""
+                  width={64}
+                  height={64}
+                  className={styles.icone}
+                />
+                <span className={styles.tituloCartao}>{item.titulo}</span>
+              </button>
+            ))}
           </div>
 
-          {/* SAIR */}
-          <button
-            type="button"
-            style={logoutStyle}
-            onClick={() => router.push("/")}
-          >
-            <span style={logoutIconStyle}>
-              ↪
-            </span>
-
-            <span>Sair</span>
-          </button>
-
-          {/* VERSÃO */}
-          <div style={versionStyle}>
-            Versão 0.0.0.0
+          <div className={styles.rodape}>
+            <button className={styles.sair} type="button" onClick={() => void sair()} disabled={saindo}>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M10 17l5-5-5-5M15 12H4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                <path d="M13 3h5a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-5" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" />
+              </svg>
+              <span>{saindo ? "Saindo..." : "Sair"}</span>
+            </button>
+            <div className={styles.versao}>homolog 0.0.0.0</div>
           </div>
         </div>
 
-        {/* BARRA INFERIOR */}
-        <div style={bottomBarStyle}>
-          <span style={androidBackStyle}>
-            ‹
-          </span>
-
-          <span style={androidHomeStyle} />
-
-          <span style={androidRecentStyle}>
-            ▥
-          </span>
+        <div className={styles.barraInferior} aria-hidden="true">
+          <span className={styles.voltar} />
+          <span className={styles.home} />
+          <span className={styles.recentes}><i /><i /><i /></span>
         </div>
       </div>
     </div>
   );
 }
-
-/* =========================================================
-   ESTILOS
-========================================================= */
-
-const topBarStyle: React.CSSProperties = {
-  height: 34,
-  minHeight: 34,
-  background: "#000",
-};
-
-const mainStyle: React.CSSProperties = {
-  flex: 1,
-
-  display: "flex",
-  flexDirection: "column",
-
-  alignItems: "center",
-
-  padding: "16px 6px 12px",
-
-  background:
-    "linear-gradient(180deg, #1885ad 0%, #06a1bd 100%)",
-
-  overflowY: "auto",
-};
-
-const logoStyle: React.CSSProperties = {
-  display: "flex",
-
-  alignItems: "center",
-
-  justifyContent: "center",
-
-  gap: 5,
-
-  height: 32,
-
-  marginBottom: 4,
-
-  color: "#fff",
-};
-
-const logoSymbolStyle: React.CSSProperties = {
-  position: "relative",
-
-  width: 23,
-  height: 25,
-};
-
-const logoLeftStyle: React.CSSProperties = {
-  position: "absolute",
-
-  left: 2,
-  top: 5,
-
-  width: 7,
-  height: 15,
-
-  border: "2px solid #fff",
-
-  transform: "skewY(30deg)",
-};
-
-const logoCenterStyle: React.CSSProperties = {
-  position: "absolute",
-
-  left: 8,
-  top: 1,
-
-  width: 7,
-  height: 22,
-
-  border: "2px solid #fff",
-
-  transform: "skewY(-30deg)",
-};
-
-const logoRightStyle: React.CSSProperties = {
-  position: "absolute",
-
-  right: 1,
-  top: 5,
-
-  width: 7,
-  height: 15,
-
-  border: "2px solid #fff",
-
-  transform: "skewY(30deg)",
-};
-
-const logoTextStyle: React.CSSProperties = {
-  fontSize: 13,
-
-  fontWeight: 500,
-
-  color: "#fff",
-};
-
-const loginContainerStyle: React.CSSProperties = {
-  height: 44,
-
-  display: "flex",
-
-  alignItems: "center",
-
-  justifyContent: "center",
-
-  marginBottom: 6,
-};
-
-const avatarStyle: React.CSSProperties = {
-  position: "relative",
-
-  zIndex: 2,
-
-  width: 40,
-  height: 40,
-
-  borderRadius: "50%",
-
-  border: "1px solid #fff",
-
-  background: "#e7f8fc",
-};
-
-const avatarHeadStyle: React.CSSProperties = {
-  position: "absolute",
-
-  width: 9,
-  height: 9,
-
-  left: 14,
-  top: 8,
-
-  border: "1.5px solid #0788af",
-
-  borderRadius: "50%",
-};
-
-const avatarBodyStyle: React.CSSProperties = {
-  position: "absolute",
-
-  width: 14,
-  height: 10,
-
-  left: 11,
-  bottom: 7,
-
-  border: "1.5px solid #0788af",
-
-  borderBottom: "none",
-
-  borderRadius: "10px 10px 0 0",
-};
-
-const loginBoxStyle: React.CSSProperties = {
-  position: "relative",
-
-  width: 143,
-  height: 29,
-
-  marginLeft: -6,
-
-  borderRadius: 18,
-
-  background: "#fff",
-
-  display: "flex",
-
-  alignItems: "center",
-
-  justifyContent: "center",
-};
-
-const loginLabelStyle: React.CSSProperties = {
-  position: "absolute",
-
-  top: -8,
-  left: 10,
-
-  padding: "1px 8px",
-
-  border: "1px solid #0789b0",
-
-  borderRadius: 6,
-
-  background: "#fff",
-
-  color: "#0780a7",
-
-  fontSize: 8,
-
-  fontWeight: 800,
-
-  lineHeight: "11px",
-};
-
-const loginEmailStyle: React.CSSProperties = {
-  paddingLeft: 11,
-
-  color: "#086d8f",
-
-  fontSize: 9,
-
-  fontWeight: 700,
-};
-
-const menuGridStyle: React.CSSProperties = {
-  width: "100%",
-
-  display: "grid",
-
-  gridTemplateColumns:
-    "repeat(2, minmax(0, 1fr))",
-
-  gap: 6,
-};
-
-const menuCardStyle: React.CSSProperties = {
-  height: 145,
-
-  padding: 0,
-
-  border: "none",
-
-  borderRadius: 10,
-
-  outline: "none",
-
-  background: "#fff",
-
-  display: "flex",
-
-  flexDirection: "column",
-
-  alignItems: "center",
-
-  justifyContent: "center",
-
-  gap: 20,
-
-  cursor: "pointer",
-
-  fontFamily: "inherit",
-};
-
-const iconAreaStyle: React.CSSProperties = {
-  width: 54,
-  height: 44,
-
-  display: "flex",
-
-  alignItems: "center",
-
-  justifyContent: "center",
-
-  color: "#0784ad",
-};
-
-const menuTextStyle: React.CSSProperties = {
-  color: "#087ea6",
-
-  fontSize: 13,
-
-  fontWeight: 800,
-};
-
-const plusCircleStyle: React.CSSProperties = {
-  position: "relative",
-
-  width: 30,
-  height: 30,
-
-  border: "2px solid #0784ad",
-
-  borderRadius: "50%",
-};
-
-const plusHorizontalStyle: React.CSSProperties = {
-  position: "absolute",
-
-  width: 17,
-  height: 2,
-
-  left: 5,
-  top: 12,
-
-  background: "#0784ad",
-};
-
-const plusVerticalStyle: React.CSSProperties = {
-  position: "absolute",
-
-  width: 2,
-  height: 17,
-
-  left: 12,
-  top: 5,
-
-  background: "#0784ad",
-};
-
-const searchIconStyle: React.CSSProperties = {
-  position: "relative",
-
-  width: 27,
-  height: 27,
-
-  border: "2px solid #0784ad",
-
-  borderRadius: "50%",
-};
-
-const searchHandleStyle: React.CSSProperties = {
-  position: "absolute",
-
-  width: 14,
-  height: 2,
-
-  right: -10,
-  bottom: -5,
-
-  background: "#0784ad",
-
-  transform: "rotate(48deg)",
-
-  transformOrigin: "left center",
-};
-
-const largeIconStyle: React.CSSProperties = {
-  display: "block",
-
-  color: "#0784ad",
-
-  fontSize: 35,
-
-  fontWeight: 700,
-
-  lineHeight: 1,
-};
-
-const logoutStyle: React.CSSProperties = {
-  minWidth: 86,
-
-  height: 30,
-
-  marginTop: 19,
-
-  padding: "0 12px",
-
-  border: "2px solid #fff",
-
-  borderRadius: 7,
-
-  background: "transparent",
-
-  color: "#fff",
-
-  display: "flex",
-
-  alignItems: "center",
-
-  justifyContent: "center",
-
-  gap: 7,
-
-  cursor: "pointer",
-
-  fontSize: 10,
-
-  fontWeight: 700,
-
-  boxShadow:
-    "inset 0 0 0 1px #0783a8",
-};
-
-const logoutIconStyle: React.CSSProperties = {
-  fontSize: 12,
-
-  fontWeight: 700,
-};
-
-const versionStyle: React.CSSProperties = {
-  marginTop: 8,
-
-  color: "#fff",
-
-  fontSize: 11,
-
-  fontWeight: 700,
-};
-
-const bottomBarStyle: React.CSSProperties = {
-  height: 36,
-
-  minHeight: 36,
-
-  padding: "0 48px",
-
-  background: "#000",
-
-  color: "#bfc4c7",
-
-  display: "flex",
-
-  alignItems: "center",
-
-  justifyContent: "space-between",
-};
-
-const androidBackStyle: React.CSSProperties = {
-  fontSize: 20,
-
-  fontWeight: 300,
-
-  lineHeight: 1,
-};
-
-const androidHomeStyle: React.CSSProperties = {
-  width: 10,
-
-  height: 10,
-
-  border: "1px solid #bfc4c7",
-
-  borderRadius: "50%",
-};
-
-const androidRecentStyle: React.CSSProperties = {
-  fontSize: 15,
-
-  lineHeight: 1,
-};

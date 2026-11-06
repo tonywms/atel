@@ -1,5 +1,7 @@
 "use client";
 
+import "./atel-v47.css";
+
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 
@@ -77,7 +79,7 @@ export default function EmbarquePage() {
   }, [busca, versao]);
 
   return (
-    <div className="collector-screen">
+    <div className="collector-screen atel-v47-screen atel-v47-embarque">
       <div
         className="collector-phone"
         style={{
@@ -85,13 +87,7 @@ export default function EmbarquePage() {
           overflow: "hidden",
         }}
       >
-        <div
-          style={{
-            height: 40,
-            background: "#000",
-            flex: "0 0 auto",
-          }}
-        />
+        
 
         <div
           style={{
@@ -120,16 +116,14 @@ export default function EmbarquePage() {
               cursor: "pointer",
               padding: 0,
             }}
-          >
-            ‹
-          </button>
+          ><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M19 12H5"/><path d="m12 19-7-7 7-7"/></svg></button>
 
           <strong
             style={{
               fontSize: 23,
             }}
           >
-            Ordens - Embarque
+            Embarque
           </strong>
         </div>
 
@@ -156,9 +150,7 @@ export default function EmbarquePage() {
                 color: "#587184",
                 fontSize: 20,
               }}
-            >
-              ⌕
-            </span>
+            ><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg></span>
 
             <input
               value={busca}

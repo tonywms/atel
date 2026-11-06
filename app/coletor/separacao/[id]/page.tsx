@@ -1,7 +1,9 @@
+
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
+import styles from "./separacao-detalhe.module.css";
 
 import { requisicoesTecnicasMock } from "@/lib/requisicoesTecnicas";
 import {
@@ -137,8 +139,8 @@ export default function SeparacaoDetalhePage() {
 
   if (!carregado) {
     return (
-      <div className="collector-screen">
-        <div className="collector-phone">
+      <div className={`collector-screen ${styles.screen}`}>
+        <div className={`collector-phone ${styles.phone}`}>
           <div
             style={{
               padding: 30,
@@ -154,8 +156,8 @@ export default function SeparacaoDetalhePage() {
 
   if (!requisicao) {
     return (
-      <div className="collector-screen">
-        <div className="collector-phone">
+      <div className={`collector-screen ${styles.screen}`}>
+        <div className={`collector-phone ${styles.phone}`}>
           <div
             style={{
               padding: 30,
@@ -169,14 +171,12 @@ export default function SeparacaoDetalhePage() {
     );
   }
 
-  const requisicaoSeguro = requisicao;
-
-  const item = requisicaoSeguro.itens[itemAtual];
+  const item = requisicao.itens[itemAtual];
 
   if (!item) {
     return (
-      <div className="collector-screen">
-        <div className="collector-phone">
+      <div className={`collector-screen ${styles.screen}`}>
+        <div className={`collector-phone ${styles.phone}`}>
           <div
             style={{
               padding: 30,
@@ -196,13 +196,13 @@ export default function SeparacaoDetalhePage() {
   const solicitado = item.solicitado;
   const listaSeriais = seriais[item.id] ?? [];
 
-  const itensSeparados = requisicaoSeguro.itens.filter(
+  const itensSeparados = requisicao.itens.filter(
     (produto) =>
       (quantidades[produto.id] ?? 0) >=
       produto.solicitado
   ).length;
 
-  const todosSeparados = requisicaoSeguro.itens.every(
+  const todosSeparados = requisicao.itens.every(
     (produto) =>
       (quantidades[produto.id] ?? 0) >=
       produto.solicitado
@@ -307,6 +307,7 @@ export default function SeparacaoDetalhePage() {
   }
 
   function adicionarSerial() {
+    if (!requisicao) return;
     if (
       !enderecoConfirmado ||
       !produtoConfirmado
@@ -358,7 +359,7 @@ export default function SeparacaoDetalhePage() {
     }));
 
     registrarSeparacaoItem(
-      requisicaoSeguro,
+      requisicao,
       item.id,
       novos.length,
       novos
@@ -382,6 +383,7 @@ export default function SeparacaoDetalhePage() {
   }
 
   function confirmarSeparacaoProduto() {
+    if (!requisicao) return;
     if (!enderecoConfirmado) {
       setMensagem(
         "Confirme primeiro o endereço."
@@ -411,7 +413,7 @@ export default function SeparacaoDetalhePage() {
       }
 
       registrarSeparacaoItem(
-        requisicaoSeguro,
+        requisicao,
         item.id,
         listaSeriais.length,
         listaSeriais
@@ -425,7 +427,7 @@ export default function SeparacaoDetalhePage() {
     }
 
     registrarSeparacaoItem(
-      requisicaoSeguro,
+      requisicao,
       item.id,
       solicitado,
       []
@@ -442,7 +444,8 @@ export default function SeparacaoDetalhePage() {
   }
 
   function irProximoProduto() {
-    const estado = obterEstado(requisicaoSeguro);
+    if (!requisicao) return;
+    const estado = obterEstado(requisicao);
 
     const qtd =
       estado.itens[item.id]
@@ -456,7 +459,7 @@ export default function SeparacaoDetalhePage() {
     }
 
     const proximoPendente =
-      requisicaoSeguro.itens.findIndex(
+      requisicao.itens.findIndex(
         (produto, indice) =>
           indice > itemAtual &&
           (estado.itens[produto.id]
@@ -472,7 +475,7 @@ export default function SeparacaoDetalhePage() {
     }
 
     const qualquerPendente =
-      requisicaoSeguro.itens.findIndex(
+      requisicao.itens.findIndex(
         (produto) =>
           (estado.itens[produto.id]
             ?.quantidadeSeparada ??
@@ -492,8 +495,9 @@ export default function SeparacaoDetalhePage() {
   }
 
   function pularProduto() {
+    if (!requisicao) return;
     if (
-      requisicaoSeguro.itens.length <= 1
+      requisicao.itens.length <= 1
     ) {
       setMensagem(
         "Não existe outro produto para pular."
@@ -503,7 +507,7 @@ export default function SeparacaoDetalhePage() {
 
     const proximo =
       itemAtual >=
-      requisicaoSeguro.itens.length - 1
+      requisicao.itens.length - 1
         ? 0
         : itemAtual + 1;
 
@@ -518,11 +522,12 @@ export default function SeparacaoDetalhePage() {
   }
 
   function concluirSeparacao() {
+    if (!requisicao) return;
     try {
       setFinalizando(true);
 
       finalizarSeparacao(
-        requisicaoSeguro
+        requisicao
       );
 
       setMensagem(
@@ -549,27 +554,19 @@ export default function SeparacaoDetalhePage() {
     atendido >= solicitado;
 
   return (
-    <div className="collector-screen">
+    <div className={`collector-screen ${styles.screen}`}>
       <div
-        className="collector-phone"
+        className={`collector-phone ${styles.phone}`}
         style={{
           background: "#f3f3f3",
           overflow: "hidden",
         }}
       >
-        {/* BARRA PRETA SUPERIOR */}
-        <div
-          style={{
-            height: 40,
-            background: "#000",
-            flex: "0 0 auto",
-          }}
-        />
 
         {/* HEADER */}
-        <div
+        <div className={styles.header}
           style={{
-            minHeight: 86,
+            minHeight: 66,
             background: "#1686b0",
             color: "#fff",
             display: "flex",
@@ -591,19 +588,19 @@ export default function SeparacaoDetalhePage() {
               border: 0,
               background: "transparent",
               color: "#fff",
-              fontSize: 38,
+              fontSize: 22,
               lineHeight: 1,
               cursor: "pointer",
               padding: 0,
               marginRight: 12,
             }}
           >
-            ‹
+            <svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M19 12H5M12 19l-7-7 7-7" /></svg>
           </button>
 
           <strong
             style={{
-              fontSize: 25,
+              fontSize: 21,
               fontWeight: 700,
             }}
           >
@@ -612,7 +609,7 @@ export default function SeparacaoDetalhePage() {
         </div>
 
         {/* RESUMO DO PEDIDO */}
-        <div
+        <div className={styles.summary}
           style={{
             background: "#fff",
             padding: "14px 15px 12px",
@@ -637,7 +634,7 @@ export default function SeparacaoDetalhePage() {
               <strong>
                 Pedido:
               </strong>{" "}
-              {requisicaoSeguro.codigo.replace(
+              {requisicao.codigo.replace(
                 "REQ-",
                 ""
               )}
@@ -648,7 +645,7 @@ export default function SeparacaoDetalhePage() {
                 Itens:
               </strong>{" "}
               {itemAtual + 1}/
-              {requisicaoSeguro.itens.length}
+              {requisicao.itens.length}
             </div>
 
             <div>
@@ -656,7 +653,7 @@ export default function SeparacaoDetalhePage() {
                 Separados:
               </strong>{" "}
               {itensSeparados}/
-              {requisicaoSeguro.itens.length}
+              {requisicao.itens.length}
             </div>
           </div>
 
@@ -669,12 +666,12 @@ export default function SeparacaoDetalhePage() {
             <strong>
               Cliente:
             </strong>{" "}
-            {requisicaoSeguro.tecnico}
+            {requisicao.tecnico}
           </div>
         </div>
 
         {/* CONTEÚDO */}
-        <div
+        <div className={styles.content}
           style={{
             flex: 1,
             overflowY: "auto",
@@ -686,7 +683,7 @@ export default function SeparacaoDetalhePage() {
               ENDEREÇO
           ========================= */}
 
-          <section style={cardStyle}>
+          <section className={styles.card} style={cardStyle}>
             <div style={cardTitleRowStyle}>
               <strong style={cardTitleStyle}>
                 Informações de Endereço
@@ -702,21 +699,21 @@ export default function SeparacaoDetalhePage() {
                   type="button"
                   style={roundButtonStyle}
                 >
-                  ⌕
+                  <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><circle cx="10.8" cy="10.8" r="6.8"/><path d="m16 16 5 5"/></svg>
                 </button>
 
                 <button
                   type="button"
                   style={roundButtonStyle}
                 >
-                  ↪
+                  <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 11a8 8 0 0 1 14-5l2 2"/><path d="M20 3v5h-5"/><path d="M20 13a8 8 0 0 1-14 5l-2-2"/><path d="M4 21v-5h5"/></svg>
                 </button>
               </div>
             </div>
 
             {/* R / P / A / A */}
 
-            <div
+            <div className={styles.addressGrid}
               style={{
                 display: "grid",
                 gridTemplateColumns:
@@ -880,6 +877,7 @@ export default function SeparacaoDetalhePage() {
           ========================= */}
 
           <section
+            className={styles.card}
             style={{
               ...cardStyle,
               marginTop: 14,
@@ -894,7 +892,7 @@ export default function SeparacaoDetalhePage() {
                 type="button"
                 style={roundButtonStyle}
               >
-                ☷
+                <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M8 6h13M8 12h13M8 18h13"/><path d="M3 6h.01M3 12h.01M3 18h.01"/></svg>
               </button>
             </div>
 
@@ -945,7 +943,7 @@ export default function SeparacaoDetalhePage() {
               >
                 <span
                   style={{
-                    fontSize: 25,
+                    fontSize: 21,
                     color: "#929292",
                   }}
                 >
@@ -1193,7 +1191,7 @@ export default function SeparacaoDetalhePage() {
                       type="button"
                       onClick={() =>
                         setSerialDigitado(
-                          `SN-${requisicaoSeguro.id}-${item.id}-${String(
+                          `SN-${requisicao.id}-${item.id}-${String(
                             listaSeriais.length +
                               1
                           ).padStart(
@@ -1316,7 +1314,7 @@ export default function SeparacaoDetalhePage() {
 
         {/* RODAPÉ */}
 
-        <div
+        <div className={styles.footer}
           style={{
             height: 72,
             flex: "0 0 72px",
@@ -1344,6 +1342,7 @@ export default function SeparacaoDetalhePage() {
               cursor: "pointer",
             }}
           >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M4 7h16M7 7l1 13h8l1-13M9 7V4h6v3"/></svg>
             Cortar
           </button>
 
@@ -1362,7 +1361,7 @@ export default function SeparacaoDetalhePage() {
               zIndex: 2,
             }}
           >
-            🔒
+            <svg width="27" height="27" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="5" y="10" width="14" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>
           </div>
 
           <button
@@ -1381,17 +1380,12 @@ export default function SeparacaoDetalhePage() {
               cursor: "pointer",
             }}
           >
-            Pular ›
+            Pular
+            <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="m9 5 7 7-7 7"/></svg>
           </button>
         </div>
 
-        <div
-          style={{
-            height: 36,
-            background: "#000",
-            flex: "0 0 36px",
-          }}
-        />
+
       </div>
     </div>
   );

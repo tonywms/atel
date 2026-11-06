@@ -1,8 +1,13 @@
 "use client";
 
+import { consultarDetalheErpV52, consultarEstoqueErpV52, type EstoqueErpV52, type DetalheErpV52 } from "@/lib/erpOperacionalV52";
+import { useSearchParams } from "next/navigation";
+import { atelSupabase } from "@/lib/atelSupabaseV08";
+
 import {
   useEffect,
   useMemo,
+  useRef,
   useState,
   type CSSProperties,
 } from "react";
@@ -85,7 +90,7 @@ function destinoNome(
    COMPONENTE
 ========================================================= */
 
-export default function OrdemServicoDetalhePage() {
+function OrdemServicoDetalheLocal() {
   const router = useRouter();
   const params = useParams();
 
@@ -2523,3 +2528,406 @@ const modalConfirmButtonStyle: CSSProperties = {
   fontWeight: 800,
   cursor: "pointer",
 };
+
+
+type EtapaAtel = "PENDENTE"|"DESLOCAMENTO"|"NO_CLIENTE"|"ATENDIMENTO";
+type ItemAtel = {cod_produto:number;produto:string;quantidade:number;patrimonio:number|null;mac:string|null};
+type ApontamentoAtel = {itens:ItemAtel[];versao:number;atualizado_em:string|null};
+type AndamentoAtel = {etapa:EtapaAtel;versao:number;atualizado_em:string|null};
+async function apiAtel<T>(path:string, body?:object):Promise<T> {
+ const sb=atelSupabase();
+ if(!sb)throw new Error("Supabase não configurado.");
+ const {data:{session}}=await sb.auth.getSession();
+ if(!session?.access_token)throw new Error("Faça login novamente.");
+ const res=await fetch(path,{method:body?"PUT":"GET",headers:{Authorization:`Bearer ${session.access_token}`,...(body?{"Content-Type":"application/json"}:{})},...(body?{body:JSON.stringify(body)}:{}),cache:"no-store"});
+ const data=await res.json() as T & {error?:string};
+ if(!res.ok)throw new Error(data.error||"Falha ao consultar servidor");
+ return data;
+}
+type HistoricoErpV525D4 = {id:string;tipo:"ETAPA"|"OCORRENCIA"|"RETOMADA";etapa_anterior:string;etapa_nova:string;tipo_ocorrencia:string|null;motivo:string|null;nova_data:string|null;versao:number;ocorrido_em:string};
+type PendenciaErpV525D4 = {id:string;tipo:string;motivo:string;nova_data:string|null;criado_em:string;ativa:boolean};
+type RespostaEventosErpV525D4 = {eventos:HistoricoErpV525D4[];pendencia:PendenciaErpV525D4|null};
+type RetornoAcaoErpV525D4 = RespostaEventosErpV525D4 & {andamento:AndamentoAtel};
+function dataBrAtel(data:string){const partes=data.split("-");return partes.length===3?`${partes[2]}/${partes[1]}/${partes[0]}`:data;}
+function rotuloEtapaAtel(etapa:string){return ({PENDENTE:"Pendente",DESLOCAMENTO:"Deslocamento",NO_CLIENTE:"No cliente",ATENDIMENTO:"Atendimento",FINALIZADA:"Finalizada"} as Record<string,string>)[etapa]||etapa.replaceAll("_"," ");}
+function rotuloOcorrenciaAtel(tipo:string){return ({CLIENTE_AUSENTE:"Cliente ausente",IMPEDIMENTO_TECNICO:"Impedimento técnico",OUTRO:"Outro impedimento"} as Record<string,string>)[tipo]||tipo;}
+async function acaoOsEventoAtel<T>(body:Record<string,unknown>):Promise<T>{
+ const sb=atelSupabase();if(!sb)throw new Error("Supabase não configurado.");
+ const {data:{session}}=await sb.auth.getSession();if(!session?.access_token)throw new Error("Faça login novamente.");
+ const response=await fetch("/api/os-eventos",{method:"POST",headers:{Authorization:`Bearer ${session.access_token}`,"Content-Type":"application/json"},body:JSON.stringify(body),cache:"no-store"});
+ const payload=await response.json() as T & {error?:string};
+ if(!response.ok)throw new Error(payload.error||"Não foi possível registrar a ação.");return payload;
+}
+function DetalheOrdemErpSomenteLeitura() {
+ const params=useParams(),router=useRouter(),id=Number(params.id);
+ const [detalhe,setDetalhe]=useState<DetalheErpV52|null>(null);
+ const [estoqueErp,setEstoqueErp]=useState<EstoqueErpV52[]>([]);
+ const [andamento,setAndamento]=useState<AndamentoAtel|null>(null);
+ const [apontamento,setApontamento]=useState<ApontamentoAtel|null>(null);
+ const [itens,setItens]=useState<ItemAtel[]>([]);
+ const [produto,setProduto]=useState("");
+ const [buscaMaterial,setBuscaMaterial]=useState("");
+ const [quantidade,setQuantidade]=useState("1");
+ const [edicaoMaterial,setEdicaoMaterial]=useState<string|null>(null);
+ const [erro,setErro]=useState(""),[aviso,setAviso]=useState("");
+ const [ocupado,setOcupado]=useState(false),[carregando,setCarregando]=useState(true),[alterado,setAlterado]=useState(false);
+ const [eventos,setEventos]=useState<HistoricoErpV525D4[]>([]);
+ const [pendencia,setPendencia]=useState<PendenciaErpV525D4|null>(null);
+ const [mostrarHistorico,setMostrarHistorico]=useState(false);
+ const [modalOcorrencia,setModalOcorrencia]=useState(false);
+ const [tipoOcorrencia,setTipoOcorrencia]=useState("CLIENTE_AUSENTE");
+ const [motivoOcorrencia,setMotivoOcorrencia]=useState("");
+ const [reagendar,setReagendar]=useState(false);
+ const [novaData,setNovaData]=useState("");
+ const [modalRetomar,setModalRetomar]=useState(false);
+ const [justificativaRetomada,setJustificativaRetomada]=useState("");
+ const [erroModal,setErroModal]=useState("");
+ const [preflightAberto,setPreflightAberto]=useState(false);
+ const [preflightCarregando,setPreflightCarregando]=useState(false);
+ const [preflightErro,setPreflightErro]=useState("");
+ const [preflightDados,setPreflightDados]=useState<{atendimento:number;etapa:string;total_itens:number;total_unidades:number;conferencias:{cod_produto:number;produto:string;quantidade:number;saldo_erp:number;valido:boolean}[];motivos:string[];finalizacao_liberada:boolean}|null>(null);
+ async function conferirFinalizacao() {
+  setPreflightAberto(true);setPreflightCarregando(true);setPreflightErro("");setPreflightDados(null);
+  try { const resultado=await apiAtel<{atendimento:number;etapa:string;total_itens:number;total_unidades:number;conferencias:{cod_produto:number;produto:string;quantidade:number;saldo_erp:number;valido:boolean}[];motivos:string[];finalizacao_liberada:boolean}>(`/api/os-finalizacao/preflight?atendimento=${encodeURIComponent(String(id))}`);setPreflightDados(resultado); }
+  catch(e){setPreflightErro(e instanceof Error?e.message:"Falha na pré-conferência");}
+  finally{setPreflightCarregando(false);}
+ }
+ const obsRef=useRef<HTMLSpanElement|null>(null);
+ const [obsTruncada,setObsTruncada]=useState(false);
+ const [obsAberta,setObsAberta]=useState(false);
+ useEffect(()=>{
+  const el=obsRef.current;
+  if(!el)return;
+  const verificar=()=>setObsTruncada(el.scrollWidth>el.clientWidth+1);
+  verificar();
+  const observer=new ResizeObserver(verificar);
+  observer.observe(el);
+  return()=>observer.disconnect();
+ },[detalhe?.Descricao]);
+
+ useEffect(()=>{
+  let ativo=true;
+  Promise.all([
+   consultarDetalheErpV52(id),
+   consultarEstoqueErpV52(),
+   apiAtel<AndamentoAtel>(`/api/os-andamento?atendimento=${id}`),
+   apiAtel<ApontamentoAtel>(`/api/os-materiais?atendimento=${id}`),
+   apiAtel<RespostaEventosErpV525D4>(`/api/os-eventos?atendimento=${id}`)
+  ]).then(([d,e,a,m,h])=>{if(!ativo)return;setDetalhe(d);setEstoqueErp(e);setAndamento(a);setApontamento(m);setItens(m.itens);setEventos(h.eventos);setPendencia(h.pendencia);setErro("");})
+  .catch(e=>{if(ativo)setErro(e instanceof Error?e.message:"Falha de consulta");})
+  .finally(()=>{if(ativo)setCarregando(false);});
+  return()=>{ativo=false;};
+ },[id]);
+ const contrato=detalhe?.Contrato as {Cliente?:{Nome?:string};IDContrato?:number}|undefined;
+ const enderecos=detalhe?.Enderecos as Array<{Endereco?:string;Numero?:number;NomeBairro?:string;NomeCidade?:string;Estado?:string}>|undefined;
+ const endereco=enderecos?.[0];
+ const local=endereco?[endereco.Endereco,endereco.Numero,endereco.NomeBairro,endereco.NomeCidade,endereco.Estado].filter(v=>v!=null&&v!=="").join(", "):"Endereço não informado";
+ const etapa=andamento?.etapa??"PENDENTE";
+ const pendenciaAtiva=Boolean(pendencia?.ativa);
+ const prox=etapa==="PENDENTE"?"DESLOCAMENTO":etapa==="DESLOCAMENTO"?"NO_CLIENTE":etapa==="NO_CLIENTE"?"ATENDIMENTO":null;
+ const rotulo=etapa==="PENDENTE"?"INICIAR DESLOCAMENTO":etapa==="DESLOCAMENTO"?"CHEGUEI AO CLIENTE":etapa==="NO_CLIENTE"?"INICIAR ATENDIMENTO":"FINALIZAR OS";
+ async function atualizarEventos(){
+  const res=await apiAtel<RespostaEventosErpV525D4>(`/api/os-eventos?atendimento=${id}`);
+  setEventos(res.eventos);setPendencia(res.pendencia);
+ }
+ async function registrarOcorrencia(){
+  if(!andamento||ocupado)return;
+  if(alterado){setErroModal("Salve os materiais alterados antes de registrar a ocorrência.");return;}
+  const motivo=motivoOcorrencia.trim();
+  if(motivo.length<10||motivo.length>2000){setErroModal("Informe justificativa de 10 a 2000 caracteres.");return;}
+  if(reagendar&&!novaData){setErroModal("Informe a nova data de atendimento.");return;}
+  setOcupado(true);setErroModal("");
+  try{
+   const retorno=await acaoOsEventoAtel<RetornoAcaoErpV525D4>({acao:"REGISTRAR",atendimento:id,versao:andamento.versao,tipo:tipoOcorrencia,motivo,novaData:reagendar?novaData:null});
+   setAndamento(retorno.andamento);setEventos(retorno.eventos);setPendencia(retorno.pendencia);
+   setModalOcorrencia(false);setMotivoOcorrencia("");setNovaData("");setReagendar(false);
+   setAviso("Ocorrência registrada. Aguardando tratativa, sem baixa de estoque.");
+  }catch(e){setErroModal(e instanceof Error?e.message:"Não foi possível registrar a ocorrência.");}
+  finally{setOcupado(false);}
+ }
+ async function retomar(){
+  if(!andamento||ocupado)return;
+  setOcupado(true);setErroModal("");
+  try{
+   const retorno=await acaoOsEventoAtel<RetornoAcaoErpV525D4>({acao:"RETOMAR",atendimento:id,versao:andamento.versao,justificativa:justificativaRetomada});
+   setAndamento(retorno.andamento);setEventos(retorno.eventos);setPendencia(retorno.pendencia);
+   setModalRetomar(false);setJustificativaRetomada("");setAviso("Deslocamento retomado. Histórico atualizado.");
+  }catch(e){setErroModal(e instanceof Error?e.message:"Não foi possível retomar o atendimento.");}
+  finally{setOcupado(false);}
+ }
+ async function avancar(){
+  if(!prox||!andamento||ocupado||pendenciaAtiva)return;
+  setOcupado(true);setErro("");
+  try{
+   const a=await apiAtel<AndamentoAtel>("/api/os-andamento",{atendimento:id,versao:andamento.versao,etapa:prox});
+   setAndamento(a);setAviso("Etapa registrada no Supabase.");
+   try { await atualizarEventos(); } catch { setAviso("Etapa registrada. Atualize a OS para consultar o histórico."); }
+  }catch(e){setErro(e instanceof Error?e.message:"Falha na transição");}
+  finally{setOcupado(false);}
+ }
+ const chave=(p:{cod_produto:number;patrimonio?:number|null;mac?:string|null})=>`${p.cod_produto}:${p.patrimonio??""}:${p.mac??""}`;
+ function adicionar(){
+  if(produto===""){setErro("Selecione um produto do estoque ERP.");return;}
+  const p=estoqueErp[Number(produto)],q=Number(quantidade);
+  if(!p||!Number.isFinite(q)||q<=0||q>p.quantidade){setErro("Produto ou quantidade inválida.");return;}
+  const anterior=itens.find(i=>chave(i)===chave(p));
+  if((edicaoMaterial===chave(p)?q:(anterior?.quantidade??0)+q)>p.quantidade){setErro("Quantidade superior ao saldo ERP.");return;}
+  const item:ItemAtel={cod_produto:p.cod_produto,produto:p.produto,quantidade:edicaoMaterial===chave(p)?q:q+(anterior?.quantidade??0),patrimonio:p.patrimonio,mac:p.mac};
+  setItens(anterior?itens.map(i=>chave(i)===chave(p)?item:i):[...itens,item]);setEdicaoMaterial(null);setProduto("");setBuscaMaterial("");setQuantidade("1");setAlterado(true);setErro("");setAviso("");
+ }
+ async function salvar(){
+  if(!apontamento||ocupado)return;
+  setOcupado(true);setErro("");
+  try{
+   const m=await apiAtel<ApontamentoAtel>("/api/os-materiais",{atendimento:id,versao:apontamento.versao,itens});
+   setApontamento(m);setItens(m.itens);setAlterado(false);setAviso("Materiais salvos. Nenhuma baixa realizada.");
+  }catch(e){setErro(e instanceof Error?e.message:"Falha ao salvar");}
+  finally{setOcupado(false);}
+ }
+ const btn:CSSProperties={width:"100%",minHeight:47,border:0,borderRadius:4,fontSize:12,fontWeight:900,background:"#0d7897",color:"#fff",cursor:"pointer"};
+ return <div className="collector-screen"><div className="collector-phone" style={phoneStyle}>
+  <div style={headerStyle}>
+   <button type="button" style={backButtonStyle} onClick={()=>router.push("/coletor/ordens-servico")}>‹</button>
+   <div style={headerInfoStyle}><strong style={headerCodigoStyle}>OS-{id}</strong><span>{String(detalhe?.NomeTecnicoVisita??"TÉCNICO ERP").toUpperCase()}</span><span>ERP · {String(detalhe?.IdTecnicoVisita??"—")}</span></div>
+   <button type="button" style={menuButtonStyle} aria-label="Mais opções">⋮</button>
+  </div>
+  <div style={scrollStyle}>
+   {carregando&&<p style={{padding:15}}>Carregando OS...</p>}
+   {erro&&<div role="alert" style={{padding:12,margin:10,background:"#fff0ed",color:"#a12424",borderRadius:8,fontSize:12}}>{erro}</div>}
+   {aviso&&<div role="status" style={{padding:12,margin:10,background:"#e8f8ee",color:"#087b43",borderRadius:8,fontSize:12}}>{aviso}</div>}
+   {detalhe&&<>
+    <section style={compactOsCardStyle}>
+     <div style={compactOsHeaderStyle}><div style={{minWidth:0,flex:1}}><div style={compactOsLabelStyle}>ATENDIMENTO DA OS</div>
+      <strong style={compactClientNameStyle}>{contrato?.Cliente?.Nome??"Cliente ERP"}</strong>
+      <div style={compactMetaStyle}><span>Protocolo {String(detalhe.NumeroProtocolo??"—")}</span></div></div>
+      <span style={compactStatusStyle}>{pendenciaAtiva?(pendencia?.nova_data?"REAGENDAMENTO":"AGUARDANDO TRATATIVA"):etapa.replaceAll("_"," ")}</span></div>
+     <div style={compactDetailsGridStyle}>
+      <div style={compactDetailStyle}><span style={compactDetailIconStyle}>⌖</span><div><span style={compactDetailLabelStyle}>LOCAL</span><b style={compactDetailValueStyle}>{local}</b></div></div>
+      <div style={compactDetailStyle}><span style={compactDetailIconStyle}>●</span><div><span style={compactDetailLabelStyle}>TÉCNICO</span><b style={compactDetailValueStyle}>{String(detalhe.NomeTecnicoVisita??detalhe.IdTecnicoVisita)}</b></div></div>
+     </div>
+     {detalhe.Descricao!=null&&<div style={{...compactObservationStyle,gap:0,minWidth:0}}>
+      <span style={compactObservationLabelStyle}>OBS</span>
+      <span ref={obsRef} style={{minWidth:0,flex:"1 1 auto",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{String(detalhe.Descricao)}</span>
+      {obsTruncada&&<button type="button" aria-label="Ver observação completa" title="Ver observação completa" onClick={()=>setObsAberta(true)} style={{flex:"0 0 auto",border:0,background:"transparent",color:"#0788ad",padding:"2px 4px",cursor:"pointer",display:"grid",placeItems:"center"}}>
+       <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 7v6"/><path d="M12 17h.01"/></svg>
+      </button>}
+     </div>}
+    </section>
+    <section style={{...receiptSectionStyle,margin:"0 10px 12px"}}>
+     <div style={receiptTitleStyle}><div><span style={sectionEyebrowStyle}>EXECUÇÃO</span><span style={sectionTitleTextStyle}>Materiais do Atendimento</span></div><span style={sectionCountStyle}>{itens.length}</span></div>
+     <div style={receiptInfoStyle}>Nenhum material previsto pelo ERP. O técnico registra os produtos utilizados. A baixa ocorre somente na finalização.</div>
+     {etapa==="ATENDIMENTO"&&!pendenciaAtiva?<>
+      <div style={{padding:"0 11px 10px",display:"grid",gap:8}}>
+       <div style={{border:"1px solid #d9e8ef",borderRadius:12,background:"#f7fbfd",padding:11,boxShadow:"0 2px 10px rgba(13,78,107,.035)"}}>
+        <label htmlFor="atel-busca-material" style={{display:"block",fontSize:10,letterSpacing:".06em",fontWeight:900,color:"#164b65",marginBottom:8}}>PESQUISAR NO ESTOQUE DO TÉCNICO</label>
+        <div style={{display:"flex",alignItems:"center",gap:8,border:"1px solid #b8d9e7",background:"#fff",borderRadius:12,padding:"2px 12px",boxShadow:"0 2px 8px rgba(10,91,125,.05)"}}>
+         <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#0b8db0" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg>
+         <input id="atel-busca-material" type="search" autoComplete="off" placeholder="Código, nome, MAC ou patrimônio" value={buscaMaterial} onChange={e=>{setBuscaMaterial(e.target.value);setProduto("");setEdicaoMaterial(null);}} style={{flex:1,minWidth:0,padding:"12px 0",fontSize:12,outline:"none",border:0,background:"transparent",color:"#10394c"}}/>
+        </div>
+        {produto!==""&&estoqueErp[Number(produto)]&&<div style={{display:"flex",alignItems:"center",justifyContent:"space-between",gap:7,marginTop:9,fontSize:10}}>
+         <span style={{color:"#087b61",fontWeight:850,display:"inline-flex",alignItems:"center",gap:5}}><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m8 12 3 3 5-6"/></svg> Material selecionado</span>
+         <span style={{color:"#607d8d",whiteSpace:"nowrap"}}>Saldo: <strong>{estoqueErp[Number(produto)].quantidade}</strong></span>
+        </div>}
+        {buscaMaterial.trim()!==""&&produto===""&&<div style={{marginTop:7,display:"grid",gap:5,maxHeight:210,overflowY:"auto"}} role="listbox" aria-label="Materiais encontrados">
+         {estoqueErp.map((p,i)=>({p,i})).filter(({p})=>[p.cod_produto,p.produto,p.mac,p.patrimonio].some(v=>String(v??"").toLocaleLowerCase("pt-BR").includes(buscaMaterial.trim().toLocaleLowerCase("pt-BR")))).slice(0,12).map(({p,i})=><button key={i} type="button" role="option" aria-selected={false} onClick={()=>{setProduto(String(i));setBuscaMaterial(`${p.cod_produto} · ${p.produto}`);}} style={{textAlign:"left",background:"#fff",border:"1px solid #d6e7ee",borderLeft:"4px solid #1298ba",borderRadius:11,padding:"12px 13px",boxShadow:"0 2px 7px rgba(9,70,100,.04)",cursor:"pointer",display:"grid",gap:4}}>
+          <strong style={{fontSize:11,color:"#103e55",overflowWrap:"anywhere"}}>{p.cod_produto} · {p.produto}</strong>
+          <span style={{fontSize:10,color:"#526c7b"}}>Saldo: {p.quantidade}{p.patrimonio!=null?` · Patrimônio: ${p.patrimonio}`:""}{p.mac?` · MAC: ${p.mac}`:""}</span>
+         </button>)}
+         {!estoqueErp.some(p=>[p.cod_produto,p.produto,p.mac,p.patrimonio].some(v=>String(v??"").toLocaleLowerCase("pt-BR").includes(buscaMaterial.trim().toLocaleLowerCase("pt-BR"))))&&<div style={{fontSize:11,color:"#64748b",padding:10}}>Nenhum material encontrado no estoque ERP.</div>}
+        </div>}
+       </div>
+       <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",gap:10,background:"#fff",border:"1px solid #d9e8ef",borderRadius:13,padding:10}}>
+        <div style={{minWidth:0}}><span style={{display:"block",fontSize:10,fontWeight:900,color:"#46687b",marginBottom:3}}>QUANTIDADE</span><span style={{fontSize:10,color:"#7891a0"}}>Unidades utilizadas</span></div>
+        <div style={{display:"flex",alignItems:"center",border:"1px solid #c7e2ed",borderRadius:11,overflow:"hidden",background:"#f3fafe"}}>
+         <button type="button" aria-label="Diminuir quantidade" onClick={()=>setQuantidade(String(Math.max(1,Number(quantidade||1)-1)))} style={{width:38,height:40,border:0,background:"transparent",fontSize:20,fontWeight:800,color:"#087d9e",cursor:"pointer"}}>−</button>
+         <input aria-label="Quantidade de material" type="number" min="0.001" step="any" value={quantidade} onChange={e=>setQuantidade(e.target.value)} style={{width:57,height:40,textAlign:"center",border:0,borderLeft:"1px solid #d8eaf1",borderRight:"1px solid #d8eaf1",background:"#fff",fontSize:16,fontWeight:900,color:"#103f56",outline:"none"}}/>
+         <button type="button" aria-label="Aumentar quantidade" onClick={()=>setQuantidade(String(Math.max(0,Number(quantidade||0))+1))} style={{width:38,height:40,border:0,background:"transparent",fontSize:20,fontWeight:800,color:"#087d9e",cursor:"pointer"}}>+</button>
+        </div>
+       </div>
+       <button type="button" onClick={adicionar} disabled={ocupado||produto===""} style={{...btn,borderRadius:11,minHeight:45,background:produto===""?"#a4c5d0":"#087e9f",boxShadow:produto===""?"none":"0 5px 12px rgba(6,122,158,.16)"}}>{edicaoMaterial?"✓ ATUALIZAR QUANTIDADE":"+ ADICIONAR À OS"}</button>
+      </div>
+     </>:<div style={{padding:"0 11px 10px",fontSize:11,color:"#64748b"}}>A inclusão de materiais será habilitada na etapa Atendimento.</div>}
+     {itens.length>0&&<div style={{display:"flex",alignItems:"center",justifyContent:"space-between",margin:"5px 12px 9px"}}><strong style={{fontSize:11,color:"#16465d"}}>MATERIAIS LANÇADOS</strong><span style={{fontSize:10,color:"#678293"}}>{itens.length} {itens.length===1?"item":"itens"}</span></div>}
+     {itens.map(i=><div key={chave(i)} style={{margin:"0 11px 9px",border:"1px solid #d5e6ee",borderRadius:13,background:"#fff",overflow:"hidden",boxShadow:"0 3px 12px rgba(12,68,96,.05)"}}>
+      <div style={{display:"flex",alignItems:"flex-start",gap:10,padding:"13px 12px 10px"}}>
+       <div style={{display:"grid",placeItems:"center",width:34,height:34,flexShrink:0,background:"#eaf6fb",borderRadius:10,color:"#0789af"}}><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="m12 2 9 5-9 5-9-5 9-5Z"/><path d="m3 7 9 5 9-5M3 7v10l9 5 9-5V7M12 12v10"/></svg></div>
+       <div style={{minWidth:0,flex:1}}><span style={{fontSize:9,fontWeight:900,letterSpacing:".06em",color:"#7290a0"}}>SKU {i.cod_produto}</span><strong style={{display:"block",fontSize:12,lineHeight:1.4,color:"#123e54",marginTop:3,overflowWrap:"anywhere"}}>{i.produto}</strong><div style={{fontSize:10,color:"#617d8b",marginTop:5,overflowWrap:"anywhere"}}>{i.patrimonio!=null?`Patrimônio ${i.patrimonio}`:""}{i.mac?` · MAC ${i.mac}`:""}</div><span style={{display:"inline-block",fontSize:10,color:"#0b866b",marginTop:5}}>● Registrado no apontamento</span></div>
+       <div style={{flexShrink:0,minWidth:37,textAlign:"center",background:"#eaf6fb",borderRadius:9,padding:"8px 7px",fontSize:16,color:"#087fa5",fontWeight:900}}>{i.quantidade}</div>
+      </div>
+      {etapa==="ATENDIMENTO"&&!pendenciaAtiva&&<div style={{display:"flex",justifyContent:"flex-end",gap:9,padding:"8px 11px",borderTop:"1px solid #edf2f5"}}>
+       <button type="button" disabled={ocupado} onClick={()=>{const p=estoqueErp.find(p=>chave(p)===chave(i));if(!p){setErro("Material não localizado no estoque atual do técnico.");return;}setEdicaoMaterial(chave(i));setQuantidade(String(i.quantidade));setProduto(String(estoqueErp.indexOf(p)));setBuscaMaterial(`${p.cod_produto} · ${p.produto}`);}} style={{border:0,background:"transparent",padding:"5px 4px",color:"#087e9f",fontWeight:850,fontSize:10,cursor:"pointer"}}>✎ EDITAR QTD.</button>
+       <button type="button" disabled={ocupado} onClick={()=>{setItens(itens.filter(x=>chave(x)!==chave(i)));setAlterado(true);if(edicaoMaterial===chave(i))setEdicaoMaterial(null);}} style={{border:0,background:"transparent",padding:"5px 4px",color:"#b0444a",fontWeight:850,fontSize:10,cursor:"pointer"}}>♧ REMOVER</button>
+      </div>}
+     </div>)}
+     <div style={{margin:"13px 11px 11px",padding:12,border:"1px solid #d8eaf1",borderRadius:13,background:"#f1f8fc"}}>
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",gap:8,marginBottom:10}}><strong style={{fontSize:11,color:"#12435b"}}>RESUMO DO ATENDIMENTO</strong><span style={{fontSize:9,color:"#638397"}}>Apontamento</span></div>
+      <div style={{display:"grid",gridTemplateColumns:"repeat(4,minmax(0,1fr))",gap:5}}>
+       {[ ["SKUs",String(itens.length).padStart(2,"0")],["UNIDADES",String(itens.reduce((n,i)=>n+i.quantidade,0))],["ITENS OK",String(itens.length).padStart(2,"0")],["DIVERG.","00"] ].map(([k,v])=><div key={k} style={{border:"1px solid #dceaf1",borderRadius:10,padding:"10px 3px",textAlign:"center",background:"#fff"}}><b style={{display:"block",fontSize:17,fontWeight:900,color:"#075b79",fontVariantNumeric:"tabular-nums"}}>{v}</b><span style={{fontSize:8,color:"#637f90",fontWeight:800}}>{k}</span></div>)}
+      </div>
+     </div>
+     {etapa==="ATENDIMENTO"&&!pendenciaAtiva&&<div style={{padding:"0 11px 13px"}}><button type="button" style={{...btn,borderRadius:11,minHeight:48,background:alterado?"#087f9f":"#a6c6d1"}} disabled={!alterado||ocupado} onClick={()=>void salvar()}>{ocupado?"SALVANDO...":alterado?"▣ SALVAR APONTAMENTOS":"✓ APONTAMENTOS SALVOS"}</button></div>}
+    </section>
+    <section style={{...receiptSectionStyle,margin:"0 10px 12px",padding:12}}>
+     <button type="button" onClick={()=>setMostrarHistorico(v=>!v)} aria-expanded={mostrarHistorico}
+       style={{width:"100%",background:"#eff8fb",border:"1px solid #cce8f0",borderRadius:7,padding:13,color:"#087da7",fontWeight:900,cursor:"pointer",fontSize:13}}>
+       {mostrarHistorico?"OCULTAR HISTÓRICO DA OS":"VER HISTÓRICO DA OS"} ({eventos.length})
+     </button>
+     {mostrarHistorico&&<div style={{display:"grid",gap:8,marginTop:12}}>
+      {eventos.length===0&&<p style={{fontSize:12,color:"#64748b",textAlign:"center",margin:8}}>Nenhuma movimentação registrada no WMS para esta OS.</p>}
+      {eventos.map(ev=><article key={ev.id} style={{border:"1px solid #dce8ef",borderLeft:`3px solid ${ev.tipo==="OCORRENCIA"?"#b7791f":"#1198ba"}`,borderRadius:9,background:"#fff",padding:12}}>
+       <div style={{display:"flex",justifyContent:"space-between",gap:8,alignItems:"start"}}>
+        <strong style={{fontSize:11,color:"#073d57"}}>{ev.tipo==="OCORRENCIA"?"Ocorrência de atendimento":ev.tipo==="RETOMADA"?"Deslocamento retomado":`${rotuloEtapaAtel(ev.etapa_anterior)} → ${rotuloEtapaAtel(ev.etapa_nova)}`}</strong>
+        <span style={{fontSize:10,color:"#64748b",whiteSpace:"nowrap"}}>{new Date(ev.ocorrido_em).toLocaleString("pt-BR",{dateStyle:"short",timeStyle:"short"})}</span>
+       </div>
+       {ev.tipo_ocorrencia&&<p style={{fontSize:11,margin:"6px 0 2px",fontWeight:800}}>Tipo: {rotuloOcorrenciaAtel(ev.tipo_ocorrencia)}</p>}
+       {ev.motivo&&<p style={{fontSize:11,margin:"4px 0",lineHeight:1.5,overflowWrap:"anywhere",whiteSpace:"pre-wrap"}}>{ev.motivo}</p>}
+       {ev.nova_data&&<p style={{fontSize:11,margin:"4px 0",fontWeight:800}}>Reagendado para: {dataBrAtel(ev.nova_data)}</p>}
+      </article>)}
+      <button type="button" onClick={()=>{void atualizarEventos().catch(e=>setErro(e instanceof Error?e.message:"Histórico indisponível"));}} style={{border:0,background:"transparent",color:"#087da7",fontWeight:800,fontSize:11,cursor:"pointer"}}>ATUALIZAR HISTÓRICO</button>
+     </div>}
+    </section>
+   </>}
+  </div>
+  {obsAberta&&<div
+   role="presentation"
+   onClick={()=>setObsAberta(false)}
+   onKeyDown={e=>{if(e.key==="Escape")setObsAberta(false);}}
+   style={{
+    position:"absolute",inset:0,zIndex:200,
+    display:"flex",alignItems:"center",justifyContent:"center",
+    padding:"20px 16px",boxSizing:"border-box",
+    background:"rgba(8,32,49,.66)",backdropFilter:"blur(4px)",
+    WebkitBackdropFilter:"blur(4px)"
+   }}
+  >
+   <div
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="atel-obs-titulo"
+    aria-describedby="atel-obs-conteudo"
+    onClick={e=>e.stopPropagation()}
+    style={{
+     width:"100%",maxWidth:372,maxHeight:"100%",boxSizing:"border-box",
+     borderRadius:20,overflow:"hidden",background:"#ffffff",
+     border:"1px solid rgba(195,225,236,.9)",
+     boxShadow:"0 25px 70px rgba(3,24,41,.32), 0 5px 18px rgba(5,41,62,.16)",
+     display:"flex",flexDirection:"column"
+    }}
+   >
+    <div style={{height:5,flex:"0 0 5px",background:"linear-gradient(90deg,#087da7,#1ca9c8)"}} />
+    <div style={{padding:"21px 20px 14px",display:"flex",alignItems:"flex-start",gap:12,flex:"0 0 auto"}}>
+     <div aria-hidden="true" style={{
+      width:44,height:44,flex:"0 0 44px",borderRadius:13,
+      display:"grid",placeItems:"center",background:"#e9f7fc",color:"#0786aa",
+      border:"1px solid #ccecf5"
+     }}>
+      <svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
+       <path d="M12 16v-4"/><path d="M12 8h.01"/><circle cx="12" cy="12" r="9.2"/>
+      </svg>
+     </div>
+     <div style={{minWidth:0,flex:1,paddingTop:2}}>
+      <div style={{fontSize:10,letterSpacing:".10em",fontWeight:850,color:"#6c8495",marginBottom:4}}>ORDEM DE SERVIÇO</div>
+      <h2 id="atel-obs-titulo" style={{fontSize:18,lineHeight:1.2,letterSpacing:"-.025em",color:"#073d57",fontWeight:900,margin:0}}>Observação da OS</h2>
+     </div>
+     <button
+      type="button" autoFocus aria-label="Fechar observação"
+      onClick={()=>setObsAberta(false)}
+      style={{width:34,height:34,flex:"0 0 34px",border:"1px solid #dcebf1",borderRadius:10,background:"#f7fafc",color:"#436477",display:"grid",placeItems:"center",cursor:"pointer",padding:0}}
+     >
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.25" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg>
+     </button>
+    </div>
+    <div style={{padding:"0 20px 18px",overflowY:"auto",overscrollBehavior:"contain",minHeight:0,flex:"1 1 auto"}}>
+     <div style={{
+      border:"1px solid #d7eaf1",borderLeft:"3px solid #1298bd",borderRadius:12,
+      padding:"17px 15px",background:"#f7fbfd"
+     }}>
+      <div style={{fontSize:10,color:"#36809a",fontWeight:850,letterSpacing:".08em",marginBottom:10}}>DESCRIÇÃO COMPLETA</div>
+      <p id="atel-obs-conteudo" style={{fontSize:13,color:"#294456",lineHeight:1.7,whiteSpace:"pre-wrap",overflowWrap:"anywhere",margin:0,fontWeight:500}}>{String(detalhe?.Descricao??"")}</p>
+     </div>
+    </div>
+    <div style={{padding:"14px 20px 20px",borderTop:"1px solid #eaf1f5",flex:"0 0 auto",background:"#fff"}}>
+     <button
+      type="button" onClick={()=>setObsAberta(false)}
+      style={{width:"100%",minHeight:46,border:0,borderRadius:11,padding:"12px 16px",fontSize:12,letterSpacing:".045em",fontWeight:900,
+       background:"linear-gradient(115deg,#0783ac,#159cbd)",color:"#fff",boxShadow:"0 6px 16px rgba(14,141,179,.2)",cursor:"pointer"}}
+     >FECHAR OBSERVAÇÃO</button>
+    </div>
+   </div>
+  </div>}
+  {modalOcorrencia&&<div role="presentation" onClick={()=>{if(!ocupado)setModalOcorrencia(false);}}
+    style={{position:"absolute",inset:0,zIndex:210,display:"flex",justifyContent:"center",alignItems:"center",padding:"14px",boxSizing:"border-box",background:"rgba(8,32,49,.68)",backdropFilter:"blur(4px)"}}>
+    <div role="dialog" aria-modal="true" aria-labelledby="titulo-ocorrencia-erp" onClick={e=>e.stopPropagation()}
+      style={{width:"100%",maxWidth:372,maxHeight:"95%",display:"flex",flexDirection:"column",background:"white",border:"1px solid #d4e9f1",borderRadius:18,boxShadow:"0 25px 70px rgba(3,24,41,.3)",overflow:"hidden"}}>
+      <div style={{height:5,background:"linear-gradient(90deg,#b7791f,#e8a63b)",flexShrink:0}} />
+      <div style={{display:"flex",alignItems:"center",gap:10,padding:"18px 18px 10px"}}>
+       <div style={{width:39,height:39,background:"#fff3dc",color:"#9c6615",border:"1px solid #f6dfb4",borderRadius:11,display:"grid",placeItems:"center",flexShrink:0}}>
+        <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 3 2 21h20L12 3Z"/><path d="M12 9v5m0 3h.01"/></svg>
+       </div>
+       <div style={{flex:1,minWidth:0}}><div style={{fontSize:9,letterSpacing:".1em",fontWeight:900,color:"#8794a3"}}>ORDEM DE SERVIÇO</div><h2 id="titulo-ocorrencia-erp" style={{fontSize:16,margin:"2px 0 0",color:"#073d57",lineHeight:1.2}}>Ocorrência de atendimento</h2></div>
+       <button type="button" aria-label="Fechar ocorrência" onClick={()=>{if(!ocupado)setModalOcorrencia(false);}} style={{width:32,height:32,borderRadius:10,border:"1px solid #dcebf1",background:"#f7fafc",cursor:"pointer",color:"#436477",fontSize:20}}>×</button>
+      </div>
+      <div style={{overflowY:"auto",padding:"4px 18px 14px",flex:1,minHeight:0}}>
+       <div style={{padding:11,background:"#f4faff",border:"1px solid #d9eef6",borderRadius:9,fontSize:11,color:"#34586b",lineHeight:1.5,marginBottom:14}}>Registre a situação real do cliente. Esta ação não baixa materiais nem finaliza a OS.</div>
+       <label style={{display:"block",fontSize:11,fontWeight:900,color:"#304f61",marginBottom:5}}>TIPO DE OCORRÊNCIA</label>
+       <select value={tipoOcorrencia} onChange={e=>setTipoOcorrencia(e.target.value)} style={{width:"100%",border:"1px solid #cbdce5",borderRadius:8,padding:11,marginBottom:13,background:"white",fontSize:13}}>
+        <option value="CLIENTE_AUSENTE">Cliente ausente</option><option value="IMPEDIMENTO_TECNICO">Impedimento técnico</option><option value="OUTRO">Outro impedimento</option>
+       </select>
+       <label style={{display:"block",fontSize:11,fontWeight:900,color:"#304f61",marginBottom:5}}>JUSTIFICATIVA OBRIGATÓRIA <span style={{fontWeight:500}}>(mín. 10 caracteres)</span></label>
+       <textarea value={motivoOcorrencia} onChange={e=>setMotivoOcorrencia(e.target.value)} rows={3} maxLength={2000} placeholder="Descreva o que ocorreu com o cliente..." style={{width:"100%",boxSizing:"border-box",border:"1px solid #cbdce5",borderRadius:8,padding:11,resize:"vertical",fontSize:12,marginBottom:12}} />
+       <label style={{display:"flex",alignItems:"center",gap:9,fontSize:12,fontWeight:850,marginBottom:12,color:"#304f61"}}><input type="checkbox" checked={reagendar} onChange={e=>setReagendar(e.target.checked)} />Reagendar atendimento</label>
+       {reagendar&&<><label style={{display:"block",fontSize:11,fontWeight:900,color:"#304f61",marginBottom:5}}>NOVA DATA</label><input type="date" value={novaData} onChange={e=>setNovaData(e.target.value)} style={{width:"100%",boxSizing:"border-box",border:"1px solid #cbdce5",borderRadius:8,padding:11,marginBottom:12,fontSize:12}}/></>}
+       {erroModal&&<p role="alert" style={{padding:10,background:"#fff0ee",borderRadius:8,color:"#a12121",fontSize:11,fontWeight:700}}>{erroModal}</p>}
+      </div>
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,padding:"14px 18px 18px",borderTop:"1px solid #edf2f6"}}>
+       <button type="button" disabled={ocupado} onClick={()=>setModalOcorrencia(false)} style={{minHeight:44,borderRadius:9,border:"1px solid #b7d8e5",background:"#fff",color:"#087da7",fontWeight:900,fontSize:11}}>CANCELAR</button>
+       <button type="button" disabled={ocupado} onClick={()=>void registrarOcorrencia()} style={{minHeight:44,borderRadius:9,border:0,background:"linear-gradient(110deg,#0988b0,#159fbd)",color:"white",fontWeight:900,fontSize:11}}>{ocupado?"SALVANDO...":"REGISTRAR"}</button>
+      </div>
+    </div>
+  </div>}
+  {modalRetomar&&<div role="presentation" onClick={()=>{if(!ocupado)setModalRetomar(false);}}
+   style={{position:"absolute",inset:0,zIndex:210,display:"flex",justifyContent:"center",alignItems:"center",padding:16,boxSizing:"border-box",background:"rgba(8,32,49,.68)",backdropFilter:"blur(4px)"}}>
+   <div role="dialog" aria-modal="true" aria-labelledby="titulo-retomada-erp" onClick={e=>e.stopPropagation()} style={{width:"100%",maxWidth:372,maxHeight:"90%",overflowY:"auto",background:"white",borderRadius:18,boxShadow:"0 25px 70px rgba(3,24,41,.3)",border:"1px solid #d5eaf1"}}>
+    <div style={{height:5,background:"linear-gradient(90deg,#0784ab,#1caac7)"}}/>
+    <div style={{padding:"20px 18px 8px"}}><div style={{fontSize:10,color:"#688496",fontWeight:900,letterSpacing:".08em"}}>ORDEM DE SERVIÇO</div><h2 id="titulo-retomada-erp" style={{fontSize:17,color:"#073d57",margin:"5px 0 10px"}}>Retomar deslocamento</h2>
+     <p style={{fontSize:12,color:"#52697b",lineHeight:1.5,margin:"0 0 12px"}}>{pendencia?.nova_data?`Atendimento reagendado para ${dataBrAtel(pendencia.nova_data)}. Se antecipar a visita, justifique.`:"A ocorrência será encerrada e o deslocamento poderá ser retomado."}</p>
+     <label style={{display:"block",fontSize:11,fontWeight:850,marginBottom:5}}>Justificativa da retomada</label>
+     <textarea value={justificativaRetomada} onChange={e=>setJustificativaRetomada(e.target.value)} rows={3} maxLength={2000} placeholder="Obrigatória para antecipar reagendamentos futuros" style={{width:"100%",boxSizing:"border-box",padding:11,border:"1px solid #cbdce5",borderRadius:8,resize:"vertical"}}/>
+     {erroModal&&<p role="alert" style={{fontSize:11,color:"#ac1d1d",background:"#fff3f1",padding:9,borderRadius:8}}>{erroModal}</p>}
+    </div>
+    <div style={{padding:"13px 18px 18px",display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}><button type="button" disabled={ocupado} onClick={()=>setModalRetomar(false)} style={{minHeight:44,border:"1px solid #b7d8e5",borderRadius:9,background:"#fff",color:"#087da7",fontWeight:900,fontSize:11}}>CANCELAR</button><button type="button" disabled={ocupado} onClick={()=>void retomar()} style={{minHeight:44,border:0,borderRadius:9,background:"#0b92b6",color:"#fff",fontWeight:900,fontSize:11}}>{ocupado?"SALVANDO...":"RETOMAR"}</button></div>
+   </div>
+  </div>}
+  {preflightAberto&&<div role="presentation" onClick={()=>setPreflightAberto(false)} style={{position:"fixed",inset:0,zIndex:11000,background:"rgba(7,28,45,.64)",display:"flex",alignItems:"center",justifyContent:"center",padding:16}}>
+   <div role="dialog" aria-modal="true" aria-labelledby="titulo-preflight-atel" onClick={e=>e.stopPropagation()} style={{width:"100%",maxWidth:390,maxHeight:"85vh",overflowY:"auto",background:"#fff",borderRadius:16,boxShadow:"0 20px 65px rgba(0,0,0,.3)",padding:18,color:"#113b50"}}>
+    <div style={{fontSize:10,fontWeight:900,color:"#1483a6",letterSpacing:1}}>CONFERÊNCIA OPERACIONAL</div>
+    <h2 id="titulo-preflight-atel" style={{fontSize:17,margin:"7px 0 5px"}}>Pré-finalização · OS nº {id}</h2>
+    <p style={{fontSize:11,color:"#617a88",lineHeight:1.5}}>Consulta somente leitura. Nenhuma baixa ou finalização será executada.</p>
+    {preflightCarregando&&<p role="status" style={{fontSize:12}}>Consultando apontamentos e validacao WMS...</p>}
+    {preflightErro&&<p role="alert" style={{fontSize:12,color:"#a32d2d",background:"#fff2f0",padding:10,borderRadius:8}}>{preflightErro}</p>}
+    {preflightDados&&<>
+     <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,margin:"12px 0"}}><div style={{background:"#eef7fb",padding:12,borderRadius:10,fontSize:11}}>SKUs<br/><strong style={{fontSize:22}}>{preflightDados.total_itens}</strong></div><div style={{background:"#eef7fb",padding:12,borderRadius:10,fontSize:11}}>Unidades<br/><strong style={{fontSize:22}}>{preflightDados.total_unidades}</strong></div></div>
+     <div style={{display:"grid",gap:7}}>{preflightDados.conferencias.map((item,i)=><div key={`${item.cod_produto}-${i}`} style={{border:"1px solid #d9e9f0",borderRadius:9,padding:10,fontSize:11}}><strong>SKU {item.cod_produto} · {item.produto}</strong><div style={{marginTop:5,color:item.valido?"#167b55":"#a62f2f"}}>Apontado: {item.quantidade} · Saldo WMS: {item.saldo_erp == null ? "Nao conciliado" : item.saldo_erp} · {item.valido?"Conferido":"Pendente de conciliacao"}</div></div>)}</div>
+     <div style={{background:"#fff7e8",border:"1px solid #f0d6a6",borderRadius:9,padding:11,marginTop:12,fontSize:11}}><strong>Finalização indisponível</strong>{preflightDados.motivos.map((m,i)=><div key={i} style={{marginTop:5}}>• {m}</div>)}</div>
+    </>}
+    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginTop:15}}><button type="button" onClick={()=>setPreflightAberto(false)} style={{minHeight:43,border:"1px solid #c7dce6",background:"white",borderRadius:9,color:"#17627c",fontWeight:800}}>FECHAR</button><button type="button" disabled={preflightCarregando} onClick={()=>void conferirFinalizacao()} style={{minHeight:43,border:0,background:"#087fa3",borderRadius:9,color:"white",fontWeight:800}}>RECONSULTAR</button></div>
+   </div>
+  </div>}
+  <div style={footerStyle}>
+   {pendenciaAtiva?<>
+    <div style={{fontSize:11,textAlign:"center",background:"#fff7e6",color:"#885b18",padding:"10px 8px",fontWeight:850,marginBottom:8}}>
+     OS aguardando tratativa{pendencia?.nova_data?` · Nova data: ${dataBrAtel(pendencia.nova_data)}`:""}
+    </div>
+    <button type="button" disabled={ocupado} onClick={()=>{setErroModal("");setModalRetomar(true);}} style={footerButtonStyle}>RETOMAR DESLOCAMENTO</button>
+   </>:<>
+    {(["DESLOCAMENTO","NO_CLIENTE","ATENDIMENTO"] as EtapaAtel[]).includes(etapa)&&<button type="button" disabled={ocupado} style={{...footerButtonStyle,background:"#b7791f",marginBottom:8}} onClick={()=>{setErroModal("");setModalOcorrencia(true);}}>REGISTRAR OCORRÊNCIA / REAGENDAR</button>}
+    {prox?<button type="button" onClick={()=>void avancar()} disabled={ocupado||carregando||!andamento} style={footerButtonStyle}>{rotulo}</button>:<button type="button" onClick={()=>void conferirFinalizacao()} disabled={ocupado||carregando||!andamento} style={{...footerButtonStyle,background:"#147e9f"}}>CONFERIR FINALIZAÇÃO</button>}
+   </>}
+  </div>
+ </div></div>;
+}
+
+export default function OrdemServicoDetalhePage() {
+  const search = useSearchParams();
+  return search.get("origem") === "erp" ? <DetalheOrdemErpSomenteLeitura /> : <OrdemServicoDetalheLocal />;
+}

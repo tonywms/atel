@@ -11,8 +11,23 @@ export default function GerarPedidoSaida(){
  const [locais,setLocais]=useState<Local[]>([]),[materiais,setMateriais]=useState<Material[]>([]);
  const [origem,setOrigem]=useState(""),[destino,setDestino]=useState(""),[prioridade,setPrioridade]=useState("NORMAL");
  const [itens,setItens]=useState<Linha[]>([{material_id:"",quantidade:"1"}]);
+ const [sincronizando,setSincronizando]=useState(false),[syncMsg,setSyncMsg]=useState(""),[busca,setBusca]=useState("");
  const [observacao,setObservacao]=useState(""),[erro,setErro]=useState(""),[ok,setOk]=useState(""),[busy,setBusy]=useState(false),[loading,setLoading]=useState(true);
  useEffect(()=>{let alive=true;(async()=>{try{const db=atelSupabase();if(!db)throw Error("Supabase indisponível");const {data:{session}}=await db.auth.getSession();if(!session)throw Error("Sessão expirada");const r=await fetch("/api/estoque-wms/catalogo",{headers:{Authorization:"Bearer "+session.access_token},cache:"no-store"});const d=await r.json();if(!r.ok)throw Error(d.error||"Catálogo indisponível");if(alive){setLocais(d.locais||[]);setMateriais(d.materiais||[]);setOrigem((d.locais||[]).find((l:Local)=>l.tipo==="cd")?.id||"");}}catch(e){if(alive)setErro(e instanceof Error?e.message:"Falha de conexão")}finally{if(alive)setLoading(false)}})();return()=>{alive=false}},[]);
+ async function sincronizarERP(){
+   setSincronizando(true);setSyncMsg("");setErro("");
+   try{
+     const db=atelSupabase();if(!db)throw Error("Supabase indisponível");
+     const {data:{session}}=await db.auth.getSession();if(!session)throw Error("Sessão expirada");
+     const r=await fetch("/api/erp/catalogo-produtos/sincronizar",{method:"POST",headers:{Authorization:"Bearer "+session.access_token},cache:"no-store"});
+     const d=await r.json();if(!r.ok)throw Error(d.error||"Falha ao sincronizar produtos");
+     const r2=await fetch("/api/estoque-wms/catalogo",{headers:{Authorization:"Bearer "+session.access_token},cache:"no-store"});
+     const c=await r2.json();if(!r2.ok)throw Error(c.error||"Falha ao atualizar catálogo");
+     setMateriais(c.materiais||[]);
+     setSyncMsg(`ERP consultado: ${d.linhasERP} linhas, ${d.codigosUnicos} produtos únicos, ${d.novos} novos cadastros. ${d.ignorados} linhas sem código ou descrição. Nenhum saldo foi alterado.`);
+   }catch(e){setErro(e instanceof Error?e.message:"Falha ao sincronizar");}
+   finally{setSincronizando(false);}
+ }
  async function enviar(e:React.FormEvent){e.preventDefault();setErro("");setOk("");
  const lista=itens.map(i=>({material_id:i.material_id,quantidade:Number(i.quantidade)}));
  if(!origem||!destino||lista.some(i=>!i.material_id||!Number.isFinite(i.quantidade)||i.quantidade<=0)||new Set(lista.map(i=>i.material_id)).size!==lista.length){setErro("Confira destino, produtos, quantidades e itens duplicados.");return;}
@@ -34,7 +49,13 @@ export default function GerarPedidoSaida(){
  <label><span className={styles.fieldLabel}><MapPin size={15}/> Local de destino</span><select value={destino} onChange={e=>setDestino(e.target.value)} required><option value="">Selecione mini-CD, depósito ou técnico</option>{locais.filter(l=>["ponto_apoio","estoque_tecnico"].includes(l.tipo)).map(l=><option key={l.id} value={l.id}>{l.nome}</option>)}</select></label>
  <label><span className={styles.fieldLabel}><Layers3 size={15}/> Prioridade</span><select value={prioridade} onChange={e=>setPrioridade(e.target.value)}><option>NORMAL</option><option>ALTA</option><option>URGENTE</option></select></label>
  </div><div className={styles.subheading}><Package size={16}/> Produtos do pedido</div>
- {itens.map((item,i)=><div className={styles.item} key={i}><select aria-label={"Produto "+(i+1)} value={item.material_id} onChange={e=>setItens(a=>a.map((x,j)=>j===i?{...x,material_id:e.target.value}:x))} required><option value="">Selecione o material</option>{materiais.map(m=><option key={m.id} value={m.id}>{m.sku} — {m.descricao}</option>)}</select><input aria-label={"Quantidade "+(i+1)} type="number" min="0.001" step="any" value={item.quantidade} onChange={e=>setItens(a=>a.map((x,j)=>j===i?{...x,quantidade:e.target.value}:x))} required/><button type="button" aria-label="Remover produto" disabled={itens.length===1} onClick={()=>setItens(a=>a.filter((_,j)=>j!==i))}><Trash2 size={17}/></button></div>)}
+ <div style={{padding:"14px 16px",background:"#edf6fb",border:"1px solid #c8e3f1",borderRadius:12,marginBottom:14,display:"flex",gap:12,alignItems:"center",justifyContent:"space-between",flexWrap:"wrap"}}>
+ <div><strong style={{color:"#16445d"}}>Catálogo ERP persistido no Supabase</strong><div style={{fontSize:12,color:"#536f83",marginTop:4}}>Importar produtos únicos do inventário do técnico 4157, sem alterar saldos ou produtos existentes.</div></div>
+ <button type="button" disabled={sincronizando||busy} onClick={sincronizarERP} style={{display:"inline-flex",alignItems:"center",gap:8,padding:"10px 14px",border:"1px solid #a4d0e2",borderRadius:9,background:"#fff",color:"#086b8d",fontWeight:700,cursor:"pointer"}}><RefreshCw size={15}/>{sincronizando?"Sincronizando...":"Sincronizar produtos ERP"}</button>
+ </div>
+ {syncMsg&&<div role="status" className={styles.success}><CircleCheck size={16}/>{syncMsg}</div>}
+ <label style={{display:"block",fontSize:12,fontWeight:700,color:"#315a70",marginBottom:12}}>Pesquisar produtos cadastrados<input value={busca} onChange={e=>setBusca(e.target.value)} placeholder="Código ou descrição" style={{display:"block",width:"100%",marginTop:6,padding:"10px 12px",border:"1px solid #cadce8",borderRadius:9}}/></label>
+ {itens.map((item,i)=><div className={styles.item} key={i}><select aria-label={"Produto "+(i+1)} value={item.material_id} onChange={e=>setItens(a=>a.map((x,j)=>j===i?{...x,material_id:e.target.value}:x))} required><option value="">Selecione o material</option>{materiais.filter(m=>!busca.trim()||`${m.sku} ${m.descricao}`.toLocaleLowerCase("pt-BR").includes(busca.toLocaleLowerCase("pt-BR"))||m.id===item.material_id).map(m=><option key={m.id} value={m.id}>{m.sku} — {m.descricao}</option>)}</select><input aria-label={"Quantidade "+(i+1)} type="number" min="0.001" step="any" value={item.quantidade} onChange={e=>setItens(a=>a.map((x,j)=>j===i?{...x,quantidade:e.target.value}:x))} required/><button type="button" aria-label="Remover produto" disabled={itens.length===1} onClick={()=>setItens(a=>a.filter((_,j)=>j!==i))}><Trash2 size={17}/></button></div>)}
  <button className={styles.add} type="button" onClick={()=>setItens(a=>[...a,{material_id:"",quantidade:"1"}])}><Plus size={16}/> Adicionar produto</button>
  <label className={styles.notes}><span className={styles.fieldLabel}><ClipboardList size={15}/> Observações</span><textarea maxLength={1000} value={observacao} onChange={e=>setObservacao(e.target.value)} rows={3}/></label>
  {erro&&<div role="alert" className={styles.error}><AlertTriangle size={16}/>{erro}</div>}{ok&&<div role="status" className={styles.success}><CircleCheck size={16}/>{ok}</div>}

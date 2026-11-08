@@ -224,8 +224,15 @@ export default function RequisicoesTecnicasPage() {
   const [menuCardId, setMenuCardId] =
     useState<number | null>(null);
 
-  const [menuCardPos, setMenuCardPos] =
-    useState<{ top: number; left: number } | null>(null);
+
+  useEffect(() => {
+    if (menuCardId === null) return;
+    const fecharNoEscape = (evento: KeyboardEvent) => {
+      if (evento.key === "Escape") setMenuCardId(null);
+    };
+    window.addEventListener("keydown", fecharNoEscape);
+    return () => window.removeEventListener("keydown", fecharNoEscape);
+  }, [menuCardId]);
 
   const [modalVolumesAberto, setModalVolumesAberto] =
     useState(false);
@@ -981,52 +988,7 @@ export default function RequisicoesTecnicasPage() {
                             e.preventDefault();
                             e.stopPropagation();
 
-                            const rect =
-                              e.currentTarget.getBoundingClientRect();
-
-                            if (menuCardId === req.id) {
-                              setMenuCardId(null);
-                              setMenuCardPos(null);
-                              return;
-                            }
-
-                            const menuWidth = 286;
-                            const menuHeight = 425;
-                            const gap = 10;
-
-                            const cabeNaDireita =
-                              rect.right +
-                                gap +
-                                menuWidth <=
-                              window.innerWidth -
-                                12;
-
-                            const left =
-                              cabeNaDireita
-                                ? rect.right + gap
-                                : Math.max(
-                                    12,
-                                    rect.left -
-                                      menuWidth -
-                                      gap
-                                  );
-
-                            const top =
-                              Math.max(
-                                12,
-                                Math.min(
-                                  rect.top,
-                                  window.innerHeight -
-                                    menuHeight -
-                                    12
-                                )
-                              );
-
-                            setMenuCardId(req.id);
-                            setMenuCardPos({
-                              top,
-                              left,
-                            });
+                            setMenuCardId(menuCardId === req.id ? null : req.id);
                           }}
                         >
                           <IconeGestao nome="settings" tamanho={17} />
@@ -1372,7 +1334,6 @@ export default function RequisicoesTecnicasPage() {
       </div>
 
       {menuCardId !== null &&
-        menuCardPos &&
         typeof document !== "undefined" &&
         createPortal(
           <>
@@ -1380,21 +1341,21 @@ export default function RequisicoesTecnicasPage() {
               className="req-menu-backdrop"
               onClick={() => {
                 setMenuCardId(null);
-                setMenuCardPos(null);
+
               }}
             />
 
             <div
               className="req-card-menu req-card-menu-floating"
-              style={{ top: menuCardPos.top, left: menuCardPos.left }}
+              aria-modal="true"
               onClick={(e) => e.stopPropagation()}
               role="dialog"
               aria-label="Ações da requisição"
             >
               <div className="req-actions-head">
                 <div className="req-actions-emblem"><IconeGestao nome="settings" tamanho={19} /></div>
-                <div><strong>Gestão da requisição</strong><small>Ferramentas administrativas</small></div>
-                <button type="button" className="req-actions-close" aria-label="Fechar ações" onClick={() => { setMenuCardId(null); setMenuCardPos(null); }}>×</button>
+                <div><strong>Gestão da requisição</strong><small>{requisicoes.find((req) => req.id === menuCardId)?.codigo ?? "Requisição"} · Ferramentas administrativas</small></div>
+                <button type="button" className="req-actions-close" aria-label="Fechar ações" onClick={() => { setMenuCardId(null);  }}>×</button>
               </div>
               <div className="req-actions-group-label">CONFIGURAÇÃO</div>
               <button type="button" disabled title="Ação ainda não integrada"><span className="req-action-icon blue"><IconeGestao nome="priority" /></span><span className="req-action-copy"><strong>Prioridades</strong><small>Alterar nível de atendimento</small></span><span className="req-action-chevron">›</span></button>

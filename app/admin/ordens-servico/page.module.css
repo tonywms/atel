@@ -133,3 +133,24 @@
 @media(max-width:1450px){.kpis{grid-template-columns:repeat(3,minmax(0,1fr))}}
 @media(max-width:850px){.summary{grid-template-columns:repeat(2,minmax(0,1fr))}.detailHead{flex-wrap:wrap}.tabs{flex-wrap:wrap}}
 @media(max-width:520px){.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.summary{grid-template-columns:repeat(2,minmax(0,1fr));padding:12px}.summary small{font-size:10px}.tableWrap{padding:0 10px 14px}}
+
+/* ATEL V9.9.2 — tabela integral, sem corte horizontal em desktop */
+.detailPane{min-width:0;max-width:100%;overflow:hidden}
+.tableWrap{min-width:0;max-width:100%;overflow-x:visible;padding:0 14px 18px}
+.tableTitle{min-width:0;width:100%;box-sizing:border-box;min-height:48px}
+.tableWrap table{min-width:0!important;width:100%;max-width:100%;table-layout:fixed;border-collapse:collapse}
+.tableWrap th,.tableWrap td{box-sizing:border-box;min-width:0!important;max-width:none!important;padding:12px 6px;overflow-wrap:anywhere;word-break:normal;vertical-align:middle}
+.tableWrap th{font-size:9px;letter-spacing:0;line-height:1.25;white-space:normal!important;text-align:left}
+.tableWrap td{font-size:10.5px;line-height:1.4}
+.tableWrap th:nth-child(1),.tableWrap td:nth-child(1){width:12%}
+.tableWrap th:nth-child(2),.tableWrap td:nth-child(2){width:9%}
+.tableWrap th:nth-child(3),.tableWrap td:nth-child(3){width:29%}
+.tableWrap th:nth-child(4),.tableWrap td:nth-child(4){width:6%}
+.tableWrap th:nth-child(5),.tableWrap td:nth-child(5){width:8%;text-align:center}
+.tableWrap th:nth-child(6),.tableWrap td:nth-child(6){width:15%}
+.tableWrap th:nth-child(7),.tableWrap td:nth-child(7){width:10%}
+.tableWrap th:nth-child(8),.tableWrap td:nth-child(8){width:11%;text-align:center}
+.tableWrap td:nth-child(3){min-width:0!important;max-width:none!important;white-space:normal}
+.tableWrap td:nth-child(4),.tableWrap td:nth-child(5),.tableWrap td:nth-child(6),.tableWrap td:nth-child(7),.tableWrap td:nth-child(8){white-space:normal}
+.draftBadge,.noBadge{max-width:100%;padding:5px 6px;font-size:9px}
+@media(max-width:850px){.tableWrap{overflow-x:auto}.tableWrap table{min-width:680px!important}.tableTitle{min-width:0}}

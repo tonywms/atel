@@ -231,7 +231,7 @@ export default function PainelOrdensServico() {
       </div>
 
       {erroMateriais && <p role="alert" className={styles.error}>{erroMateriais}</p>}
-      <div className={styles.tableWrap}><div className={styles.tableTitle}><span><OsIcon name="box" size={18}/> Itens e materiais da OS</span><span>{rascunho?.itens.length ?? 0} produto(s)</span></div><table><thead><tr><th>STATUS</th><th>CÓDIGO</th><th>DESCRIÇÃO DO PRODUTO</th><th>UND</th><th>QUANTIDADE APONTADA</th><th>PATRIMÔNIO</th><th>MAC</th><th>BAIXA</th></tr></thead>
+      <div className={styles.tableWrap}><div className={styles.tableTitle}><span><OsIcon name="box" size={18}/> Itens e materiais da OS</span><span>{rascunho?.itens.length ?? 0} produto(s)</span></div><table><thead><tr><th>STATUS</th><th>CÓDIGO</th><th>DESCRIÇÃO DO PRODUTO</th><th>UND</th><th>Qtd</th><th>PATRIMÔNIO</th><th>MAC</th><th>BAIXA</th></tr></thead>
       <tbody>{(rascunho?.itens ?? []).map((item, i) => <tr key={`${item.cod_produto}-${item.patrimonio ?? ""}-${item.mac ?? ""}-${i}`}>
         <td><span className={styles.draftBadge}>Rascunho</span></td><td><strong className={styles.productCode}>{item.cod_produto}</strong></td><td>{item.produto || "Produto ERP"}</td><td>{item.unidade || "—"}</td><td>{item.quantidade}</td><td>{item.patrimonio ?? "—"}</td><td>{item.mac ?? "—"}</td><td><span className={styles.noBadge}>Não</span></td>
       </tr>)}

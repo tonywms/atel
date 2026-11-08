@@ -191,3 +191,11 @@
  .root :global(.req-header-main){gap:10px}
  .root :global(.req-header-received){padding-left:10px}
 }
+
+/* V9.3: tabela expandida, rolagem interna e cabecalho fixo */
+.root :global(.req-detail){display:flex;flex-direction:column;min-height:550px;min-width:0}
+.root :global(.req-products){min-height:0;min-width:0;display:flex;flex-direction:column;flex:1 1 auto}
+.root :global(.req-products-scroll){overflow:auto;max-height:440px;max-width:100%;min-height:0;overscroll-behavior:contain;scrollbar-gutter:stable}
+.root :global(.req-products-scroll table){min-width:850px}
+.root :global(.req-products-scroll thead th){position:sticky;top:0;z-index:2;background:#f2f8fc}
+.root :global(.req-footer){flex:0 0 auto}

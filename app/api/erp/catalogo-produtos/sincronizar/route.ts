@@ -8,11 +8,12 @@ const TECNICO = "4157";
 const json = (body: object, status = 200) => NextResponse.json(body, { status, headers: { "Cache-Control": "no-store" } });
 
 export async function POST(req: NextRequest) {
-  const token = req.headers.get("authorization")?.match(/^Bearer\\s+(.+)$/i)?.[1];
+  const authorization = req.headers.get("authorization") ?? "";
+  const token = authorization.toLowerCase().startsWith("bearer ") ? authorization.slice(7).trim() : "";
   if (!token) return json({ error: "Autenticação obrigatória" }, 401);
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const anon = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-  const service = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const service = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.ATEL_SUPABASE_SERVICE_ROLE_KEY;
   const base = process.env.ATEL_ADAPTER_BASE_URL;
   const key = process.env.ATEL_ADAPTER_API_KEY;
   if (!url || !anon || !service || !base || !key) return json({ error: "Integração ERP não configurada" }, 503);

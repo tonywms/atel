@@ -3,6 +3,7 @@
 import {carregarPedidosV36,pedidoParaCardV36} from "@/lib/atelPedidosReaisV36";
 import { pedidosComProgressoV364 } from "@/lib/atelGestaoProgressoV364";
 import { useEffect, useMemo, useState } from "react";
+import type { ReactNode } from "react";
 import { createPortal } from "react-dom";
 import styles from "./gestao.module.css";
 
@@ -15,6 +16,26 @@ import {
   carregarEstados,
   ouvirAlteracoes,
 } from "@/lib/requisicoesStore";
+
+
+type AcaoIcone = "settings" | "priority" | "check" | "truck" | "undo" | "ban" | "user-minus" | "user-round-pen" | "alert" | "package" | "receipt" | "scan";
+function IconeGestao({ nome, tamanho = 16 }: { nome: AcaoIcone; tamanho?: number }) {
+  const caminhos: Record<AcaoIcone, ReactNode> = {
+    settings: <><path d="M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8Z"/><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.88l.06.06-1.9 1.9-.06-.06A1.7 1.7 0 0 0 16 18.4a1.7 1.7 0 0 0-1 1.55V21h-2.7v-.1A1.7 1.7 0 0 0 10.7 19a1.7 1.7 0 0 0-1.9.35l-.07.06-1.9-1.9.07-.06A1.7 1.7 0 0 0 7.2 15.6 1.7 1.7 0 0 0 5.65 14H5v-2.7h.65A1.7 1.7 0 0 0 7.2 9.7a1.7 1.7 0 0 0-.35-1.9l-.06-.07 1.9-1.9.06.07A1.7 1.7 0 0 0 10.6 6.2 1.7 1.7 0 0 0 12.2 4.65V4h2.7v.65A1.7 1.7 0 0 0 16.5 6.2a1.7 1.7 0 0 0 1.9-.35l.07-.06 1.9 1.9-.07.06A1.7 1.7 0 0 0 20 9.6a1.7 1.7 0 0 0 1.55 1.6H22V14h-.45A1.7 1.7 0 0 0 19.4 15Z"/></>,
+    priority: <><path d="M5 21V4"/><path d="M5 5c4-3 8 3 14 0v10c-6 3-10-3-14 0"/></>,
+    check: <><path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="9"/></>,
+    truck: <><path d="M3 5h11v11H3zM14 9h4l3 4v3h-7"/><circle cx="7" cy="18" r="2"/><circle cx="18" cy="18" r="2"/></>,
+    undo: <><path d="M9 14 4 9l5-5"/><path d="M4 9h10a6 6 0 0 1 0 12h-2"/></>,
+    ban: <><circle cx="12" cy="12" r="9"/><path d="m5.7 5.7 12.6 12.6"/></>,
+    "user-minus": <><path d="M15 20H4v-2a5 5 0 0 1 10 0"/><circle cx="9" cy="8" r="4"/><path d="M17 11h5"/></>,
+    "user-round-pen": <><circle cx="9" cy="8" r="4"/><path d="M3 21v-2a6 6 0 0 1 9-5"/><path d="m15 19 5-5 2 2-5 5-3 1z"/></>,
+    alert: <><path d="m12 3 10 18H2L12 3Z"/><path d="M12 9v5m0 3h.01"/></>,
+    package: <><path d="m12 2 9 5-9 5-9-5 9-5Z"/><path d="M3 7v10l9 5 9-5V7M12 12v10"/></>,
+    receipt: <><path d="M5 3h14v18l-3-2-4 2-4-2-3 2V3Z"/><path d="M9 8h6M9 12h6"/></>,
+    scan: <><path d="M4 9V4h5M15 4h5v5M20 15v5h-5M9 20H4v-5"/><path d="M8 12h8"/></>
+  };
+  return <svg width={tamanho} height={tamanho} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{caminhos[nome]}</svg>;
+}
 
 /* =========================================================
    HELPERS
@@ -940,16 +961,16 @@ export default function RequisicoesTecnicasPage() {
 
                     <div className="req-card-indicators" onClick={(e) => e.stopPropagation()}>
   <div className="req-indicator-row">
-    <span className={`req-stage-dot ${coresIndicadoresPedido(req.itens).R}`} title="Retorno">R</span>
-    <span className={`req-stage-dot ${coresIndicadoresPedido(req.itens).S}`} title="Separação">S</span>
+    <span className={`req-stage-dot ${coresIndicadoresPedido(req.itens).R}`} title="Retorno"><IconeGestao nome="undo" tamanho={12} /></span>
+    <span className={`req-stage-dot ${coresIndicadoresPedido(req.itens).S}`} title="Separação"><IconeGestao nome="package" tamanho={12} /></span>
   </div>
   <div className="req-indicator-row">
-    <span className={`req-stage-dot ${coresIndicadoresPedido(req.itens).F}`} title="Faturamento">F</span>
-    <span className={`req-stage-dot ${coresIndicadoresPedido(req.itens).C}`} title="Conferência">C</span>
+    <span className={`req-stage-dot ${coresIndicadoresPedido(req.itens).F}`} title="Faturamento"><IconeGestao nome="receipt" tamanho={12} /></span>
+    <span className={`req-stage-dot ${coresIndicadoresPedido(req.itens).C}`} title="Conferência"><IconeGestao nome="check" tamanho={12} /></span>
   </div>
   <div className="req-indicator-row">
-    <span className="req-alert-dot" title="Pendência / alerta">!</span>
-    <span className={`req-stage-dot ${coresIndicadoresPedido(req.itens).E}`} title="Embarque">E</span>
+    <span className="req-alert-dot" title="Pendência / alerta"><IconeGestao nome="alert" tamanho={12} /></span>
+    <span className={`req-stage-dot ${coresIndicadoresPedido(req.itens).E}`} title="Embarque"><IconeGestao nome="truck" tamanho={12} /></span>
   </div>
   <div className="req-gear-wrap">
                         <button
@@ -969,8 +990,8 @@ export default function RequisicoesTecnicasPage() {
                               return;
                             }
 
-                            const menuWidth = 245;
-                            const menuHeight = 322;
+                            const menuWidth = 286;
+                            const menuHeight = 425;
                             const gap = 10;
 
                             const cabeNaDireita =
@@ -1008,7 +1029,7 @@ export default function RequisicoesTecnicasPage() {
                             });
                           }}
                         >
-                          ⚙
+                          <IconeGestao nome="settings" tamanho={17} />
                         </button>
                       </div>
                     </div>
@@ -1365,48 +1386,27 @@ export default function RequisicoesTecnicasPage() {
 
             <div
               className="req-card-menu req-card-menu-floating"
-              style={{
-                top: menuCardPos.top,
-                left: menuCardPos.left,
-              }}
-              onClick={(e) =>
-                e.stopPropagation()
-              }
+              style={{ top: menuCardPos.top, left: menuCardPos.left }}
+              onClick={(e) => e.stopPropagation()}
+              role="dialog"
+              aria-label="Ações da requisição"
             >
-              <button type="button">
-                <span>Prioridades</span>
-                <b>›</b>
-              </button>
-
-              <button type="button">
-                <span>Limpar Conferência</span>
-                <b className="menu-red">◆</b>
-              </button>
-
-              <button type="button">
-                <span>Limpar Embarque</span>
-                <b className="menu-red">◆</b>
-              </button>
-
-              <button type="button">
-                <span>Devolver Requisição</span>
-                <b className="menu-red">▣</b>
-              </button>
-
-              <button type="button">
-                <span>Cancelar Requisição</span>
-                <b className="menu-red">▣</b>
-              </button>
-
-              <button type="button">
-                <span>Limpar Usuário</span>
-                <b className="menu-blue">●</b>
-              </button>
-
-              <button type="button">
-                <span>Alterar Usuário</span>
-                <b className="menu-blue">●</b>
-              </button>
+              <div className="req-actions-head">
+                <div className="req-actions-emblem"><IconeGestao nome="settings" tamanho={19} /></div>
+                <div><strong>Gestão da requisição</strong><small>Ferramentas administrativas</small></div>
+                <button type="button" className="req-actions-close" aria-label="Fechar ações" onClick={() => { setMenuCardId(null); setMenuCardPos(null); }}>×</button>
+              </div>
+              <div className="req-actions-group-label">CONFIGURAÇÃO</div>
+              <button type="button" disabled title="Ação ainda não integrada"><span className="req-action-icon blue"><IconeGestao nome="priority" /></span><span className="req-action-copy"><strong>Prioridades</strong><small>Alterar nível de atendimento</small></span><span className="req-action-chevron">›</span></button>
+              <div className="req-actions-group-label">CONTROLE OPERACIONAL</div>
+              <button type="button" disabled title="Ação ainda não integrada"><span className="req-action-icon amber"><IconeGestao nome="check" /></span><span className="req-action-copy"><strong>Limpar conferência</strong><small>Reiniciar etapa de validação</small></span></button>
+              <button type="button" disabled title="Ação ainda não integrada"><span className="req-action-icon amber"><IconeGestao nome="truck" /></span><span className="req-action-copy"><strong>Limpar embarque</strong><small>Reiniciar etapa de expedição</small></span></button>
+              <button type="button" disabled title="Ação ainda não integrada"><span className="req-action-icon rose"><IconeGestao nome="undo" /></span><span className="req-action-copy"><strong>Devolver requisição</strong><small>Retornar ao fluxo anterior</small></span></button>
+              <button type="button" disabled title="Ação ainda não integrada"><span className="req-action-icon rose"><IconeGestao nome="ban" /></span><span className="req-action-copy"><strong>Cancelar requisição</strong><small>Encerrar solicitação</small></span></button>
+              <div className="req-actions-group-label">RESPONSÁVEL</div>
+              <button type="button" disabled title="Ação ainda não integrada"><span className="req-action-icon blue"><IconeGestao nome="user-minus" /></span><span className="req-action-copy"><strong>Limpar usuário</strong><small>Remover responsável atribuído</small></span></button>
+              <button type="button" disabled title="Ação ainda não integrada"><span className="req-action-icon blue"><IconeGestao nome="user-round-pen" /></span><span className="req-action-copy"><strong>Alterar usuário</strong><small>Reatribuir responsável</small></span></button>
+              <div className="req-actions-foot"><IconeGestao nome="alert" tamanho={13} /> Ações aguardando integração</div>
             </div>
           </>,
           document.body

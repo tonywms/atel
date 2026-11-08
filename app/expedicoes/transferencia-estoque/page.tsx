@@ -5,9 +5,17 @@ import { ArrowLeftRight, ArrowRight, Boxes, Building2, ClipboardCheck, Database,
 import styles from "./transferencia.module.css";
 type Local={id:string;nome:string;tipo:string;responsavel_usuario_id:string|null};
 type Material={id:string;sku:string;descricao:string};
+type LinhaERP={cod_produto?:string|number;produto?:string;quantidade?:number|string;mac?:string|null;patrimonio?:string|number|null;[key:string]:unknown};
 const org="6ea04673-4deb-42cf-a001-dbb027120103";
 export default function TransferenciaEstoque(){
  const [tentativa,setTentativa]=useState(0);
+ const [linhasERP,setLinhasERP]=useState<LinhaERP[]>([]);
+ const [erpCarregando,setErpCarregando]=useState(true),[erpErro,setErpErro]=useState(""),[buscaERP,setBuscaERP]=useState("");
+ const [erpAtualizado,setErpAtualizado]=useState("");
+ const linhasFiltradas=useMemo(()=>linhasERP.map((linha,indice)=>({linha,indice})).filter(({linha})=>{
+   const busca=buscaERP.trim().toLocaleLowerCase("pt-BR");
+   return !busca || [linha.cod_produto,linha.produto,linha.mac,linha.patrimonio].some(v=>String(v??"").toLocaleLowerCase("pt-BR").includes(busca));
+ }),[linhasERP,buscaERP]);
  const [locais,setLocais]=useState<Local[]>([]),[materiais,setMateriais]=useState<Material[]>([]),[autorizados,setAutorizados]=useState<string[]>([]);
  const [origem,setOrigem]=useState(""),[destino,setDestino]=useState(""),[material,setMaterial]=useState(""),[quantidade,setQuantidade]=useState(""),[token,setToken]=useState(""),[erro,setErro]=useState(""),[sucesso,setSucesso]=useState(""),[carregando,setCarregando]=useState(true),[enviando,setEnviando]=useState(false);
  useEffect(()=>{let ativo=true;async function carregar(){setCarregando(true);setErro("");setToken("");try{
@@ -17,6 +25,18 @@ export default function TransferenciaEstoque(){
  const data=await resp.json();if(!resp.ok)throw Error(data.error||"Falha na consulta do catálogo WMS");
  if(ativo){setToken(session.access_token);setLocais(data.locais||[]);setMateriais(data.materiais||[]);setAutorizados(data.tecnicos||[]);}
  }catch(e){if(ativo){setLocais([]);setMateriais([]);setAutorizados([]);setErro(e instanceof Error?e.message:"Erro de conexão");}}finally{if(ativo)setCarregando(false)}}void carregar();return()=>{ativo=false}},[tentativa]);
+ useEffect(()=>{let ativo=true;async function consultarERP(){
+   setErpCarregando(true);setErpErro("");
+   try {
+     const db=atelSupabase();if(!db)throw Error("Sessão não configurada");
+     const {data:{session}}=await db.auth.getSession();if(!session)throw Error("Entre novamente para consultar o ERP");
+     const resp=await fetch("/api/estoque-wms/inventario-erp",{headers:{Authorization:`Bearer ${session.access_token}`},cache:"no-store"});
+     const data=await resp.json();if(!resp.ok)throw Error(data.error||"Falha ao consultar o inventário ERP");
+     if(!Array.isArray(data.linhas))throw Error("Formato inesperado do inventário ERP");
+     if(ativo){setLinhasERP(data.linhas);setErpAtualizado(new Date().toLocaleString("pt-BR"));}
+   } catch(e){if(ativo){setLinhasERP([]);setErpErro(e instanceof Error?e.message:"Falha de consulta");}}
+   finally{if(ativo)setErpCarregando(false);}
+ }void consultarERP();return()=>{ativo=false}},[tentativa]);
  const origens=locais.filter(l=>l.tipo==="cd"||l.tipo==="ponto_apoio");const destinos=locais.filter(l=>l.id!==origem);
  const destinoSelecionado=useMemo(()=>locais.find(l=>l.id===destino),[locais,destino]);
  const destinoHabilitado=!!destinoSelecionado&&destinoSelecionado.tipo==="estoque_tecnico"&&!!destinoSelecionado.responsavel_usuario_id&&autorizados.includes(destinoSelecionado.responsavel_usuario_id)&&origem!==destino;
@@ -33,6 +53,27 @@ export default function TransferenciaEstoque(){
  <div className={styles.metric}><div className={styles.metricTop}><span>Mini-CDs e depósitos</span><span className={styles.metricIcon}><Building2 size={19}/></span></div><strong>{carregando||erro?"—":locais.filter(l=>l.tipo==="ponto_apoio").length}</strong><small>Unidades de apoio</small></div>
  <div className={styles.metric}><div className={styles.metricTop}><span>Estoques técnicos</span><span className={styles.metricIcon}><Boxes size={19}/></span></div><strong>{carregando||erro?"—":locais.filter(l=>l.tipo==="estoque_tecnico").length}</strong><small>Posições individuais</small></div>
  <div className={styles.metric}><div className={styles.metricTop}><span>Materiais cadastrados</span><span className={styles.metricIcon}><Package size={19}/></span></div><strong>{carregando||erro?"—":materiais.length}</strong><small>Itens do catálogo</small></div>
+ </section>
+ <section className={styles.erpCatalog} aria-label="Inventário real do ERP">
+   <div className={styles.erpCatalogHead}>
+     <div><span className={styles.overline}>FONTE OFICIAL · ADAPTER ERP</span><h2>Inventário do técnico 4157</h2>
+       <p>Todas as linhas retornadas pelo ERP, inclusive registros repetidos com MAC ou patrimônio diferentes. Consulta somente leitura.</p></div>
+     <button type="button" className={styles.retryButton} onClick={()=>setTentativa(v=>v+1)} disabled={erpCarregando}><RefreshCw size={15}/> Atualizar ERP</button>
+   </div>
+   <div className={styles.erpCatalogTools}>
+     <label>Pesquisar no inventário <input value={buscaERP} onChange={e=>setBuscaERP(e.target.value)} placeholder="Código, descrição, MAC ou patrimônio" aria-label="Pesquisar inventário ERP"/></label>
+     <div className={styles.erpCatalogCounts}><strong>{erpCarregando?"…":erpErro?"—":linhasERP.length}</strong> linhas do ERP · <strong>{linhasFiltradas.length}</strong> exibidas
+       {erpAtualizado&&!erpErro&&<small>Atualizado: {erpAtualizado}</small>}</div>
+   </div>
+   {erpErro?<div className={styles.erpCatalogError} role="alert"><AlertTriangle size={17}/><span>{erpErro}. O catálogo WMS permanece independente; nenhum dado foi alterado.</span></div>:
+   erpCarregando?<p className={styles.erpCatalogLoading} role="status">Consultando todas as linhas do adapter ERP...</p>:
+   <div className={styles.erpCatalogScroll}><table className={styles.erpCatalogTable}><thead><tr><th>Linha</th><th>Código ERP</th><th>Descrição</th><th>Qtd. ERP</th><th>MAC</th><th>Patrimônio</th><th>Vínculo WMS</th></tr></thead><tbody>
+   {linhasFiltradas.map(({linha,indice})=>{const sku=String(linha.cod_produto??"");const vinculo=materiais.find(m=>m.sku===sku);
+     return <tr key={indice}><td>{indice+1}</td><td>{sku||"—"}</td><td>{String(linha.produto??"—")}</td><td>{String(linha.quantidade??"—")}</td><td>{String(linha.mac??"—")}</td><td>{String(linha.patrimonio??"—")}</td><td><span className={vinculo?styles.erpLinked:styles.erpUnlinked}>{vinculo?"Vinculado":"Não cadastrado no WMS"}</span></td></tr>;
+   })}
+   {!linhasFiltradas.length&&<tr><td colSpan={7}>Nenhuma linha encontrada para a pesquisa.</td></tr>}
+   </tbody></table></div>}
+   <p className={styles.erpCatalogFoot}>O inventário do técnico não representa necessariamente todos os produtos da empresa. Produtos sem vínculo WMS são apenas exibidos: não entram automaticamente na seleção de transferência nem alteram estoque.</p>
  </section>
  <div className={styles.sectionLabel}><span>EXECUÇÃO OPERACIONAL</span><div/></div>
  <div className={styles.layout}>

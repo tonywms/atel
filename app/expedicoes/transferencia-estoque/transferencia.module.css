@@ -5,3 +5,25 @@
 .catalogAlertText{flex:1;min-width:0}.catalogAlertText strong{display:block;color:#803a1f;font-size:14px;font-weight:800}.catalogAlertText p{margin:5px 0;color:#824d38;line-height:1.45}.catalogAlertText small{display:block;color:#8a6a5d;line-height:1.45}
 .retryButton{display:inline-flex;align-items:center;justify-content:center;gap:8px;flex:none;min-height:39px;padding:10px 15px;border:1px solid #b9d9e8;border-radius:10px;background:#fff;color:#075c7e;font:inherit;font-weight:800;cursor:pointer;transition:background .15s,box-shadow .15s}.retryButton:hover:not(:disabled){background:#eaf7fc;box-shadow:0 2px 9px rgba(0,83,120,.1)}.retryButton:focus-visible{outline:3px solid #5cb9df;outline-offset:2px}.retryButton:disabled{opacity:.55;cursor:not-allowed}
 @media(max-width:720px){.catalogAlert{align-items:flex-start;flex-wrap:wrap}.retryButton{width:100%}}
+
+
+/* ATEL V5 - Inventario ERP integral, somente leitura */
+.erpCatalog{background:#fff;border:1px solid #dce8f0;border-radius:16px;padding:24px;margin:0 0 28px;box-shadow:0 5px 20px #1239530b}
+.erpCatalogHead{display:flex;justify-content:space-between;align-items:center;gap:20px;flex-wrap:wrap}
+.erpCatalogHead h2{font-size:22px;color:#13354f;margin:6px 0}
+.erpCatalogHead p,.erpCatalogFoot{color:#627e92;font-size:12px;line-height:1.6;margin:4px 0}
+.erpCatalogTools{display:flex;justify-content:space-between;align-items:end;gap:15px;margin:22px 0 15px;flex-wrap:wrap}
+.erpCatalogTools label{display:flex;flex-direction:column;gap:7px;color:#385a70;font-weight:700;min-width:min(100%,340px)}
+.erpCatalogTools input{padding:11px 13px;border:1px solid #c8dbe7;border-radius:9px;color:#173b52;background:#f8fbfd;font:inherit}
+.erpCatalogTools input:focus-visible{outline:3px solid #b0e3f3}
+.erpCatalogCounts{font-size:12px;color:#536f83}.erpCatalogCounts strong{font-size:17px;color:#096c8c}
+.erpCatalogCounts small{display:block;color:#8395a4;margin-top:5px}
+.erpCatalogScroll{overflow:auto;max-height:440px;border:1px solid #e0e9ef;border-radius:11px}
+.erpCatalogTable{width:100%;border-collapse:collapse;font-size:12px;text-align:left}
+.erpCatalogTable th{position:sticky;top:0;background:#edf5f9;color:#285a74;font-size:11px;padding:13px 12px;white-space:nowrap;z-index:1}
+.erpCatalogTable td{border-top:1px solid #edf1f5;padding:11px 12px;color:#314c60;vertical-align:top}
+.erpCatalogTable tr:hover td{background:#f8fbfd}
+.erpLinked,.erpUnlinked{display:inline-block;border-radius:30px;padding:5px 9px;font-size:10px;font-weight:750;white-space:nowrap}
+.erpLinked{background:#e5f7ee;color:#137348}.erpUnlinked{background:#fff4e4;color:#91601a}
+.erpCatalogError{display:flex;gap:9px;align-items:center;background:#fff5f0;border:1px solid #f3d6c7;color:#914b31;padding:13px;border-radius:9px;margin:15px 0}
+.erpCatalogLoading{color:#52778d;padding:18px}.erpCatalogFoot{margin-top:15px}

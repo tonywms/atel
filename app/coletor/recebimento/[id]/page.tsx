@@ -1,4 +1,6 @@
 "use client";
+import { usePedidoAtelV363 } from "@/lib/atelPedidosHomologacaoV363";
+import TransferenciaInternaAceite from "@/components/atel-v35/TransferenciaInternaAceite";
 
 import { useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
@@ -59,7 +61,7 @@ const rotulo = (d?: DecisaoRecebimento) =>
    PAGE
 ========================================================= */
 
-export default function Page() {
+function RecebimentoLegado() {
   const params = useParams();
   const router = useRouter();
 
@@ -69,12 +71,10 @@ export default function Page() {
       : params.id
   );
 
+  const pedidoAtel = usePedidoAtelV363(id);
   const req = useMemo(
-    () =>
-      requisicoesTecnicasMock.find(
-        (r) => r.id === id
-      ),
-    [id]
+    () => requisicoesTecnicasMock.find((r) => r.id === id) ?? pedidoAtel,
+    [id, pedidoAtel]
   );
 
   const [ready, setReady] =
@@ -2511,3 +2511,11 @@ const quantidadeAutomatica = {
 
   background: "#f8fafc",
 } as const;
+export default function Page() {
+  const params = useParams();
+  const raw = Array.isArray(params.id) ? params.id[0] : params.id;
+  if (typeof raw === "string" && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(raw)) {
+    return <TransferenciaInternaAceite id={raw} />;
+  }
+  return <RecebimentoLegado />;
+}

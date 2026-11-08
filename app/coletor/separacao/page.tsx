@@ -1,5 +1,7 @@
 "use client";
+import { pedidosComEstadoV363 } from "@/lib/atelPedidosHomologacaoV363";
 
+import {carregarPedidosV36,pedidoParaCardV36} from "@/lib/atelPedidosReaisV36";
 import {
   useEffect,
   useMemo,
@@ -113,8 +115,12 @@ export default function SeparacaoListaPage() {
 
   const [busca, setBusca] = useState("");
 
-  const [requisicoes, setRequisicoes] =
+  const [requisicoesMock, setRequisicoes] =
     useState<RequisicaoTecnica[]>([]);
+
+  const [pedidosReais,setPedidosReais]=useState<RequisicaoTecnica[]>([]);
+  useEffect(()=>{let ativo=true;async function atualizar(){try{const pedidos=await carregarPedidosV36();if(ativo)setPedidosReais(pedidosComEstadoV363(pedidos.map(pedidoParaCardV36)).filter(p=>p.status==="PENDENTE"||p.status==="EM_SEPARACAO"));}catch(e){console.error("ATEL V36 pedidos reais:",e)}}void atualizar();const intervalo=setInterval(()=>void atualizar(),30000);return()=>{ativo=false;clearInterval(intervalo)}},[]);
+  const requisicoes=[...requisicoesMock,...pedidosReais];
 
   /* =======================================================
      CARREGAR REQUISIÇÕES
@@ -218,9 +224,7 @@ export default function SeparacaoListaPage() {
   function abrirRequisicao(
     req: RequisicaoTecnica
   ) {
-    router.push(
-      `/coletor/separacao/${req.id}`
-    );
+    router.push(`/coletor/separacao/${req.id}`);
   }
 
   /* =======================================================

@@ -7,7 +7,7 @@ const reply = (obj: object, status = 200) => NextResponse.json(obj, { status, he
 function bancoServidor() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.ATEL_SUPABASE_SERVICE_ROLE_KEY;
-  if (!url || !key) throw new Error("Credencial de servidor Supabase nao configurada");
+  if (!url || !key) throw new Error("SUPABASE_SERVER_KEY_MISSING");
   return createClient(url, key, { auth: { persistSession: false, autoRefreshToken: false } });
 }
 async function contexto(req: NextRequest) {
@@ -45,7 +45,7 @@ export async function GET(req: NextRequest) {
     const { data, error } = await bancoServidor().from("atel_os_apontamentos").select("itens,versao,atualizado_em").eq("tecnico_erp", ctx.tecnico).eq("atendimento_erp", atendimento).order("atualizado_em", { ascending: false }).limit(1).maybeSingle();
     if (error) return reply({ error: "Consulta de apontamentos indisponivel" }, 503);
     return reply({ atendimento, itens: data?.itens ?? [], versao: data?.versao ?? 0, atualizado_em: data?.atualizado_em ?? null });
-  } catch { return reply({ error: "Nao foi possivel validar a OS no ERP" }, 502); }
+  } catch (e) { return reply({ error: e instanceof Error && e.message === "SUPABASE_SERVER_KEY_MISSING" ? "Chave de servidor Supabase ausente no ambiente. Configure SUPABASE_SERVICE_ROLE_KEY no servidor." : "Falha ao consultar a OS ou o ERP" }, e instanceof Error && e.message === "SUPABASE_SERVER_KEY_MISSING" ? 503 : 502); }
 }
 export async function PUT(req: NextRequest) {
   let body: unknown;

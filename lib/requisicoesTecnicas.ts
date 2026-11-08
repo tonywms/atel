@@ -15,6 +15,8 @@ export type PrioridadeRequisicao =
 
 export type ItemRequisicaoTecnica = {
   id: number;
+  itemPedidoUuid?: string;
+  materialUuid?: string;
   codigoProduto: string;
   produto: string;
   unidade: string;

@@ -514,6 +514,9 @@ function salvarEstados(
 
   );
 
+  // V36.6: replicacao assincrona somente dos PED, sem alterar o fluxo REQ.
+  void import("@/lib/atelSyncPedV366").then(({ notificarEstadosPedV366 }) => notificarEstadosPedV366(estados)).catch(console.error);
+
 }
 
 
@@ -3378,7 +3381,15 @@ export function finalizarRecebimentoTecnico(requisicao:RequisicaoTecnica){
 
   if(itensPendentes) throw new Error(`Ainda faltam ${itensPendentes} item(ns) para avaliar no recebimento.`);
 
-  const agora=new Date().toISOString(); atual.volumes=atual.volumes.map(v=>({...v,status:"RECEBIDO",recebidoEm:v.recebidoEm??agora})); const retorno=gerarRetornoDaRequisicao(requisicao,avaliacoes,atual.volumes); registrarAceiteEstoqueTecnico(requisicao,avaliacoes); atual.status=retorno?(retorno.tipo==="RECUSA_TOTAL"?"RECUSA_TOTAL":"RECUSA_PARCIAL"):"RECEBIDA_TECNICO"; atual.recebidoTecnicoEm=atual.recebidoTecnicoEm??agora;
+  const agora=new Date().toISOString(); atual.volumes=atual.volumes.map(v=>({...v,status:"RECEBIDO",recebidoEm:v.recebidoEm??agora})); const retorno = requisicao.origemIntegracao === "SUPABASE_V36" ? null : gerarRetornoDaRequisicao(requisicao,avaliacoes,atual.volumes); if (requisicao.origemIntegracao !== "SUPABASE_V36") registrarAceiteEstoqueTecnico(requisicao,avaliacoes); const avaliacoesLista = Object.values(avaliacoes);
+  const temRecusaOuDivergencia = avaliacoesLista.some(a =>
+    a.decisao !== "ACEITE_TOTAL" || a.situacao !== "OK" ||
+    a.quantidadeAceita !== a.quantidadeEsperada || a.quantidadeRecusada > 0
+  );
+  const nenhumaQuantidadeAceita = avaliacoesLista.length > 0 && avaliacoesLista.every(a => a.quantidadeAceita === 0);
+  atual.status = requisicao.origemIntegracao === "SUPABASE_V36"
+    ? (temRecusaOuDivergencia ? (nenhumaQuantidadeAceita ? "RECUSA_TOTAL" : "RECUSA_PARCIAL") : "RECEBIDA_TECNICO")
+    : (retorno ? (retorno.tipo === "RECUSA_TOTAL" ? "RECUSA_TOTAL" : "RECUSA_PARCIAL") : "RECEBIDA_TECNICO"); atual.recebidoTecnicoEm=atual.recebidoTecnicoEm??agora;
 
   atual.recebimentoTecnico={...(atual.recebimentoTecnico??{volumesLidos:{},itensConferidos:{}}),volumesLidos:atual.recebimentoTecnico?.volumesLidos??{},itensConferidos:atual.recebimentoTecnico?.itensConferidos??{},finalizadoEm:atual.recebimentoTecnico?.finalizadoEm??agora};
 

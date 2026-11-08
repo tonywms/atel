@@ -1,5 +1,7 @@
 "use client";
 
+import {carregarPedidosV36,pedidoParaCardV36} from "@/lib/atelPedidosReaisV36";
+import { pedidosComProgressoV364 } from "@/lib/atelGestaoProgressoV364";
 import { useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
 import styles from "./gestao.module.css";
@@ -178,10 +180,21 @@ function etapaTecnicoAtiva(status: string) {
 ========================================================= */
 
 export default function RequisicoesTecnicasPage() {
-  const [requisicoes, setRequisicoes] =
+  const [requisicoesMock, setRequisicoes] =
     useState<RequisicaoTecnica[]>(
       requisicoesTecnicasMock
     );
+
+  const [pedidosReais,setPedidosReais]=useState<RequisicaoTecnica[]>([]);
+  useEffect(()=>{let ativo=true;async function atualizar(){try{const pedidos=await carregarPedidosV36();const cards=pedidos.map(pedidoParaCardV36);const {sincronizarPedidosPedV366}=await import("@/lib/atelSyncPedV366");await sincronizarPedidosPedV366(pedidos,cards);if(ativo)setPedidosReais(pedidosComProgressoV364(cards));}catch(e){console.error("ATEL V36 pedidos reais:",e)}}void atualizar();const intervalo=setInterval(()=>void atualizar(),30000);return()=>{ativo=false;clearInterval(intervalo)}},[]);
+  useEffect(() => {
+    const atualizar = () => setPedidosReais((anteriores) => pedidosComProgressoV364(anteriores));
+    const parar = ouvirAlteracoes(atualizar);
+    const aoFocar = () => atualizar();
+    window.addEventListener("focus", aoFocar);
+    return () => { parar(); window.removeEventListener("focus", aoFocar); };
+  }, []);
+  const requisicoes=[...requisicoesMock,...pedidosReais];
 
   const [selecionadaId, setSelecionadaId] =
     useState<number>(1);
@@ -688,6 +701,7 @@ export default function RequisicoesTecnicasPage() {
       return;
     }
 
+    if(selecionada.origemIntegracao==="SUPABASE_V36"){alert("Pedido real aguardando integração da execução da separação. Não é permitido usar o store mockado.");return;}
     iniciarSeparacao(selecionada);
   };
 

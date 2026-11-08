@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import { requisicoesTecnicasMock } from "@/lib/requisicoesTecnicas";
+import { atualizarPedidosAtelV363, obterPedidosAtelV363, pedidosComEstadoV363 } from "@/lib/atelPedidosHomologacaoV363";
 
 import {
   carregarEstados,
@@ -52,7 +53,7 @@ export default function ColetorExpedicaoPage() {
     let embarque = 0;
     let recebimento = 0;
 
-    requisicoesTecnicasMock.forEach((req) => {
+    [...requisicoesTecnicasMock, ...pedidosComEstadoV363(obterPedidosAtelV363())].forEach((req) => {
       const status =
         estados[req.id]?.status ??
         req.status;
@@ -111,6 +112,18 @@ export default function ColetorExpedicaoPage() {
       ordensServico,
     });
   }
+
+  useEffect(() => {
+    let ativo = true;
+    const sincronizar = () => {
+      void atualizarPedidosAtelV363()
+        .then(() => { if (ativo) atualizarContadores(); })
+        .catch((erro) => console.error("ATEL: falha ao atualizar contadores", erro));
+    };
+    sincronizar();
+    window.addEventListener("focus", sincronizar);
+    return () => { ativo = false; window.removeEventListener("focus", sincronizar); };
+  }, []);
 
   useEffect(() => {
     atualizarContadores();

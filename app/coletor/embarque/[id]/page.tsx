@@ -1,4 +1,5 @@
 "use client";
+import { usePedidoAtelV363 } from "@/lib/atelPedidosHomologacaoV363";
 
 import {
   useEffect,
@@ -40,15 +41,11 @@ export default function EmbarqueDetalhePage() {
         : idParam
     );
 
-  const requisicao =
-    useMemo(
-      () =>
-        requisicoesTecnicasMock.find(
-          (req) =>
-            req.id === id
-        ),
-      [id]
-    );
+  const pedidoAtel = usePedidoAtelV363(id);
+  const requisicao = useMemo(
+    () => requisicoesTecnicasMock.find((req) => req.id === id) ?? pedidoAtel,
+    [id, pedidoAtel]
+  );
 
   const [carregado, setCarregado] =
     useState(false);

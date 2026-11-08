@@ -1,4 +1,5 @@
 "use client";
+import { atualizarPedidosAtelV363, obterPedidosAtelV363, pedidosComEstadoV363 } from "@/lib/atelPedidosHomologacaoV363";
 
 import "./atel-v47.css";
 
@@ -30,6 +31,12 @@ export default function EmbarquePage() {
     return ouvirAlteracoes(atualizar);
   }, []);
 
+  useEffect(() => {
+    let ativo = true;
+    void atualizarPedidosAtelV363().then(() => { if (ativo) setVersao(v => v + 1); }).catch(console.error);
+    return () => { ativo = false; };
+  }, []);
+
   const requisicoes = useMemo(() => {
     void versao;
 
@@ -39,7 +46,7 @@ export default function EmbarquePage() {
       .trim()
       .toUpperCase();
 
-    return requisicoesTecnicasMock
+    return [...requisicoesTecnicasMock, ...pedidosComEstadoV363(obterPedidosAtelV363())]
       .map((req) => {
         const estado = estados[req.id];
 

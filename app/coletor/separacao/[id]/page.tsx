@@ -1,5 +1,5 @@
-
 "use client";
+import { usePedidoAtelV363 } from "@/lib/atelPedidosHomologacaoV363";
 
 import { useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
@@ -66,9 +66,10 @@ export default function SeparacaoDetalhePage() {
   const idParam = params.id;
   const id = Number(Array.isArray(idParam) ? idParam[0] : idParam);
 
+  const pedidoAtel = usePedidoAtelV363(id);
   const requisicao = useMemo(
-    () => requisicoesTecnicasMock.find((req) => req.id === id),
-    [id]
+    () => requisicoesTecnicasMock.find((req) => req.id === id) ?? pedidoAtel,
+    [id, pedidoAtel]
   );
 
   const [carregado, setCarregado] = useState(false);

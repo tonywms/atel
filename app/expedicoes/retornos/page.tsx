@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { atelSupabase } from "@/lib/atelSupabaseV08";
 
 import {
   alterarStatusRetorno,
@@ -9,6 +10,13 @@ import {
   RetornoDevolucao,
   StatusRetorno,
 } from "@/lib/retornosStore";
+
+type RetServidorItem = {chave:string;sku:string;produto:string;esperado:number;recebido:number;aceito:number;recusado:number;motivo?:string;observacao?:string;seriais?:string[]};
+type RetServidor = {id:string;codigo:string;pedido_codigo:string;origem_id:string;destino_id:string;status:"AGUARDANDO_RETORNO"|"EM_TRANSITO_CD"|"AGUARDANDO_CONFERENCIA"|"FINALIZADO";itens:RetServidorItem[];criado_em:string;atualizado_em:string};
+function numeroRetServidor(id:string){let h=2166136261;for(const c of id){h=Math.imul(h^c.charCodeAt(0),16777619)}return -(h>>>0)-1;}
+function mapearRetServidor(r:RetServidor):RetornoDevolucao {
+ return {id:numeroRetServidor(r.id),codigo:r.codigo,tipo:"RECUSA_PARCIAL",origem:"REQUISICAO",status:r.status,documentoOrigem:r.pedido_codigo,tecnico:"Mini CD",codigoTecnico:"RECEBIMENTO",base:"Mini CD",origemFisica:"Mini CD • destino do pedido",destinoFisico:"CD • origem do pedido",criadoEm:r.criado_em,atualizadoEm:r.atualizado_em,observacao:"RET sincronizado pelo Supabase",itens:r.itens.map((i,n)=>({id:n+1,codigoProduto:i.sku,produto:i.produto,unidade:"UN",quantidade:Number(i.recusado),quantidadeEsperada:Number(i.esperado),quantidadeRecebida:Number(i.recebido),quantidadeAceita:Number(i.aceito),motivo:i.motivo,observacao:i.observacao,seriais:i.seriais||[]}))};
+}
 
 /* =========================================================
    STATUS
@@ -41,19 +49,37 @@ export default function RetornosPage() {
   const [retornos, setRetornos] = useState<RetornoDevolucao[]>([]);
   const [selecionadoId, setSelecionadoId] = useState<number | null>(null);
   const [busca, setBusca] = useState("");
-
-  function atualizar() {
-    const dados = carregarRetornos();
-
+  const [servidor, setServidor] = useState<Record<number,RetServidor>>({});
+  const [erroServidor, setErroServidor] = useState("");
+  const [operando, setOperando] = useState(false);
+  const [conferir, setConferir] = useState<RetServidor|null>(null);
+  const [conferencia, setConferencia] = useState<Record<string,{qtd:string;destino:string}>>({});
+  async function atualizar() {
+    const locais = carregarRetornos();
+    const db = atelSupabase();
+    let remotos:RetServidor[] = [];
+    if (db) {
+      const {data,error}=await db.rpc("atel_v3730_listar_rets");
+      if (error) setErroServidor("RET Supabase: "+error.message);
+      else {remotos=Array.isArray(data)?data as RetServidor[]:[];setErroServidor("");}
+    } else setErroServidor("Supabase indisponível para consultar RETs sincronizados.");
+    const mapa:Record<number,RetServidor>={};
+    for (const r of remotos) mapa[numeroRetServidor(r.id)]=r;
+    setServidor(mapa);
+    const dados=[...remotos.map(mapearRetServidor),...locais.filter(l=>!remotos.some(r=>r.pedido_codigo===l.documentoOrigem))];
     setRetornos(dados);
-
-    setSelecionadoId((atual) => {
-      if (atual && dados.some((r) => r.id === atual)) {
-        return atual;
-      }
-
-      return dados[0]?.id ?? null;
-    });
+    setSelecionadoId((atual)=>atual!==null&&dados.some(r=>r.id===atual)?atual:(dados[0]?.id??null));
+  }
+  async function transicionarRet(r:RetServidor,novo:RetServidor["status"],dados?:unknown) {
+    const db=atelSupabase();if(!db){setErroServidor("Supabase indisponível");return;}
+    setOperando(true);setErroServidor("");
+    try {
+      const {error}=await db.rpc("atel_v3730_transicionar_ret",{p_id:r.id,p_status:novo,p_conferencia:dados??null});
+      if(error)throw Error(error.message);
+      setConferir(null);
+      await atualizar();
+    } catch(e){setErroServidor(e instanceof Error?e.message:"Falha ao atualizar RET");}
+    finally{setOperando(false);}
   }
 
   useEffect(() => {
@@ -129,6 +155,8 @@ export default function RetornosPage() {
       return;
     }
 
+    const remoto=servidor[retorno.id];
+    if (remoto) {void transicionarRet(remoto,"EM_TRANSITO_CD");return;}
     alterarStatusRetorno(retorno.id, "EM_TRANSITO_CD");
 
     atualizar();
@@ -144,6 +172,7 @@ export default function RetornosPage() {
           KPIS
       ===================================================== */}
 
+      {erroServidor && <div role="alert" style={{background:"#fff4e7",color:"#8b3d06",padding:"9px 14px",borderRadius:10,border:"1px solid #f2c48c",marginBottom:8,fontSize:12}}>{erroServidor}</div>}
       <div className="ret-kpis">
         <KpiCard
           titulo="Retornos"
@@ -626,16 +655,17 @@ export default function RetornosPage() {
                 )}
 
                 {selecionado.status === "EM_TRANSITO_CD" && (
-                  <div className="ret-action-message blue">
-                    AGUARDANDO RECEBIMENTO FÍSICO NO CD
-                  </div>
+                  servidor[selecionado.id] ? <button className="ret-action-button" type="button" disabled={operando} onClick={()=>void transicionarRet(servidor[selecionado.id],"AGUARDANDO_CONFERENCIA")}>CONFIRMAR CHEGADA FÍSICA AO CD</button> :
+                  <div className="ret-action-message blue">AGUARDANDO RECEBIMENTO FÍSICO NO CD</div>
                 )}
 
                 {(selecionado.status === "AGUARDANDO_CONFERENCIA" ||
                   selecionado.status === "EM_CONFERENCIA") && (
-                  <div className="ret-action-message yellow">
-                    RECEBIMENTO / CONFERÊNCIA PELO COLETOR
-                  </div>
+                  servidor[selecionado.id] ? <button className="ret-action-button" type="button" disabled={operando} onClick={()=>{
+                    const r=servidor[selecionado.id];setConferir(r);
+                    setConferencia(Object.fromEntries(r.itens.map(i=>[i.chave,{qtd:"",destino:"QUARENTENA"}])));
+                  }}>CONFERIR MATERIAIS RECEBIDOS NO CD</button> :
+                  <div className="ret-action-message yellow">RECEBIMENTO / CONFERÊNCIA PELO COLETOR</div>
                 )}
 
                 {(selecionado.status === "RECEBIDO" ||
@@ -654,6 +684,13 @@ export default function RetornosPage() {
           CSS
       ===================================================== */}
 
+      {conferir && <div role="dialog" aria-modal="true" aria-label="Conferência do RET" style={{position:"fixed",inset:0,zIndex:9999,background:"#071b30b8",display:"grid",placeItems:"center",padding:16}}>
+        <div style={{width:"min(620px,100%)",maxHeight:"85vh",overflowY:"auto",background:"#fff",borderRadius:18,padding:22,boxShadow:"0 24px 60px #0005",color:"#153e55"}}>
+          <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:12}}><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#168db3" strokeWidth="2"><path d="M3 7h18v12H3zM8 7V4h8v3M8 13h8"/></svg><div><strong style={{fontSize:18}}>Conferência física no CD</strong><div style={{fontSize:12,color:"#58798b"}}>{conferir.codigo} · Nenhum estoque será movimentado nesta etapa</div></div></div>
+          {conferir.itens.map(i=><div key={i.chave} style={{border:"1px solid #d8e7ed",borderRadius:12,padding:12,marginBottom:10}}><strong>{i.sku} — {i.produto}</strong><div style={{fontSize:12,margin:"5px 0 10px"}}>Esperado para retorno: {i.recusado} UN · {i.motivo||"Sem motivo informado"}</div><div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}><label style={{fontSize:12}}>Quantidade efetivamente recebida<input type="number" min="0" max={i.recusado} step="any" value={conferencia[i.chave]?.qtd??""} onChange={e=>setConferencia(prev=>({...prev,[i.chave]:{...prev[i.chave],qtd:e.target.value}}))} style={{display:"block",width:"100%",border:"1px solid #b6d2de",padding:9,borderRadius:8}}/></label><label style={{fontSize:12}}>Destino<select value={conferencia[i.chave]?.destino||"QUARENTENA"} onChange={e=>setConferencia(prev=>({...prev,[i.chave]:{...prev[i.chave],destino:e.target.value}}))} style={{display:"block",width:"100%",border:"1px solid #b6d2de",padding:9,borderRadius:8}}><option value="QUARENTENA">Quarentena / avaliação</option><option value="DISPONIVEL">Apto para estoque (sem baixa automática)</option><option value="AVARIA">Avaria</option><option value="DIVERGENCIA">Divergência</option></select></label></div></div>)}
+          <div style={{display:"flex",justifyContent:"flex-end",gap:10}}><button type="button" disabled={operando} onClick={()=>setConferir(null)} style={{padding:"10px 16px",border:"1px solid #bdd3dd",borderRadius:9,background:"white",color:"#23536a"}}>Cancelar</button><button type="button" disabled={operando||conferir.itens.some(i=>conferencia[i.chave]?.qtd===""||!Number.isFinite(Number(conferencia[i.chave]?.qtd))||Number(conferencia[i.chave]?.qtd)<0||Number(conferencia[i.chave]?.qtd)>Number(i.recusado))} onClick={()=>void transicionarRet(conferir,"FINALIZADO",conferir.itens.map(i=>({chave:i.chave,quantidade_recebida:Number(conferencia[i.chave].qtd),destino:conferencia[i.chave].destino})))} style={{padding:"10px 16px",border:0,borderRadius:9,background:"#138bad",color:"white",fontWeight:700}}>Finalizar conferência</button></div>
+        </div>
+      </div>}
       <style jsx>{`
         .ret-page {
           padding: 18px;
@@ -768,7 +805,7 @@ export default function RetornosPage() {
 
         .ret-content {
           display: grid;
-          grid-template-columns: 380px minmax(0, 1fr);
+          grid-template-columns: clamp(265px, 24vw, 315px) minmax(0, 1fr);
           gap: 14px;
 
           min-height: 595px;
@@ -1266,7 +1303,10 @@ export default function RetornosPage() {
           display: flex;
           align-items: flex-start;
 
-          padding: 0 15px 18px;
+          padding: 0 4px 18px;
+          width: 100%;
+          min-width: 0;
+          box-sizing: border-box;
         }
 
         /* ===================================================
@@ -1372,12 +1412,48 @@ export default function RetornosPage() {
           }
 
           .ret-content {
-            grid-template-columns: 330px minmax(0, 1fr);
+            grid-template-columns: 265px minmax(0, 1fr);
           }
 
           .ret-detail-documents {
             gap: 12px;
           }
+        }
+
+        /* ATEL V37.25 - encaixe responsivo sem cortar a timeline */
+        /* V37.27: lista ocupa toda a altura real do painel, sem espaco vazio */
+        @media (min-width: 981px) {
+          .ret-content { align-items: stretch; }
+          .ret-list-panel { position: relative; min-height: 0; }
+          .ret-list-panel > .ret-list {
+            position: absolute;
+            top: 48px;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: auto;
+            max-height: none;
+            overflow-y: auto;
+            overscroll-behavior: contain;
+          }
+        }
+
+        .ret-detail-panel { min-width: 0; }
+        .ret-timeline-area { min-width: 0; margin-left: 12px; margin-right: 12px; }
+        .ret-timeline-title { margin-bottom: 12px; }
+        .ret-list { max-height: min(680px, calc(100vh - 280px)); }
+        @media (max-width: 980px) {
+          .ret-content { grid-template-columns: minmax(0, 1fr); }
+          .ret-list { max-height: 320px; }
+          .ret-header { height: auto; min-height: 54px; flex-wrap: wrap; gap: 8px; padding: 8px 12px; }
+          .ret-search { width: min(300px, 55vw); }
+        }
+        @media (max-width: 600px) {
+          .ret-page { padding: 10px; }
+          .ret-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+          .ret-timeline-area { margin-left: 6px; margin-right: 6px; }
+          .ret-detail-documents { flex-wrap: wrap; }
+          .ret-info-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
         }
       `}</style>
     </div>
@@ -1617,12 +1693,13 @@ function TimelineStep({
   return (
     <div
       style={{
-        width: 132,
+        flex: "1 1 0",
+        minWidth: 0,
         display: "flex",
         flexDirection: "column",
         alignItems: "center",
         textAlign: "center",
-        flexShrink: 0,
+        boxSizing: "border-box",
       }}
     >
       <div
@@ -1657,7 +1734,10 @@ function TimelineStep({
             : "#8a959e",
           fontSize: 10,
           fontWeight: 900,
-          whiteSpace: "nowrap",
+          whiteSpace: "normal",
+          overflowWrap: "anywhere",
+          padding: "0 2px",
+          lineHeight: 1.2,
         }}
       >
         {titulo}
@@ -1705,7 +1785,8 @@ function TimelineLine({
       style={{
         height: 2,
         flex: 1,
-        minWidth: 35,
+        minWidth: 5,
+        maxWidth: 22,
         marginTop: 15,
         background: ativo ? "#27a36a" : "#d5dde1",
       }}

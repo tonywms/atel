@@ -4,9 +4,9 @@ export const ATEL_GRUPOS = {
   Cadastros: [["Clientes", "/clientes"], ["Ativos", "/ativos"], ["Técnicos", "/tecnicos"]],
   Relatórios: [["Estoque Técnico", "/relatorios/estoque-tecnico"], ["Patrimônio Cliente", "/relatorios/patrimonio-cliente"]],
   Movimentações: [["Movimentações", "/movimentacoes"], ["Reversa", "/reversa"]],
-  Expedições: [["Dashboard", "/expedicoes"], ["Gestão", "/expedicoes/gestao"], ["Ordens de Serviço", "/admin/ordens-servico"], ["OS Adapter", "/expedicoes/os-adapter"], ["Regularização", "/expedicoes/os-adapter/regularizacao"], ["Requisições Técnicas", "/expedicoes/requisicoes-tecnicas"], ["Retornos / Devoluções", "/expedicoes/retornos"], ["Pendências", "/expedicoes/pendencias"]],
+  Expedições: [["Dashboard", "/expedicoes"], ["Gestão", "/expedicoes/gestao"], ["Ordens de Serviço", "/admin/ordens-servico"], ["OS Adapter", "/expedicoes/os-adapter"], ["Regularização", "/expedicoes/os-adapter/regularizacao"], ["Requisições Técnicas", "/expedicoes/requisicoes-tecnicas"], ["Retornos / Devoluções", "/expedicoes/retornos"], ["Pendências", "/expedicoes/pendencias"], ["Transferencia de Estoque", "/expedicoes/transferencia-estoque"]],
   Auditoria: [["Integridade", "/admin/auditoria-integridade"]],
-  ERP: [["Integrações", "/integracoes"]],
+  ERP: [["Integrações", "/integracoes"], ["Gerar Pedido de Saída", "/erp/gerar-pedido-saida"]],
   Painel: [["Operador Logístico", "/operacao"], ["Ordens de Serviço", "/os"], ["Visão Operacional", "/"], ["Governança Operacional", "/admin/governanca-operacional"]],
   Coletor: [["Início", "/coletor"], ["Recebimento", "/coletor/recebimento"], ["Separação", "/coletor/separacao"], ["Conferência", "/coletor/conferencia"], ["Embarque", "/coletor/embarque"], ["Retornos", "/coletor/retornos"], ["Consulta", "/coletor/consulta"], ["Estoque", "/coletor/estoque"], ["Expedições", "/coletor/expedicoes"], ["Ordens de Serviço", "/coletor/ordens-servico"], ["Jornada OS", "/coletor/jornada-os"]]
 } as const;

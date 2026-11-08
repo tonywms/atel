@@ -127,10 +127,10 @@ export default function PainelOrdensServico() {
           const {data:{session}}=await supabase.auth.getSession();
           if(!session?.access_token)throw new Error("Sessão expirada");
           const resposta=await fetch("/api/os-painel-status",{headers:{Authorization:`Bearer ${session.access_token}`},cache:"no-store"});
-          if(!resposta.ok)throw new Error("Status operacionais temporariamente indisponíveis");
+          if(!resposta.ok) { const falha = await resposta.json().catch(() => null) as { error?: string } | null; throw new Error(falha?.error || `Status WMS indisponível (HTTP ${resposta.status})`); }
           const dados=await resposta.json() as PainelStatusERP;
           sincronizadas=enriquecerOsERP(ordens,dados);
-        }catch { avisoStatus="Andamentos WMS não sincronizados nesta consulta. Os dados da OS permanecem do ERP."; }
+        }catch (e) { avisoStatus=`Andamentos WMS não sincronizados: ${e instanceof Error ? e.message : "Falha desconhecida"}. Os dados da OS permanecem do ERP.`; }
         if (ativo) { setLista(sincronizadas); setErro(avisoStatus); }
       } catch (e) {
         if (ativo) { setLista([]); setErro(e instanceof Error ? e.message : "Falha ao consultar ERP"); }
@@ -214,7 +214,7 @@ export default function PainelOrdensServico() {
       <tbody>{(rascunho?.itens ?? []).map((item, i) => <tr key={`${item.cod_produto}-${item.patrimonio ?? ""}-${item.mac ?? ""}-${i}`}>
         <td>Rascunho</td><td><strong>{item.cod_produto}</strong></td><td>{item.produto || "Produto ERP"}</td><td>{item.unidade || "—"}</td><td>{item.quantidade}</td><td>{item.patrimonio ?? "—"}</td><td>{item.mac ?? "—"}</td><td>Não</td>
       </tr>)}
-      {!rascunho?.itens.length && <tr><td colSpan={8} className={styles.empty}>{carregandoMateriais ? "Consultando..." : erroMateriais ? "Não foi possível consultar os apontamentos." : "Nenhum material apontado nesta OS."}</td></tr>}
+      {!rascunho?.itens.length && <tr><td colSpan={8} className={styles.empty}>{carregandoMateriais ? "Consultando..." : erroMateriais ? erroMateriais : "Nenhum material apontado nesta OS."}</td></tr>}
       </tbody></table></div>
       </>:<div className={styles.timeline}>{ordem.historicoFSM?.length?[...ordem.historicoFSM].reverse().map((h,i)=><article key={h.id||i}><div className={styles.timelineDot}/><div><strong>{rotulo(h.estadoAnterior)} → {rotulo(h.estadoNovo)}</strong><small>{dataHora(h.ocorridoEm)} · {h.tecnico}</small>{h.tipoOcorrencia&&<p>Ocorrência: {rotulo(h.tipoOcorrencia)}</p>}{h.motivo&&<p>Motivo: {h.motivo}</p>}{h.observacao&&<p>{h.observacao}</p>}{h.novaData&&<p>Nova data: {dataBR(h.novaData)}</p>}</div></article>):<div className={styles.empty}>Nenhum evento FSM registrado.</div>}</div>}
       <FluxoTecnico ordem={ordem} />

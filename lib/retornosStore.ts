@@ -375,13 +375,6 @@ export function gerarRetornoDaRequisicao(
             )
         );
 
-      const quantidadeFaltante =
-        Math.max(
-          quantidadeEsperada -
-            quantidadeRecebida,
-          0
-        );
-
       const quantidadeRecusadaFisica =
         Math.max(
           quantidadeRecebida -
@@ -389,9 +382,9 @@ export function gerarRetornoDaRequisicao(
           0
         );
 
-      const quantidadeRetorno =
-        quantidadeFaltante +
-        quantidadeRecusadaFisica;
+      // Somente unidades fisicamente recusadas podem compor um RET.
+      // Unidades faltantes devem gerar ocorrencia, nunca transporte ficticio.
+      const quantidadeRetorno = quantidadeRecusadaFisica;
 
       if (quantidadeAceita > 0) {
         houveAceite = true;

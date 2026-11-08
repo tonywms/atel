@@ -7,7 +7,7 @@ const reply = (obj: object, status = 200) => NextResponse.json(obj, { status, he
 function bancoServidor() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.ATEL_SUPABASE_SERVICE_ROLE_KEY;
-  if (!url || !key) throw new Error("Credencial de servidor Supabase nao configurada");
+  if (!url || !key) throw new Error("SUPABASE_SERVER_KEY_MISSING");
   return createClient(url, key, { auth: { persistSession: false, autoRefreshToken: false } });
 }
 async function contexto(req: NextRequest) {
@@ -45,7 +45,7 @@ export async function GET(req: NextRequest) {
   const {data,error}=await bancoServidor().from("atel_os_andamento").select("etapa,versao").eq("usuario_id",ctx.userId).eq("tecnico_erp",ctx.tecnico).eq("atendimento_erp",atendimento).maybeSingle();
   if(error) return reply({error:"Andamento indisponivel"},503);
   return reply({atendimento,etapa:data?.etapa??"PENDENTE",versao:data?.versao??0});
- }catch{return reply({error:"Falha ao consultar ERP"},502)}
+ }catch(e){return reply({error:e instanceof Error && e.message === "SUPABASE_SERVER_KEY_MISSING" ? "Chave de servidor Supabase ausente no ambiente. Configure SUPABASE_SERVICE_ROLE_KEY no servidor." : "Falha ao consultar andamento da OS"},e instanceof Error && e.message === "SUPABASE_SERVER_KEY_MISSING" ? 503 : 502)}
 }
 export async function PUT(req: NextRequest) {
  let b:Record<string,unknown>;

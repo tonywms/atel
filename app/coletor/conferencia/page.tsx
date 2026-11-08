@@ -1,4 +1,5 @@
 "use client";
+import { atualizarPedidosAtelV363, obterPedidosAtelV363, pedidosComEstadoV363 } from "@/lib/atelPedidosHomologacaoV363";
 
 import styles from "./conferencia.module.css";
 
@@ -359,7 +360,7 @@ export default function ConferenciaListaPage() {
   function carregar() {
     const estados = carregarEstados();
 
-    const lista = requisicoesTecnicasMock
+    const lista = [...requisicoesTecnicasMock, ...pedidosComEstadoV363(obterPedidosAtelV363())]
       .map((req) => {
         const estado = estados[req.id];
 
@@ -393,6 +394,12 @@ export default function ConferenciaListaPage() {
 
     setRequisicoes(lista);
   }
+
+  useEffect(() => {
+    let ativo = true;
+    void atualizarPedidosAtelV363().then(() => { if (ativo) carregar(); }).catch(console.error);
+    return () => { ativo = false; };
+  }, []);
 
   useEffect(() => {
     carregar();

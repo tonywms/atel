@@ -1,5 +1,5 @@
 "use client";
-import {useEffect,useState} from "react";
+import {useEffect,useRef,useState} from "react";
 import {atelSupabase} from "@/lib/atelSupabaseV08";
 import {Warehouse,Package,ClipboardList,Plus,Trash2,ShieldCheck,RefreshCw,Truck,MapPin,Layers3,Database,CircleCheck,LockKeyhole,AlertTriangle,Building2,Boxes} from "lucide-react";
 import styles from "./page.module.css";
@@ -7,11 +7,30 @@ const org="6ea04673-4deb-42cf-a001-dbb027120103";
 type Local={id:string;nome:string;tipo:string};
 type Material={id:string;sku:string;descricao:string;unidade?:string};
 type Linha={material_id:string;quantidade:string};
+function ProdutoPicker({materiais,value,onChange,numero}:{materiais:Material[];value:string;onChange:(id:string)=>void;numero:number}){
+ const [aberto,setAberto]=useState(false),[termo,setTermo]=useState("");
+ const area=useRef<HTMLDivElement>(null),campo=useRef<HTMLInputElement>(null);
+ const escolhido=materiais.find(m=>m.id===value);
+ const encontrados=materiais.filter(m=>`${m.sku} ${m.descricao}`.toLocaleLowerCase("pt-BR").includes(termo.trim().toLocaleLowerCase("pt-BR")));
+ useEffect(()=>{if(!aberto)return;const fechar=(e:PointerEvent)=>{if(area.current&&!area.current.contains(e.target as Node))setAberto(false)};document.addEventListener("pointerdown",fechar);return()=>document.removeEventListener("pointerdown",fechar)},[aberto]);
+ return <div ref={area} style={{position:"relative",flex:"1 1 0",minWidth:0}}>
+  <button type="button" aria-label={`Selecionar produto ${numero}`} aria-haspopup="listbox" aria-expanded={aberto} onClick={()=>{setAberto(v=>!v);setTermo("");setTimeout(()=>campo.current?.focus(),0)}} style={{display:"flex",alignItems:"center",justifyContent:"space-between",gap:10,width:"100%",minHeight:48,padding:"10px 14px",background:"#f7fafc",border:"1px solid #cddfea",borderRadius:10,color:"#153b54",textAlign:"left",fontSize:13,cursor:"pointer"}}>
+   <span style={{overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{escolhido?`${escolhido.sku} — ${escolhido.descricao}`:"Selecione o material"}</span><span aria-hidden="true">⌄</span>
+  </button>
+  {aberto&&<div style={{position:"absolute",top:"calc(100% + 5px)",left:0,right:0,zIndex:50,background:"white",border:"1px solid #b8d2e2",borderRadius:11,boxShadow:"0 14px 35px #163b5433",padding:8}}>
+   <input ref={campo} type="search" aria-label={`Pesquisar produto ${numero}`} placeholder="Buscar código ou descrição" value={termo} onChange={e=>setTermo(e.target.value)} onKeyDown={e=>{if(e.key==="Escape")setAberto(false);if(e.key==="Enter"&&encontrados.length===1){e.preventDefault();onChange(encontrados[0].id);setAberto(false)}}} style={{width:"100%",height:40,padding:"9px 11px",border:"1px solid #cbdde8",borderRadius:8,marginBottom:6,fontSize:13}}/>
+   <div role="listbox" aria-label={`Produtos disponíveis ${numero}`} style={{maxHeight:260,overflowY:"auto",overscrollBehavior:"contain"}}>
+    {encontrados.map(m=><button type="button" role="option" aria-selected={m.id===value} key={m.id} onClick={()=>{onChange(m.id);setAberto(false)}} style={{display:"block",width:"100%",textAlign:"left",padding:"10px 12px",border:0,borderRadius:7,background:m.id===value?"#e5f4fb":"transparent",color:"#1b435c",fontSize:12,cursor:"pointer"}}>{m.sku} — {m.descricao}</button>)}
+    {!encontrados.length&&<div style={{padding:12,color:"#667d8b",fontSize:12}}>Nenhum produto encontrado.</div>}
+   </div>
+  </div>}
+ </div>;
+}
 export default function GerarPedidoSaida(){
  const [locais,setLocais]=useState<Local[]>([]),[materiais,setMateriais]=useState<Material[]>([]);
  const [origem,setOrigem]=useState(""),[destino,setDestino]=useState(""),[prioridade,setPrioridade]=useState("NORMAL");
  const [itens,setItens]=useState<Linha[]>([{material_id:"",quantidade:"1"}]);
- const [sincronizando,setSincronizando]=useState(false),[syncMsg,setSyncMsg]=useState(""),[busca,setBusca]=useState("");
+ const [sincronizando,setSincronizando]=useState(false),[syncMsg,setSyncMsg]=useState("");
  const [observacao,setObservacao]=useState(""),[erro,setErro]=useState(""),[ok,setOk]=useState(""),[busy,setBusy]=useState(false),[loading,setLoading]=useState(true);
  useEffect(()=>{let alive=true;(async()=>{try{const db=atelSupabase();if(!db)throw Error("Supabase indisponível");const {data:{session}}=await db.auth.getSession();if(!session)throw Error("Sessão expirada");const r=await fetch("/api/estoque-wms/catalogo",{headers:{Authorization:"Bearer "+session.access_token},cache:"no-store"});const d=await r.json();if(!r.ok)throw Error(d.error||"Catálogo indisponível");if(alive){setLocais(d.locais||[]);setMateriais(d.materiais||[]);setOrigem((d.locais||[]).find((l:Local)=>l.tipo==="cd")?.id||"");}}catch(e){if(alive)setErro(e instanceof Error?e.message:"Falha de conexão")}finally{if(alive)setLoading(false)}})();return()=>{alive=false}},[]);
  useEffect(()=>{let active=true;const timer=window.setTimeout(()=>{if(active)void sincronizarERP()},250);return()=>{active=false;window.clearTimeout(timer)}},[]);
@@ -51,8 +70,8 @@ export default function GerarPedidoSaida(){
  <label><span className={styles.fieldLabel}><Layers3 size={15}/> Prioridade</span><select value={prioridade} onChange={e=>setPrioridade(e.target.value)}><option>NORMAL</option><option>ALTA</option><option>URGENTE</option></select></label>
  </div><div className={styles.subheading}><Package size={16}/> Produtos do pedido</div>
  <div role="status" aria-live="polite" style={{fontSize:12,color:"#536f83",marginBottom:12}}>{sincronizando?"Verificando automaticamente novos produtos no ERP...":syncMsg||"Catálogo carregado do Supabase; novidades do ERP são verificadas automaticamente."}</div>
- <label style={{display:"block",fontSize:12,fontWeight:700,color:"#315a70",marginBottom:12}}>Pesquisar produtos cadastrados<input value={busca} onChange={e=>setBusca(e.target.value)} placeholder="Código ou descrição" style={{display:"block",width:"100%",marginTop:6,padding:"10px 12px",border:"1px solid #cadce8",borderRadius:9}}/></label>
- {itens.map((item,i)=><div className={styles.item} key={i}><select aria-label={"Produto "+(i+1)} value={item.material_id} onChange={e=>setItens(a=>a.map((x,j)=>j===i?{...x,material_id:e.target.value}:x))} required><option value="">Selecione o material</option>{materiais.filter(m=>!busca.trim()||`${m.sku} ${m.descricao}`.toLocaleLowerCase("pt-BR").includes(busca.toLocaleLowerCase("pt-BR"))||m.id===item.material_id).map(m=><option key={m.id} value={m.id}>{m.sku} — {m.descricao}</option>)}</select><input aria-label={"Quantidade "+(i+1)} type="number" min="0.001" step="any" value={item.quantidade} onChange={e=>setItens(a=>a.map((x,j)=>j===i?{...x,quantidade:e.target.value}:x))} required/><button type="button" aria-label="Remover produto" disabled={itens.length===1} onClick={()=>setItens(a=>a.filter((_,j)=>j!==i))}><Trash2 size={17}/></button></div>)}
+
+ {itens.map((item,i)=><div className={styles.item} key={i}><ProdutoPicker materiais={materiais} value={item.material_id} numero={i+1} onChange={id=>setItens(a=>a.map((x,j)=>j===i?{...x,material_id:id}:x))}/><input aria-label={"Quantidade "+(i+1)} type="number" min="0.001" step="any" value={item.quantidade} onChange={e=>setItens(a=>a.map((x,j)=>j===i?{...x,quantidade:e.target.value}:x))} required/><button type="button" aria-label="Remover produto" disabled={itens.length===1} onClick={()=>setItens(a=>a.filter((_,j)=>j!==i))}><Trash2 size={17}/></button></div>)}
  <button className={styles.add} type="button" onClick={()=>setItens(a=>[...a,{material_id:"",quantidade:"1"}])}><Plus size={16}/> Adicionar produto</button>
  <label className={styles.notes}><span className={styles.fieldLabel}><ClipboardList size={15}/> Observações</span><textarea maxLength={1000} value={observacao} onChange={e=>setObservacao(e.target.value)} rows={3}/></label>
  {erro&&<div role="alert" className={styles.error}><AlertTriangle size={16}/>{erro}</div>}{ok&&<div role="status" className={styles.success}><CircleCheck size={16}/>{ok}</div>}

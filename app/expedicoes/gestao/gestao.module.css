@@ -289,3 +289,32 @@
 @media(max-width:1150px){.root :global(.req-layout){grid-template-columns:minmax(270px,34%) minmax(0,1fr)}.root :global(.req-products-scroll table){min-width:960px}}
 @media(max-width:850px){.root :global(.req-layout){grid-template-columns:1fr}.root :global(.req-list){max-height:380px}.root :global(.req-products-scroll){max-height:480px;min-height:160px}}
 @media(max-width:520px){.root :global(.req-detail-header){padding:16px}.root :global(.req-products){padding:12px}.root :global(.req-products-scroll table){min-width:900px}.root :global(.req-footer){padding:14px}}
+
+
+/* ATEL V9.6 — layout de trabalho: dados em primeiro plano, sem molduras aninhadas. */
+.root{padding:18px 16px 24px;background:#f1f6fa;border-radius:0}
+.root :global(.req-layout){grid-template-columns:minmax(250px,27%) minmax(0,1fr);gap:12px;align-items:start}
+.root :global(.req-sidebar-panel),.root :global(.req-detail){border:1px solid #d8e7ef;border-radius:14px;box-shadow:0 3px 12px rgba(12,63,92,.045)}
+.root :global(.req-sidebar-title){padding:12px 16px}
+.root :global(.req-list){padding:8px;max-height:640px}
+.root :global(.req-card){padding:10px 11px;margin-bottom:7px;border-radius:10px;box-shadow:none}
+.root :global(.req-detail){display:flex;flex-direction:column;min-height:0}
+.root :global(.req-detail-header){padding:14px 18px;min-height:76px;background:#fff}
+.root :global(.req-detail-code){font-size:22px}
+.root :global(.req-products){display:block;flex:0 0 auto;min-height:0;padding:0;margin:0;background:#fff}
+.root :global(.req-products-title){margin:0;border-radius:0;padding:12px 17px;background:#075b79}
+.root :global(.req-products-scroll){display:block;flex:none;min-height:0;max-height:360px;overflow-x:auto;overflow-y:auto;border:0;border-radius:0;scrollbar-gutter:auto}
+.root :global(.req-products-scroll table){width:100%;min-width:810px;table-layout:auto;border-spacing:0}
+.root :global(.req-products-scroll th){font-size:9px;letter-spacing:0;padding:11px 7px;white-space:nowrap}
+.root :global(.req-products-scroll td){font-size:11px;padding:12px 7px;white-space:nowrap}
+.root :global(.req-products-scroll th:nth-child(1)),.root :global(.req-products-scroll td:nth-child(1)){min-width:50px;width:50px}
+.root :global(.req-products-scroll th:nth-child(2)),.root :global(.req-products-scroll td:nth-child(2)){min-width:77px}
+.root :global(.req-products-scroll th:nth-child(3)),.root :global(.req-products-scroll td:nth-child(3)){min-width:185px;max-width:310px;white-space:normal;text-align:left}
+.root :global(.req-footer){margin:0;padding:11px 15px;min-height:57px;background:#f8fbfd;border-radius:0 0 14px 14px}
+.root :global(.req-footer .req-flow){gap:4px;padding:0;justify-content:space-between}
+.root :global(.req-footer .req-flow-step){font-size:10px}
+.root :global(.req-footer .req-flow-step span){width:23px;height:23px;min-width:23px}
+.root :global(.generate-separation){display:none!important}
+@media(max-width:1100px){.root :global(.req-layout){grid-template-columns:minmax(235px,30%) minmax(0,1fr)}}
+@media(max-width:850px){.root :global(.req-layout){grid-template-columns:1fr}.root :global(.req-list){max-height:300px}.root :global(.req-products-scroll){max-height:340px}}
+@media(max-width:520px){.root{padding:10px}.root :global(.req-detail-header){padding:12px}.root :global(.req-products-scroll table){min-width:810px}.root :global(.req-footer .req-flow){flex-wrap:wrap;justify-content:flex-start}}

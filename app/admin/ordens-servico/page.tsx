@@ -1,4 +1,5 @@
 "use client";
+import type { ReactNode } from "react";
 
 import { useEffect, useMemo, useState } from "react";
 import { obterEstadoFSMOS, type OrdemServico } from "@/lib/ordensServicoStore";
@@ -87,6 +88,26 @@ function FluxoTecnico({ ordem }: { ordem: OrdemServico }) {
     </ol>
     {excepcional && <div className={styles.fsmFlowAlert}>Situação atual: {rotulo(atual)}. Consulte o Histórico operacional para os detalhes.</div>}
   </section>;
+}
+
+function OsIcon({ name, size = 18 }: { name: "clipboard" | "truck" | "activity" | "calendar" | "alert" | "check" | "search" | "box" | "layers" | "history" | "shield" | "hash" | "list", size?: number }) {
+  const common = { width: size, height: size, viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: 1.9, strokeLinecap: "round" as const, strokeLinejoin: "round" as const, "aria-hidden": true as const };
+  const shapes: Record<typeof name, ReactNode> = {
+    clipboard: <><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4.5h6M9 9h6M9 13h6M9 17h4"/></>,
+    truck: <><path d="M3 6h11v11H3zM14 10h4l3 4v3h-7z"/><circle cx="7.5" cy="18" r="1.5"/><circle cx="17.5" cy="18" r="1.5"/></>,
+    activity: <><path d="M3 12h4l3-7 4 14 3-7h4"/></>,
+    calendar: <><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M7 3v4M17 3v4M3 10h18M8 14h3M8 17h6"/></>,
+    alert: <><path d="m12 3 10 18H2L12 3Z"/><path d="M12 9v5M12 17h.01"/></>,
+    check: <><circle cx="12" cy="12" r="9"/><path d="m8 12 2.5 2.5L16 9"/></>,
+    search: <><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 5 5"/></>,
+    box: <><path d="m12 2 9 5-9 5-9-5 9-5ZM3 7v10l9 5 9-5V7M12 12v10"/></>,
+    layers: <><path d="m12 3 9 5-9 5-9-5 9-5ZM3 12l9 5 9-5M3 16l9 5 9-5"/></>,
+    history: <><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5M12 7v5l3 2"/></>,
+    shield: <><path d="m12 2 8 4v6c0 5-3 8-8 10-5-2-8-5-8-10V6l8-4Z"/><path d="m9 12 2 2 4-4"/></>,
+    hash: <><path d="M9 3 7 21M17 3l-2 18M4 9h17M3 15h17"/></>,
+    list: <><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M8 8h8M8 12h8M8 16h5"/></>,
+  };
+  return <svg {...common}>{shapes[name]}</svg>;
 }
 
 export default function PainelOrdensServico() {
@@ -184,35 +205,35 @@ export default function PainelOrdensServico() {
 
   const contagem = (fn: (o: OrdemServico) => boolean) => lista.filter(fn).length;
   const indicadores = [
-    { nome: "Total de OS", valor: lista.length, cor: "azul" },
-    { nome: "Em deslocamento", valor: contagem(o => estado(o) === "EM_DESLOCAMENTO"), cor: "ciano" },
-    { nome: "Em atendimento", valor: contagem(o => ["NO_LOCAL", "EM_ATENDIMENTO"].includes(estado(o))), cor: "verde" },
-    { nome: "Reagendadas", valor: contagem(o => estado(o) === "PENDENTE_REAGENDAMENTO"), cor: "laranja" },
-    { nome: "Com ocorrência", valor: contagem(temOcorrencia), cor: "rosa" },
-    { nome: "Finalizadas", valor: contagem(o => estado(o) === "FINALIZADA"), cor: "turquesa" },
+    { nome: "Total de OS", icone: "clipboard" as const, valor: lista.length, cor: "azul" },
+    { nome: "Em deslocamento", icone: "truck" as const, valor: contagem(o => estado(o) === "EM_DESLOCAMENTO"), cor: "ciano" },
+    { nome: "Em atendimento", icone: "activity" as const, valor: contagem(o => ["NO_LOCAL", "EM_ATENDIMENTO"].includes(estado(o))), cor: "verde" },
+    { nome: "Reagendadas", icone: "calendar" as const, valor: contagem(o => estado(o) === "PENDENTE_REAGENDAMENTO"), cor: "laranja" },
+    { nome: "Com ocorrência", icone: "alert" as const, valor: contagem(temOcorrencia), cor: "rosa" },
+    { nome: "Finalizadas", icone: "check" as const, valor: contagem(o => estado(o) === "FINALIZADA"), cor: "turquesa" },
   ];
   return <main className={styles.root}>
     <header className={styles.heading}><div><span className={styles.eyebrow}>EXPEDIÇÕES / GESTÃO OS</span><h1>Gestão de Ordens de Serviço</h1><p>Acompanhamento dos atendimentos, materiais e histórico técnico.</p></div><span className={styles.readonly}>Consulta ERP · homologação</span></header>
-    <section className={styles.kpis} aria-label="Indicadores de ordens de serviço">{indicadores.map(i=><div className={styles.kpi} key={i.nome}><div className={`${styles.kpiHead} ${styles[i.cor]}`}>{i.nome}</div><div className={styles.kpiBody}><strong>{i.valor}</strong><span>{lista.length ? Math.round(i.valor / lista.length * 100) : 0}% do total</span></div></div>)}</section>
-    <section className={styles.toolbar}><div><strong>Acompanhamento de Ordens de Serviço</strong><small>{filtradas.length} de {lista.length} OS</small></div><div className={styles.filters}><input aria-label="Pesquisar OS" value={busca} onChange={e=>{setBusca(e.target.value);setPagina(1)}} placeholder="Pesquisar OS, cliente, técnico..."/><select aria-label="Filtrar status" value={filtroStatus} onChange={e=>{setFiltroStatus(e.target.value);setPagina(1)}}><option value="TODOS">Todos os status</option>{status.map(x=><option key={x} value={x}>{rotulo(x)}</option>)}</select><select aria-label="Filtrar técnico" value={filtroTecnico} onChange={e=>{setFiltroTecnico(e.target.value);setPagina(1)}}><option value="TODOS">Todos os técnicos</option>{tecnicos.map(x=><option key={x} value={x}>{x}</option>)}</select><button onClick={()=>{setBusca("");setFiltroStatus("TODOS");setFiltroTecnico("TODOS");setPagina(1)}}>Limpar</button></div></section>
+    <section className={styles.kpis} aria-label="Indicadores de ordens de serviço">{indicadores.map(i=><div className={styles.kpi} key={i.nome}><div className={`${styles.kpiHead} ${styles[i.cor]}`}><span>{i.nome}</span><OsIcon name={i.icone} size={19}/></div><div className={styles.kpiBody}><strong>{i.valor}</strong><span>{lista.length ? Math.round(i.valor / lista.length * 100) : 0}% do total</span></div></div>)}</section>
+    <section className={styles.toolbar}><div><strong className={styles.toolbarTitle}><OsIcon name="list" size={19}/> Acompanhamento de Ordens de Serviço</strong><small>{filtradas.length} de {lista.length} OS</small></div><div className={styles.filters}><input aria-label="Pesquisar OS" value={busca} onChange={e=>{setBusca(e.target.value);setPagina(1)}} placeholder="Pesquisar OS, cliente, técnico..."/><select aria-label="Filtrar status" value={filtroStatus} onChange={e=>{setFiltroStatus(e.target.value);setPagina(1)}}><option value="TODOS">Todos os status</option>{status.map(x=><option key={x} value={x}>{rotulo(x)}</option>)}</select><select aria-label="Filtrar técnico" value={filtroTecnico} onChange={e=>{setFiltroTecnico(e.target.value);setPagina(1)}}><option value="TODOS">Todos os técnicos</option>{tecnicos.map(x=><option key={x} value={x}>{x}</option>)}</select><button onClick={()=>{setBusca("");setFiltroStatus("TODOS");setFiltroTecnico("TODOS");setPagina(1)}}>Limpar</button></div></section>
     {erro && <p role="alert" className={styles.error}>{erro}</p>}
     <div className={styles.workspace}>
-      <div className={styles.listPane}><div className={styles.paneTitle}>Ordens de serviço <span>{filtradas.length}</span></div><div className={styles.osList}>{exibidas.map(o=><button key={o.id} onClick={()=>{setSelecionada(o.id);setAba("materiais")}} className={`${styles.osCard} ${ordem?.id===o.id?styles.selected:""}`} aria-pressed={ordem?.id===o.id}><div className={styles.osTop}><strong>OS nº {o.codigo}</strong><span className={`${styles.state} ${styles[estado(o).toLowerCase()] ?? ""}`}>{rotulo(estado(o))}</span></div><div className={styles.client}>{o.cliente}</div><div className={styles.osMeta}><span>{o.observacao}</span><span>Cliente: {o.codigoCliente}</span><span>Tipo: {rotulo(o.tipo)}</span><span>Técnico: {o.tecnico}</span><span>Data: {dataBR(prevista(o))}</span><span>Base: {o.base} · {o.codigoTecnico}</span></div></button>)}{!exibidas.length&&<div className={styles.empty}>Nenhuma OS encontrada.</div>}</div><footer className={styles.pager}><button disabled={paginaAtual<=1} onClick={()=>setPagina(p=>p-1)}>‹</button><span>{paginaAtual} / {totalPaginas}</span><button disabled={paginaAtual>=totalPaginas} onClick={()=>setPagina(p=>p+1)}>›</button></footer></div>
-      <section className={styles.detailPane} aria-label="Detalhamento da ordem de serviço">{ordem?<><div className={styles.detailHead}><div><span>ORDEM DE SERVIÇO</span><h2>OS nº {ordem.codigo}</h2><p>{ordem.cliente} · {ordem.observacao}</p></div><div className={styles.detailActions}><span className={`${styles.state} ${styles[estado(ordem).toLowerCase()]??""}`}>{rotulo(estado(ordem))}</span></div></div><div className={styles.infoGrid}><div><small>Técnico responsável</small><strong>{ordem.tecnico}</strong><span>{ordem.codigoTecnico} · {ordem.base}</span></div><div><small>Tipo de serviço</small><strong>{rotulo(ordem.tipo)}</strong><span>Prevista: {dataBR(prevista(ordem))}</span></div><div><small>Endereço</small><strong>{ordem.endereco || "Não informado"}</strong><span>{ordem.cidade}</span></div></div>
-      
-      <nav className={styles.tabs} aria-label="Informações da OS"><button className={aba==="materiais"?styles.active:""} onClick={()=>setAba("materiais")}>Materiais e quantidades</button><button className={aba==="historico"?styles.active:""} onClick={()=>setAba("historico")}>Histórico operacional ({ordem.historicoFSM?.length??0})</button></nav>
+      <div className={styles.listPane}><div className={styles.paneTitle}><span className={styles.paneTitleLabel}><OsIcon name="clipboard" size={18}/> Ordens de serviço</span> <span>{filtradas.length}</span></div><div className={styles.osList}>{exibidas.map(o=><button key={o.id} onClick={()=>{setSelecionada(o.id);setAba("materiais")}} className={`${styles.osCard} ${ordem?.id===o.id?styles.selected:""}`} aria-pressed={ordem?.id===o.id}><div className={styles.osTop}><strong>OS nº {o.codigo}</strong><span className={`${styles.state} ${styles[estado(o).toLowerCase()] ?? ""}`}>{rotulo(estado(o))}</span></div><div className={styles.client}>{o.cliente}</div><div className={styles.osMeta}><span>{o.observacao}</span><span>Cliente: {o.codigoCliente}</span><span>Tipo: {rotulo(o.tipo)}</span><span>Técnico: {o.tecnico}</span><span>Data: {dataBR(prevista(o))}</span><span>Base: {o.base} · {o.codigoTecnico}</span></div></button>)}{!exibidas.length&&<div className={styles.empty}>Nenhuma OS encontrada.</div>}</div><footer className={styles.pager}><button disabled={paginaAtual<=1} onClick={()=>setPagina(p=>p-1)}>‹</button><span>{paginaAtual} / {totalPaginas}</span><button disabled={paginaAtual>=totalPaginas} onClick={()=>setPagina(p=>p+1)}>›</button></footer></div>
+      <section className={styles.detailPane} aria-label="Detalhamento da ordem de serviço">{ordem?<><div className={styles.detailHead}><div><span className={styles.detailEyebrow}><OsIcon name="clipboard" size={15}/> ORDEM DE SERVIÇO</span><h2>OS nº {ordem.codigo}</h2><p>{ordem.cliente} · {ordem.observacao}</p></div><div className={styles.detailActions}><span className={`${styles.state} ${styles[estado(ordem).toLowerCase()]??""}`}>{rotulo(estado(ordem))}</span></div></div>{ordem.endereco && <p className={styles.addressNote}>Endereço: {ordem.endereco}{ordem.cidade ? ` · ${ordem.cidade}` : ""}</p>}
+
+      <nav className={styles.tabs} aria-label="Informações da OS"><button className={aba==="materiais"?styles.active:""} onClick={()=>setAba("materiais")}><OsIcon name="box" size={17}/> Materiais e quantidades</button><button className={aba==="historico"?styles.active:""} onClick={()=>setAba("historico")}><OsIcon name="history" size={17}/> Histórico operacional ({ordem.historicoFSM?.length??0})</button></nav>
       {aba==="materiais"?<>
       <div className={styles.summary}>
-        <div><small>Produtos apontados</small><strong>{rascunho?.itens.length ?? 0}</strong></div>
-        <div><small>Quantidade apontada</small><strong>{rascunho?.itens.reduce((a, i) => a + Number(i.quantidade || 0), 0) ?? 0}</strong></div>
-        <div><small>Versão do rascunho</small><strong>{rascunho?.versao ?? 0}</strong></div>
-        <div><small>Baixa de estoque</small><strong>Não realizada</strong></div>
+        <div><small><OsIcon name="box" size={17}/> Produtos apontados</small><strong>{rascunho?.itens.length ?? 0}</strong></div>
+        <div><small><OsIcon name="layers" size={17}/> Quantidade apontada</small><strong>{rascunho?.itens.reduce((a, i) => a + Number(i.quantidade || 0), 0) ?? 0}</strong></div>
+        <div><small><OsIcon name="hash" size={17}/> Versão do rascunho</small><strong>{rascunho?.versao ?? 0}</strong></div>
+        <div><small><OsIcon name="shield" size={17}/> Baixa de estoque</small><strong>Não realizada</strong></div>
       </div>
 
       {erroMateriais && <p role="alert" className={styles.error}>{erroMateriais}</p>}
-      <div className={styles.tableWrap}><table><thead><tr><th>STATUS</th><th>CÓDIGO</th><th>DESCRIÇÃO DO PRODUTO</th><th>UND</th><th>QUANTIDADE APONTADA</th><th>PATRIMÔNIO</th><th>MAC</th><th>BAIXA</th></tr></thead>
+      <div className={styles.tableWrap}><div className={styles.tableTitle}><span><OsIcon name="box" size={18}/> Itens e materiais da OS</span><span>{rascunho?.itens.length ?? 0} produto(s)</span></div><table><thead><tr><th>STATUS</th><th>CÓDIGO</th><th>DESCRIÇÃO DO PRODUTO</th><th>UND</th><th>QUANTIDADE APONTADA</th><th>PATRIMÔNIO</th><th>MAC</th><th>BAIXA</th></tr></thead>
       <tbody>{(rascunho?.itens ?? []).map((item, i) => <tr key={`${item.cod_produto}-${item.patrimonio ?? ""}-${item.mac ?? ""}-${i}`}>
-        <td>Rascunho</td><td><strong>{item.cod_produto}</strong></td><td>{item.produto || "Produto ERP"}</td><td>{item.unidade || "—"}</td><td>{item.quantidade}</td><td>{item.patrimonio ?? "—"}</td><td>{item.mac ?? "—"}</td><td>Não</td>
+        <td><span className={styles.draftBadge}>Rascunho</span></td><td><strong className={styles.productCode}>{item.cod_produto}</strong></td><td>{item.produto || "Produto ERP"}</td><td>{item.unidade || "—"}</td><td>{item.quantidade}</td><td>{item.patrimonio ?? "—"}</td><td>{item.mac ?? "—"}</td><td><span className={styles.noBadge}>Não</span></td>
       </tr>)}
       {!rascunho?.itens.length && <tr><td colSpan={8} className={styles.empty}>{carregandoMateriais ? "Consultando..." : erroMateriais ? erroMateriais : "Nenhum material apontado nesta OS."}</td></tr>}
       </tbody></table></div>

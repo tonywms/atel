@@ -223,6 +223,7 @@ export default function RequisicoesTecnicasPage() {
 
   const [menuCardId, setMenuCardId] =
     useState<number | null>(null);
+  const [posicaoMenu, setPosicaoMenu] = useState<{ top: number; left: number } | null>(null);
 
 
   useEffect(() => {
@@ -231,7 +232,9 @@ export default function RequisicoesTecnicasPage() {
       if (evento.key === "Escape") setMenuCardId(null);
     };
     window.addEventListener("keydown", fecharNoEscape);
-    return () => window.removeEventListener("keydown", fecharNoEscape);
+    const fecharAoRedimensionar = () => setMenuCardId(null);
+    window.addEventListener("resize", fecharAoRedimensionar);
+    return () => { window.removeEventListener("keydown", fecharNoEscape); window.removeEventListener("resize", fecharAoRedimensionar); };
   }, [menuCardId]);
 
   const [modalVolumesAberto, setModalVolumesAberto] =
@@ -988,7 +991,19 @@ export default function RequisicoesTecnicasPage() {
                             e.preventDefault();
                             e.stopPropagation();
 
-                            setMenuCardId(menuCardId === req.id ? null : req.id);
+                            if (menuCardId === req.id) { setMenuCardId(null); return; }
+                            const rect = e.currentTarget.getBoundingClientRect();
+                            const larguraMenu = Math.min(310, window.innerWidth - 24);
+                            const alturaMenu = Math.min(560, window.innerHeight - 24);
+                            const espacoDireita = window.innerWidth - rect.right;
+                            const left = espacoDireita >= larguraMenu + 12
+                              ? rect.right + 10
+                              : rect.left >= larguraMenu + 12
+                                ? rect.left - larguraMenu - 10
+                                : Math.max(12, Math.min(rect.right + 10, window.innerWidth - larguraMenu - 12));
+                            const top = Math.max(12, Math.min(rect.top - 12, window.innerHeight - alturaMenu - 12));
+                            setPosicaoMenu({ top, left });
+                            setMenuCardId(req.id);
                           }}
                         >
                           <IconeGestao nome="settings" tamanho={17} />
@@ -1347,7 +1362,8 @@ export default function RequisicoesTecnicasPage() {
 
             <div
               className="req-card-menu req-card-menu-floating"
-              aria-modal="true"
+              style={posicaoMenu ? { top: posicaoMenu.top, left: posicaoMenu.left } : undefined}
+              aria-modal="false"
               onClick={(e) => e.stopPropagation()}
               role="dialog"
               aria-label="Ações da requisição"

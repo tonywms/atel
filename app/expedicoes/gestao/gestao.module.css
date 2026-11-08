@@ -366,3 +366,26 @@
 @keyframes atelDrawerIn{from{opacity:.6;transform:translateX(30px)}to{opacity:1;transform:translateX(0)}}
 @media(max-width:520px){:global(.req-card-menu.req-card-menu-floating){border-radius:0!important}}
 @media(prefers-reduced-motion:reduce){:global(.req-card-menu.req-card-menu-floating){animation:none}}
+
+/* V9.8.4 — menu contextual ancorado na engrenagem clicada, nunca na borda da tela. */
+:global(.req-menu-backdrop){background:transparent!important;backdrop-filter:none!important}
+:global(.req-card-menu.req-card-menu-floating){
+  position:fixed!important;right:auto!important;bottom:auto!important;
+  width:min(310px,calc(100vw - 24px))!important;max-width:calc(100vw - 24px)!important;
+  max-height:calc(100dvh - 24px)!important;overflow-y:auto!important;
+  border:1px solid #cbdfea!important;border-radius:15px!important;
+  box-shadow:0 16px 45px rgba(3,38,60,.22)!important;
+  animation:atelPopoverIn .16s ease-out!important;
+  overscroll-behavior:contain;
+}
+:global(.req-card-menu.req-card-menu-floating .req-actions-head){min-height:unset;padding:13px 14px}
+:global(.req-card-menu.req-card-menu-floating .req-actions-head strong){font-size:12px}
+:global(.req-card-menu.req-card-menu-floating .req-actions-head small){font-size:10px}
+:global(.req-card-menu.req-card-menu-floating .req-actions-group-label){padding:11px 14px 5px;font-size:9px}
+:global(.req-card-menu.req-card-menu-floating button:not(.req-actions-close)){min-height:43px;padding:6px 13px;gap:10px}
+:global(.req-card-menu.req-card-menu-floating .req-action-icon){width:31px;height:31px;border-radius:8px}
+:global(.req-card-menu.req-card-menu-floating .req-action-copy strong){font-size:11px}
+:global(.req-card-menu.req-card-menu-floating .req-action-copy small){font-size:9px}
+:global(.req-card-menu.req-card-menu-floating .req-actions-foot){padding:10px 13px;margin-top:6px}
+@keyframes atelPopoverIn{from{opacity:0;transform:translateY(5px) scale(.985)}to{opacity:1;transform:translateY(0) scale(1)}}
+@media(prefers-reduced-motion:reduce){:global(.req-card-menu.req-card-menu-floating){animation:none!important}}

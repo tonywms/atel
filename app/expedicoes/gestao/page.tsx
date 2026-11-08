@@ -1371,7 +1371,7 @@ export default function RequisicoesTecnicasPage() {
               <div className="req-actions-head">
                 <div className="req-actions-emblem"><IconeGestao nome="settings" tamanho={19} /></div>
                 <div><strong>Gestão da requisição</strong><small>{requisicoes.find((req) => req.id === menuCardId)?.codigo ?? "Requisição"} · Ferramentas administrativas</small></div>
-                <button type="button" className="req-actions-close" aria-label="Fechar ações" onClick={() => { setMenuCardId(null);  }}>×</button>
+                <button type="button" className="req-actions-close" aria-label="Fechar ações" onClick={() => { setMenuCardId(null);  }}><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" style={{ display: "block", flexShrink: 0 }}><path d="M18 6 6 18M6 6l12 12" /></svg></button>
               </div>
               <div className="req-actions-group-label">CONFIGURAÇÃO</div>
               <button type="button" disabled title="Ação ainda não integrada"><span className="req-action-icon blue"><IconeGestao nome="priority" /></span><span className="req-action-copy"><strong>Prioridades</strong><small>Alterar nível de atendimento</small></span><span className="req-action-chevron">›</span></button>

@@ -199,3 +199,64 @@
 .root :global(.req-products-scroll table){min-width:850px}
 .root :global(.req-products-scroll thead th){position:sticky;top:0;z-index:2;background:#f2f8fc}
 .root :global(.req-footer){flex:0 0 auto}
+
+
+/* ATEL V9.4 — premium executive visual system, strictly scoped to this page. */
+.root{--at-ink:#123c55;--at-navy:#07506b;--at-blue:#087eaa;--at-line:#dbe9f0;--at-muted:#698699;--at-soft:#f5f9fc;padding:24px 24px 32px;background:linear-gradient(155deg,#f1f6fa 0%,#eaf2f8 58%,#f4f8fb 100%);border-radius:18px}
+.heading{margin-bottom:20px;gap:18px}.heading h1{font-size:26px;letter-spacing:-.7px;font-weight:800;color:#0c3852}.heading p{font-size:12px;line-height:1.6;color:#70899a}.eyebrow{letter-spacing:1.5px;color:#0788b2}
+.readonly{background:#fff;border-color:#d8e8f1;box-shadow:0 4px 16px rgba(14,62,89,.04);padding:10px 15px}
+.root :global(.stock-summary){gap:13px;margin-bottom:18px}
+.root :global(.summary-card){border:1px solid #d9e7f0;border-radius:16px;box-shadow:0 7px 22px rgba(21,74,105,.055);transition:transform .18s ease,box-shadow .18s ease;background:#fff;position:relative}
+.root :global(.summary-card:hover){transform:translateY(-2px);box-shadow:0 12px 25px rgba(21,74,105,.10)}
+.root :global(.summary-card .top){background:transparent!important;color:#54758b;padding:15px 16px 0;font-size:11px;font-weight:800;letter-spacing:.25px}
+.root :global(.summary-card .value){font-size:31px;font-weight:800;letter-spacing:-1px;padding:7px 16px 0;color:#103b54}
+.root :global(.summary-card .detail){padding:4px 16px 15px;font-size:10px;color:#8196a5}
+.root :global(.summary-card)::after{content:"";position:absolute;left:0;top:17px;bottom:17px;width:3px;border-radius:0 4px 4px 0;background:#118eb6}
+.root :global(.summary-card.c2)::after{background:#e5a331}.root :global(.summary-card.c3)::after{background:#69b5cb}.root :global(.summary-card.c4)::after{background:#21a99d}.root :global(.summary-card.c5)::after{background:#7ba38b}
+.root :global(.wms-page-header){border:1px solid #d6e6f0;border-radius:16px;padding:15px 18px;margin-bottom:15px;box-shadow:0 6px 20px rgba(19,67,95,.045);background:#fff}
+.root :global(.wms-page-title){gap:5px}.root :global(.premium-section-label){display:inline-flex;align-items:center;gap:10px;color:#0a526e;font-size:15px;letter-spacing:-.2px}
+.root :global(.premium-section-label svg){color:#078cb7}
+.root :global(.wms-page-title small){font-size:11px;color:#718b9d}
+.root :global(.wms-search input){width:285px;border-radius:11px;border-color:#d5e5ef;padding:11px 14px;background:#f8fbfd;font-size:12px;transition:border-color .2s,box-shadow .2s}
+.root :global(.wms-search input:focus){border-color:#4ba7ce;box-shadow:0 0 0 3px rgba(11,146,193,.10)}
+.root :global(.wms-icon-button){border-radius:10px;padding:11px 15px;background:#edf7fb;border-color:#cbe6f2;font-weight:700}
+.root :global(.req-layout){grid-template-columns:minmax(275px,28%) minmax(0,1fr);gap:15px;align-items:stretch}
+.root :global(.req-sidebar-panel),.root :global(.req-detail){border:1px solid #d3e5ef;border-radius:18px;box-shadow:0 9px 28px rgba(20,69,97,.065);background:#fff}
+.root :global(.req-sidebar-title){background:linear-gradient(115deg,#075c7e,#0a8eb8);padding:16px 18px;font-size:14px;letter-spacing:.2px}
+.root :global(.req-sidebar-title span){border-radius:10px;padding:5px 10px;background:rgba(255,255,255,.94);color:#08779e;font-size:12px}
+.root :global(.req-list){padding:11px;max-height:690px;scrollbar-color:#b7d5e5 transparent;scrollbar-width:thin}
+.root :global(.req-card){border:1px solid #e0ebf2;border-radius:13px;padding:13px 12px;margin-bottom:9px;background:#fff;box-shadow:0 2px 7px rgba(11,63,93,.025);transition:background .18s,border-color .18s,box-shadow .18s,transform .18s}
+.root :global(.req-card:hover){background:#f3faff;border-color:#8ac8e2;transform:translateY(-1px);box-shadow:0 5px 15px rgba(13,89,126,.075)}
+.root :global(.req-card.selected){background:linear-gradient(115deg,#edf8ff,#f7fbff);border-color:#4badd4;box-shadow:inset 4px 0 #058fbd,0 5px 15px rgba(9,103,143,.075)}
+.root :global(.req-card-top strong){font-size:13px;letter-spacing:-.1px;color:#08799f}
+.root :global(.req-card-tech){font-size:11px;color:#1d465d}
+.root :global(.req-card-line){font-size:10px;line-height:1.55;color:#617c8c}
+.root :global(.req-card-indicators){border-left:1px solid #e2edf3;padding-left:9px}
+.root :global(.req-detail){min-height:610px}
+.root :global(.req-detail-header){background:linear-gradient(110deg,#fff,#f7fbfd);padding:19px 21px;min-height:94px;border-bottom:1px solid #e0ebf2}
+.root :global(.req-detail-code){font-size:23px;letter-spacing:-.5px;color:#087a9e}
+.root :global(.req-detail-description){font-size:11px;color:#7b92a0;margin-top:3px}
+.root :global(.req-header-received){border-left:1px solid #d7e8f1;padding-left:18px}
+.root :global(.req-header-received small){color:#7995a7;letter-spacing:.9px}
+.root :global(.req-header-received strong){font-size:12px;color:#16445c}
+.root :global(.req-products){padding:17px 18px 12px;gap:0;flex:1 1 auto;min-height:0}
+.root :global(.req-products-title){display:flex;justify-content:space-between;align-items:center;gap:10px;background:linear-gradient(105deg,#07556f,#087c9c);border-radius:12px 12px 0 0;padding:13px 16px;color:#fff;font-size:13px;font-weight:800}
+.root :global(.premium-table-label){display:inline-flex;align-items:center;gap:9px}
+.root :global(.premium-table-count){font-size:10px;font-weight:750;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.18);border-radius:8px;padding:5px 9px}
+.root :global(.req-products-scroll){border:1px solid #dae7ef;border-top:0;border-radius:0 0 13px 13px;max-height:520px;overflow:auto;scrollbar-color:#a9c9d9 #f4f8fb;scrollbar-width:thin;flex:0 1 auto}
+.root :global(.req-products-scroll table){width:100%;min-width:920px;border-collapse:separate;border-spacing:0;table-layout:auto}
+.root :global(.req-products-scroll th){position:sticky;top:0;z-index:2;background:#edf5fa;color:#527085;font-size:9px;font-weight:850;letter-spacing:.35px;padding:13px 10px;border-bottom:1px solid #d7e5ee;text-align:center}
+.root :global(.req-products-scroll td){padding:15px 10px;font-size:11px;color:#284e64;border-bottom:1px solid #e8f0f5;text-align:center;vertical-align:middle}
+.root :global(.req-products-scroll th:nth-child(3)),.root :global(.req-products-scroll td:nth-child(3)){min-width:190px;text-align:left;white-space:normal}
+.root :global(.req-products-scroll tbody tr:nth-child(even)){background:#f7fafc}
+.root :global(.req-products-scroll tbody tr:hover){background:#eaf7fd}
+.root :global(.req-products-scroll tbody tr:last-child td){border-bottom:0}
+.root :global(.req-products-scroll td:nth-child(2)){font-weight:800;color:#087aa5}
+.root :global(.req-footer){margin-top:auto;background:linear-gradient(180deg,#fff,#f7fbfd);border-top:1px solid #dceaf2;padding:14px 20px;min-height:76px}
+.root :global(.req-footer .req-flow-step span){width:26px;height:26px;min-width:26px;font-size:11px}
+.root :global(.req-footer .req-flow-line){height:2px;background:#d9e8f1}
+.root :global(.req-footer .generate-separation){background:linear-gradient(105deg,#076c90,#0799bb);border-radius:10px;box-shadow:0 5px 12px rgba(8,121,158,.16);padding:11px 17px}
+@media(max-width:1180px){.root :global(.req-layout){grid-template-columns:minmax(255px,32%) minmax(0,1fr)}.root :global(.req-products){padding:13px}.root :global(.req-detail-header){padding:15px}}
+@media(max-width:850px){.root{padding:16px}.root :global(.req-layout){grid-template-columns:1fr}.root :global(.req-list){max-height:340px}.root :global(.req-products-scroll){max-height:440px}.root :global(.stock-summary){grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:520px){.root{padding:12px}.root :global(.stock-summary){grid-template-columns:1fr 1fr;gap:8px}.root :global(.summary-card .value){font-size:25px}.root :global(.wms-search input){width:100%}.root :global(.req-detail-header){flex-wrap:wrap}.root :global(.req-header-main){flex-wrap:wrap}.root :global(.req-footer .req-flow){flex-wrap:wrap}}
+@media(prefers-reduced-motion:reduce){.root :global(.summary-card),.root :global(.req-card){transition:none}}

@@ -827,7 +827,7 @@ export default function RequisicoesTecnicasPage() {
 
       <div className="wms-page-header">
         <div className="wms-page-title">
-          <strong>Acompanhamento de Pedidos</strong>
+          <strong className="premium-section-label"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="M8 9h8M8 13h5M8 17h8"/></svg>Acompanhamento de Pedidos</strong>
           <small>{requisicoesFiltradas.length} de {requisicoes.length} pedidos</small>
         </div>
         <div className="wms-header-actions">
@@ -1089,7 +1089,8 @@ export default function RequisicoesTecnicasPage() {
             <div className="req-products">
 
               <div className="req-products-title">
-                Itens do Pedido
+                <span className="premium-table-label"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M4 7 12 3l8 4-8 4-8-4ZM4 7v10l8 4 8-4V7M12 11v10"/></svg>Itens do Pedido</span>
+                <span className="premium-table-count">{selecionada.itens.length} SKU(s)</span>
               </div>
 
               <div className="req-products-scroll">

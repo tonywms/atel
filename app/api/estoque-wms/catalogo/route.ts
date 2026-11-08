@@ -39,7 +39,7 @@ export async function GET(req: NextRequest) {
 
     const [l, m, u] = await Promise.all([
       adminDb.from("locais_estoque").select("id,nome,tipo,responsavel_usuario_id").eq("organizacao_id", org).eq("ativo", true).order("nome"),
-      adminDb.from("materiais").select("id,sku,descricao").eq("organizacao_id", org).eq("ativo", true).order("sku"),
+      adminDb.from("materiais").select("id,sku,descricao,rastreio,unidade").eq("organizacao_id", org).eq("ativo", true).order("sku"),
       adminDb.from("usuarios_organizacao").select("usuario_id").eq("organizacao_id", org).eq("ativo", true).eq("perfil", "tecnico"),
     ]);
     if (l.error || m.error || u.error)

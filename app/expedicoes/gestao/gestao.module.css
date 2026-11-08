@@ -351,41 +351,12 @@
 :global(.req-card-menu.req-card-menu-floating .req-action-chevron){font-size:19px;color:#96a9b5}
 :global(.req-card-menu.req-card-menu-floating .req-actions-foot){display:flex;align-items:center;gap:7px;margin-top:8px;padding:11px 14px;background:#f5f9fc;border-top:1px solid #e5edf3;color:#718b9a;font-size:10px;font-weight:650}
 
-/* ATEL V9.8.2 — painel administrativo lateral, baseado nos fontes reais. */
-:global(.req-menu-backdrop){background:rgba(5,29,47,.34);backdrop-filter:blur(2px)}
-:global(.req-card-menu.req-card-menu-floating){position:fixed!important;top:0!important;right:0!important;bottom:0!important;left:auto!important;width:min(420px,100vw)!important;max-width:100vw!important;max-height:100dvh!important;border-radius:20px 0 0 20px!important;border:0!important;box-shadow:-22px 0 70px rgba(2,34,53,.22)!important;overflow-y:auto!important;overscroll-behavior:contain;animation:atelDrawerIn .22s ease-out}
-:global(.req-card-menu.req-card-menu-floating .req-actions-head){position:sticky;top:0;z-index:3;min-height:88px;padding:20px 22px;background:linear-gradient(115deg,#063e59,#087da3)}
-:global(.req-card-menu.req-card-menu-floating .req-actions-head strong){font-size:15px}
-:global(.req-card-menu.req-card-menu-floating .req-actions-head small){font-size:11px;line-height:1.45}
-:global(.req-card-menu.req-card-menu-floating .req-actions-group-label){padding:21px 24px 9px;font-size:10px}
-:global(.req-card-menu.req-card-menu-floating button:not(.req-actions-close)){padding:10px 23px;min-height:61px;gap:13px}
-:global(.req-card-menu.req-card-menu-floating .req-action-icon){width:39px;height:39px;border-radius:11px}
-:global(.req-card-menu.req-card-menu-floating .req-action-copy strong){font-size:13px}
-:global(.req-card-menu.req-card-menu-floating .req-action-copy small){font-size:11px}
-:global(.req-card-menu.req-card-menu-floating .req-actions-foot){padding:18px 23px;margin-top:18px}
-@keyframes atelDrawerIn{from{opacity:.6;transform:translateX(30px)}to{opacity:1;transform:translateX(0)}}
-@media(max-width:520px){:global(.req-card-menu.req-card-menu-floating){border-radius:0!important}}
-@media(prefers-reduced-motion:reduce){:global(.req-card-menu.req-card-menu-floating){animation:none}}
-
-/* V9.8.4 — menu contextual ancorado na engrenagem clicada, nunca na borda da tela. */
-:global(.req-menu-backdrop){background:transparent!important;backdrop-filter:none!important}
+/* V9.8.5: recupera o posicionamento contextual original da V9.7.
+   Sem regras !important em top/left: o React posiciona pelo botao clicado. */
+:global(.req-menu-backdrop){background:transparent;backdrop-filter:none}
 :global(.req-card-menu.req-card-menu-floating){
-  position:fixed!important;right:auto!important;bottom:auto!important;
-  width:min(310px,calc(100vw - 24px))!important;max-width:calc(100vw - 24px)!important;
-  max-height:calc(100dvh - 24px)!important;overflow-y:auto!important;
-  border:1px solid #cbdfea!important;border-radius:15px!important;
-  box-shadow:0 16px 45px rgba(3,38,60,.22)!important;
-  animation:atelPopoverIn .16s ease-out!important;
+  position:fixed;right:auto;bottom:auto;
+  width:286px;max-width:calc(100vw - 24px);
+  max-height:calc(100dvh - 24px);overflow-y:auto;
   overscroll-behavior:contain;
 }
-:global(.req-card-menu.req-card-menu-floating .req-actions-head){min-height:unset;padding:13px 14px}
-:global(.req-card-menu.req-card-menu-floating .req-actions-head strong){font-size:12px}
-:global(.req-card-menu.req-card-menu-floating .req-actions-head small){font-size:10px}
-:global(.req-card-menu.req-card-menu-floating .req-actions-group-label){padding:11px 14px 5px;font-size:9px}
-:global(.req-card-menu.req-card-menu-floating button:not(.req-actions-close)){min-height:43px;padding:6px 13px;gap:10px}
-:global(.req-card-menu.req-card-menu-floating .req-action-icon){width:31px;height:31px;border-radius:8px}
-:global(.req-card-menu.req-card-menu-floating .req-action-copy strong){font-size:11px}
-:global(.req-card-menu.req-card-menu-floating .req-action-copy small){font-size:9px}
-:global(.req-card-menu.req-card-menu-floating .req-actions-foot){padding:10px 13px;margin-top:6px}
-@keyframes atelPopoverIn{from{opacity:0;transform:translateY(5px) scale(.985)}to{opacity:1;transform:translateY(0) scale(1)}}
-@media(prefers-reduced-motion:reduce){:global(.req-card-menu.req-card-menu-floating){animation:none!important}}

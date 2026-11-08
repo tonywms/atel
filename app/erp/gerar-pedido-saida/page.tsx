@@ -1,7 +1,7 @@
 "use client";
 import {useEffect,useRef,useState} from "react";
 import {atelSupabase} from "@/lib/atelSupabaseV08";
-import {Warehouse,Package,ClipboardList,Plus,Trash2,ShieldCheck,RefreshCw,Truck,MapPin,Layers3,Database,CircleCheck,LockKeyhole,AlertTriangle,Building2,Boxes} from "lucide-react";
+import {Warehouse,Package,ClipboardList,Plus,Trash2,ShieldCheck,RefreshCw,Truck,MapPin,Layers3,Database,CircleCheck,LockKeyhole,AlertTriangle,Building2,Boxes,ChevronDown} from "lucide-react";
 import styles from "./page.module.css";
 const org="6ea04673-4deb-42cf-a001-dbb027120103";
 type Local={id:string;nome:string;tipo:string};
@@ -15,7 +15,7 @@ function ProdutoPicker({materiais,value,onChange,numero}:{materiais:Material[];v
  useEffect(()=>{if(!aberto)return;const fechar=(e:PointerEvent)=>{if(area.current&&!area.current.contains(e.target as Node))setAberto(false)};document.addEventListener("pointerdown",fechar);return()=>document.removeEventListener("pointerdown",fechar)},[aberto]);
  return <div ref={area} style={{position:"relative",flex:"1 1 0",minWidth:0}}>
   <button type="button" aria-label={`Selecionar produto ${numero}`} aria-haspopup="listbox" aria-expanded={aberto} onClick={()=>{setAberto(v=>!v);setTermo("");setTimeout(()=>campo.current?.focus(),0)}} style={{display:"flex",alignItems:"center",justifyContent:"space-between",gap:10,width:"100%",minHeight:48,padding:"10px 14px",background:"#f7fafc",border:"1px solid #cddfea",borderRadius:10,color:"#153b54",textAlign:"left",fontSize:13,cursor:"pointer"}}>
-   <span style={{overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{escolhido?`${escolhido.sku} — ${escolhido.descricao}`:"Selecione o material"}</span><span aria-hidden="true">⌄</span>
+   <span style={{overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{escolhido?`${escolhido.sku} — ${escolhido.descricao}`:"Selecione o material"}</span><ChevronDown size={16} strokeWidth={2} aria-hidden="true" style={{flexShrink:0,color:"#365a73"}}/>
   </button>
   {aberto&&<div style={{position:"absolute",top:"calc(100% + 5px)",left:0,right:0,zIndex:50,background:"white",border:"1px solid #b8d2e2",borderRadius:11,boxShadow:"0 14px 35px #163b5433",padding:8}}>
    <input ref={campo} type="search" aria-label={`Pesquisar produto ${numero}`} placeholder="Buscar código ou descrição" value={termo} onChange={e=>setTermo(e.target.value)} onKeyDown={e=>{if(e.key==="Escape")setAberto(false);if(e.key==="Enter"&&encontrados.length===1){e.preventDefault();onChange(encontrados[0].id);setAberto(false)}}} style={{width:"100%",height:40,padding:"9px 11px",border:"1px solid #cbdde8",borderRadius:8,marginBottom:6,fontSize:13}}/>

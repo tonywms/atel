@@ -1376,9 +1376,14 @@ export default function RequisicoesTecnicasPage() {
                           </td>
 
                           <td>
-                            {item.controlaSerie
-                              ? "SIM"
-                              : "NÃO"}
+                            {item.controlaSerie ? (() => {
+                              const seriais = (item as typeof item & { seriaisPedido?: string[] }).seriaisPedido ?? [];
+                              const total = Number(item.solicitado);
+                              return <span
+                                title={seriais.length ? `Seriais registrados no pedido: ${seriais.join(", ")}` : "Produto exige número de série; nenhum serial registrado no pedido."}
+                                style={{color:seriais.length===total?"#087f65":"#a56b10",fontWeight:700,whiteSpace:"nowrap"}}
+                              >SIM · {seriais.length}/{total}</span>;
+                            })() : "NÃO"}
                           </td>
 
                         </tr>

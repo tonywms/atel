@@ -12,10 +12,11 @@ export async function GET(req: NextRequest) {
   if (!token) return json({ error: "Autenticação obrigatória" }, 401);
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const key = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-  if (!url || !key) return json({ error: "URL ou chave pública do Supabase ausente no servidor" }, 503);
+  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.ATEL_SUPABASE_SERVICE_ROLE_KEY;
+  if (!url || !key || !serviceKey) return json({ error: "Configuração Supabase incompleta no servidor" }, 503);
 
   try {
-    // O mesmo JWT é usado nas consultas: o Postgres aplica as políticas RLS.
+    // Valida a identidade do JWT antes de usar o cliente administrativo.
     const db = createClient(url, key, {
       global: { headers: { Authorization: `Bearer ${token}` } },
       auth: { persistSession: false, autoRefreshToken: false },
@@ -23,7 +24,9 @@ export async function GET(req: NextRequest) {
     const { data: { user }, error: authError } = await db.auth.getUser(token);
     if (authError || !user) return json({ error: "Sessão Supabase inválida" }, 401);
 
-    const { data: membership, error: membershipError } = await db
+    // Service role somente no servidor, com escopo fixo de organização e vínculo ativo.
+    const adminDb = createClient(url, serviceKey, { auth: { persistSession: false, autoRefreshToken: false } });
+    const { data: membership, error: membershipError } = await adminDb
       .from("usuarios_organizacao")
       .select("perfil")
       .eq("organizacao_id", org)
@@ -31,13 +34,13 @@ export async function GET(req: NextRequest) {
       .eq("ativo", true)
       .limit(1);
     if (membershipError) return json({ error: "Falha ao validar vínculo ATEL", detalhe: membershipError.message }, 503);
-    if (!membership?.some((m) => m.perfil === "admin" || m.perfil === "gestor"))
-      return json({ error: "Acesso restrito a administradores e gestores ATEL" }, 403);
+    if (!membership?.some((m) => m.perfil === "admin" || m.perfil === "gestor" || m.perfil === "tecnico"))
+      return json({ error: "Seu perfil não possui acesso ao catálogo WMS" }, 403);
 
     const [l, m, u] = await Promise.all([
-      db.from("locais_estoque").select("id,nome,tipo,responsavel_usuario_id").eq("organizacao_id", org).eq("ativo", true).order("nome"),
-      db.from("materiais").select("id,sku,descricao").eq("organizacao_id", org).eq("ativo", true).order("sku"),
-      db.from("usuarios_organizacao").select("usuario_id").eq("organizacao_id", org).eq("ativo", true).eq("perfil", "tecnico"),
+      adminDb.from("locais_estoque").select("id,nome,tipo,responsavel_usuario_id").eq("organizacao_id", org).eq("ativo", true).order("nome"),
+      adminDb.from("materiais").select("id,sku,descricao").eq("organizacao_id", org).eq("ativo", true).order("sku"),
+      adminDb.from("usuarios_organizacao").select("usuario_id").eq("organizacao_id", org).eq("ativo", true).eq("perfil", "tecnico"),
     ]);
     if (l.error || m.error || u.error)
       return json({ error: "Falha na consulta dos cadastros WMS", detalhe: l.error?.message || m.error?.message || u.error?.message }, 503);

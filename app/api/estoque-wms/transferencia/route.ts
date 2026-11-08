@@ -31,8 +31,8 @@ export async function POST(req: NextRequest) {
     const { data: membership, error: membershipError } = await db.from("usuarios_organizacao")
       .select("perfil").eq("organizacao_id", organizacao_id).eq("usuario_id", identity.user.id).eq("ativo", true).limit(1);
     if (membershipError) return json({ error: "Falha ao validar permissao" }, 503);
-    if (!membership?.some((item) => item.perfil === "admin" || item.perfil === "gestor"))
-      return json({ error: "Transferencia restrita a administradores e gestores" }, 403);
+    if (!membership?.some((item) => item.perfil === "admin" || item.perfil === "gestor" || item.perfil === "tecnico"))
+      return json({ error: "Perfil sem permissao para transferencia" }, 403);
     const { data, error } = await db.rpc("atel_abastecimento_cd_tecnico_v25", {
       p_organizacao_id: organizacao_id, p_cd_id: cd_id, p_tecnico_usuario_id: tecnico_usuario_id,
       p_material_id: material_id, p_quantidade: quantidade,

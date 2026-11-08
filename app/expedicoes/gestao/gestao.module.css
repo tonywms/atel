@@ -260,3 +260,32 @@
 @media(max-width:850px){.root{padding:16px}.root :global(.req-layout){grid-template-columns:1fr}.root :global(.req-list){max-height:340px}.root :global(.req-products-scroll){max-height:440px}.root :global(.stock-summary){grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:520px){.root{padding:12px}.root :global(.stock-summary){grid-template-columns:1fr 1fr;gap:8px}.root :global(.summary-card .value){font-size:25px}.root :global(.wms-search input){width:100%}.root :global(.req-detail-header){flex-wrap:wrap}.root :global(.req-header-main){flex-wrap:wrap}.root :global(.req-footer .req-flow){flex-wrap:wrap}}
 @media(prefers-reduced-motion:reduce){.root :global(.summary-card),.root :global(.req-card){transition:none}}
+
+
+/* ATEL V9.5 — executive refinement; no navigation or data-flow changes. */
+.root{background:radial-gradient(ellipse at 90% 0%,rgba(17,146,185,.09),transparent 42%),#f2f7fb;--at-line:#d8e6ee}
+.root :global(.req-layout){grid-template-columns:minmax(295px,31%) minmax(0,1fr);gap:16px;align-items:stretch}
+.root :global(.req-sidebar-panel),.root :global(.req-detail){border:1px solid #d7e6ef;border-radius:20px;box-shadow:0 12px 32px rgba(18,61,86,.075)}
+.root :global(.req-sidebar-title){background:linear-gradient(105deg,#063e5a,#087ba2);padding:16px 20px}
+.root :global(.req-list){padding:12px;max-height:720px}
+.root :global(.req-card){border-radius:15px;padding:14px 13px;margin-bottom:10px}
+.root :global(.req-card.selected){border-color:#008ab8;box-shadow:inset 4px 0 #008ab8,0 5px 18px rgba(5,107,153,.09)}
+.root :global(.req-detail){min-height:0}
+.root :global(.req-detail-header){padding:21px 24px;min-height:100px}
+.root :global(.req-detail-code){font-size:clamp(19px,1.7vw,27px);font-weight:850;letter-spacing:-.8px}
+.root :global(.req-products){padding:18px 18px 22px;flex:1 1 auto;min-height:0}
+.root :global(.req-products-title){padding:16px 18px;border-radius:13px 13px 0 0;background:linear-gradient(100deg,#064c69,#087c9e)}
+.root :global(.req-products-scroll){max-height:unset;overflow:auto;flex:1 1 auto;min-height:220px;scrollbar-gutter:auto}
+.root :global(.req-products-scroll table){min-width:1000px;width:100%;table-layout:auto}
+.root :global(.req-products-scroll th){padding:15px 11px;letter-spacing:.5px;font-size:10px}
+.root :global(.req-products-scroll td){padding:17px 11px;font-size:12px}
+.root :global(.req-products-scroll th:nth-child(3)),.root :global(.req-products-scroll td:nth-child(3)){min-width:220px}
+.root :global(.req-products-scroll tbody tr){transition:background .14s ease}
+.root :global(.req-footer){margin-top:0;min-height:76px;padding:18px 22px;border-radius:0 0 20px 20px}
+.root :global(.req-footer .req-flow){max-width:100%;gap:8px}
+.root :global(.req-footer .req-flow-step){font-size:11px;font-weight:750}
+.root :global(.req-footer .req-flow-step span){width:28px;height:28px;min-width:28px}
+.root :global(.generate-separation){display:none!important}
+@media(max-width:1150px){.root :global(.req-layout){grid-template-columns:minmax(270px,34%) minmax(0,1fr)}.root :global(.req-products-scroll table){min-width:960px}}
+@media(max-width:850px){.root :global(.req-layout){grid-template-columns:1fr}.root :global(.req-list){max-height:380px}.root :global(.req-products-scroll){max-height:480px;min-height:160px}}
+@media(max-width:520px){.root :global(.req-detail-header){padding:16px}.root :global(.req-products){padding:12px}.root :global(.req-products-scroll table){min-width:900px}.root :global(.req-footer){padding:14px}}

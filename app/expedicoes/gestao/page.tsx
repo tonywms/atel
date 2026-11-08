@@ -13,7 +13,6 @@ import {
 
 import {
   carregarEstados,
-  iniciarSeparacao,
   ouvirAlteracoes,
 } from "@/lib/requisicoesStore";
 
@@ -693,17 +692,10 @@ export default function RequisicoesTecnicasPage() {
   }
 
   /* =======================================================
-     GERAR SEPARAÇÃO
+     AÇÃO OPERACIONAL (NÃO INTEGRADA)
   ======================================================= */
 
-  const gerarSeparacao = () => {
-    if (!selecionada) {
-      return;
-    }
 
-    if(selecionada.origemIntegracao==="SUPABASE_V36"){alert("Pedido real aguardando integração da execução da separação. Não é permitido usar o store mockado.");return;}
-    iniciarSeparacao(selecionada);
-  };
 
   /* =======================================================
      KPIs
@@ -1346,20 +1338,10 @@ export default function RequisicoesTecnicasPage() {
                   AÇÕES / MENSAGENS
               =========================================== */}
 
-              {selecionada.status ===
-                "PENDENTE" && (
-                <button
-                  className="generate-separation"
-                  onClick={
-                    gerarSeparacao
-                  }
-                >
-                  GERAR SEPARAÇÃO
-                </button>
-              )}
+              {/* A separação operacional dos pedidos reais ainda não está integrada.
+                  Nenhum botão inoperante é exibido nesta tela. */}
 
-              {/* O status da requisicao ja aparece no cabecalho.
-                  Mantemos somente a acao de gerar separacao quando pendente. */}
+              {/* O status da requisicao ja aparece no cabecalho. */}
 
             </div>
 

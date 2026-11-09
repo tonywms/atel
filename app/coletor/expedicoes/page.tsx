@@ -166,6 +166,7 @@ export default function ColetorExpedicaoPage() {
             { label: "Embarque", href: "/coletor/embarque", count: contadores.embarque, icon: "▤" },
             { label: "Recebimento", href: "/coletor/recebimento", count: contadores.recebimento, icon: "✓" },
             { label: "Retornos ao CD", href: "/coletor/retornos", count: contadores.retornos, icon: "↩" },
+            { label: "Devolução CD", href: "/coletor/devolucao-cd", count: 0, icon: "↩" },
             { label: "Ordens de Serviço", href: "/coletor/ordens-servico", count: contadores.ordensServico, icon: "⚙" },
           ] as const).map((item) => (
             <button key={item.href} type="button" className={styles.card} onClick={() => router.push(item.href)}>
@@ -188,6 +189,7 @@ function IconeExpedicao({ rota }: { rota: string }) {
     case "/coletor/conferencia": desenho = <><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h4m-4 4 2 2 5-5"/></>; break;
     case "/coletor/embarque": desenho = <><path d="M3 7h11v11H3zM14 11h4l3 4v3h-7"/><circle cx="7" cy="19" r="2"/><circle cx="18" cy="19" r="2"/><path d="M6 10h5"/></>; break;
     case "/coletor/recebimento": desenho = <><path d="M4 7 12 3l8 4v10l-8 4-8-4zM4 7l8 5 8-5M12 12v9"/><path d="m9 14 2 2 4-4"/></>; break;
+    case "/coletor/devolucao-cd": desenho = <><path d="M9 14 4 9l5-5M4 9h10a6 6 0 0 1 0 12h-3"/><path d="M15 5h6m-3-3v6"/></>; break;
     case "/coletor/retornos": desenho = <><path d="M9 14 4 9l5-5M4 9h10a6 6 0 0 1 0 12h-3"/></>; break;
     case "/coletor/ordens-servico": desenho = <><path d="M9 3h6l1 2 2 1 2-.5 2 5-2 1v3l2 1-2 5-2-.5-2 1-1 2H9l-1-2-2-1-2 .5-2-5 2-1v-3l-2-1 2-5 2 .5 2-1z"/><circle cx="12" cy="12" r="3"/></>; break;
     default: desenho = <circle cx="12" cy="12" r="8"/>;

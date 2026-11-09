@@ -292,7 +292,7 @@
 
 
 /* ATEL V9.6 — layout de trabalho: dados em primeiro plano, sem molduras aninhadas. */
-.root{padding:18px 16px 24px;background:#f1f6fa;border-radius:0}
+.root{padding:18px 16px 24px;background:#f1f6fa;border-radius:18px}
 .root :global(.req-layout){grid-template-columns:minmax(250px,27%) minmax(0,1fr);gap:12px;align-items:start}
 .root :global(.req-sidebar-panel),.root :global(.req-detail){border:1px solid #d8e7ef;border-radius:14px;box-shadow:0 3px 12px rgba(12,63,92,.045)}
 .root :global(.req-sidebar-title){padding:12px 16px}

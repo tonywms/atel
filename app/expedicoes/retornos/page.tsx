@@ -50,6 +50,7 @@ export default function RetornosPage() {
   const [selecionadoId, setSelecionadoId] = useState<number | null>(null);
   const [busca, setBusca] = useState("");
   const [servidor, setServidor] = useState<Record<number,RetServidor>>({});
+  const [autoMiniCD, setAutoMiniCD] = useState<RetServidor[]>([]);
   const [erroServidor, setErroServidor] = useState("");
   const [operando, setOperando] = useState(false);
   const [conferir, setConferir] = useState<RetServidor|null>(null);
@@ -63,10 +64,18 @@ export default function RetornosPage() {
       if (error) setErroServidor("RET Supabase: "+error.message);
       else {remotos=Array.isArray(data)?data as RetServidor[]:[];setErroServidor("");}
     } else setErroServidor("Supabase indisponível para consultar RETs sincronizados.");
+    let automaticos:RetServidor[] = [];
+    if (db) {
+      const {data:autoData,error:autoError}=await db.rpc("atel_v45_listar_rets_mini_cd");
+      if(autoError) setErroServidor(prev=>[prev,"Mini-CD: "+autoError.message].filter(Boolean).join(" | "));
+      else automaticos=Array.isArray(autoData)?autoData as RetServidor[]:[];
+    }
+    setAutoMiniCD(automaticos);
     const mapa:Record<number,RetServidor>={};
     for (const r of remotos) mapa[numeroRetServidor(r.id)]=r;
     setServidor(mapa);
-    const dados=[...remotos.map(mapearRetServidor),...locais.filter(l=>!remotos.some(r=>r.pedido_codigo===l.documentoOrigem))];
+    const codigos=new Set([...remotos,...automaticos].map(r=>r.pedido_codigo));
+    const dados=[...automaticos.map(mapearRetServidor),...remotos.filter(r=>!automaticos.some(a=>a.id===r.id)).map(mapearRetServidor),...locais.filter(l=>!codigos.has(l.documentoOrigem))];
     setRetornos(dados);
     setSelecionadoId((atual)=>atual!==null&&dados.some(r=>r.id===atual)?atual:(dados[0]?.id??null));
   }
@@ -83,9 +92,12 @@ export default function RetornosPage() {
   }
 
   useEffect(() => {
-    atualizar();
-
-    return ouvirRetornos(atualizar);
+    void atualizar();
+    const parar=ouvirRetornos(()=>{void atualizar();});
+    const intervalo=window.setInterval(()=>{if(document.visibilityState==="visible")void atualizar();},15000);
+    const visibilidade=()=>{if(document.visibilityState==="visible")void atualizar();};
+    document.addEventListener("visibilitychange",visibilidade);
+    return ()=>{parar();window.clearInterval(intervalo);document.removeEventListener("visibilitychange",visibilidade);};
   }, []);
 
   /* =========================================================
@@ -221,6 +233,7 @@ export default function RetornosPage() {
         </div>
 
         <div className="ret-header-actions">
+          
           <div className="ret-search">
             <span>⌕</span>
 
@@ -262,6 +275,9 @@ export default function RetornosPage() {
           CONTEÚDO
       ===================================================== */}
 
+      
+
+      
       <div className="ret-content">
         {/* ===================================================
             LISTA DE RETORNOS

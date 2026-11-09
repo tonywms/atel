@@ -154,3 +154,9 @@
 .tableWrap td:nth-child(4),.tableWrap td:nth-child(5),.tableWrap td:nth-child(6),.tableWrap td:nth-child(7),.tableWrap td:nth-child(8){white-space:normal}
 .draftBadge,.noBadge{max-width:100%;padding:5px 6px;font-size:9px}
 @media(max-width:850px){.tableWrap{overflow-x:auto}.tableWrap table{min-width:680px!important}.tableTitle{min-width:0}}
+
+/* ATEL V10.1 - superficie azul premium, mesmo padrao de Gestao de Pedidos. */
+.root {
+  background: linear-gradient(155deg, #f1f6fa 0%, #eaf2f8 58%, #f4f8fb 100%);
+  border-radius: 18px;
+}

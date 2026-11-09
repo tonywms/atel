@@ -1,0 +1,3 @@
+-- EXEMPLO SOMENTE. Validar no cadastro ERP antes de aplicar.
+-- INSERT INTO public.atel_devolucao_enderecos(organizacao_id,cd_id,codigo,deposito,descricao)
+-- VALUES('6ea04673-4deb-42cf-a001-dbb027120103','9e67798f-f40b-4f65-bd91-2454a484c623','4132','DEVOLUCAO','R 01 / P 01 / N 00 / A 01');

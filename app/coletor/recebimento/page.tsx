@@ -113,7 +113,7 @@ export default function RecebimentoListaPage() {
 
       <div className="collector-phone">
 
-      <a href="/coletor/devolucao-cd" style={{display:"block",padding:12,margin:12,borderRadius:10,background:"#16435c",color:"#c7f2ff",fontWeight:700}}>Devolucoes CD ATEL</a>
+      
         {/* HEADER */}
 
         <div className="collector-header">

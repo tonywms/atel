@@ -10,11 +10,27 @@ import {
 } from "react";
 
 import { useRouter } from "next/navigation";
+import { atelSupabase } from "@/lib/atelSupabaseV08";
 
 import {
   carregarRetornos,
   ouvirRetornos,
 } from "@/lib/retornosStore";
+
+type ReturnRemote = {
+  id: string;
+  codigo: string;
+  pedido_codigo: string;
+  status: "AGUARDANDO_RETORNO" | "EM_TRANSITO_CD" | "AGUARDANDO_CONFERENCIA" | "FINALIZADO";
+  itens?: Array<{ recusado: number }>;
+};
+
+// ATEL E1 V108: identidade estavel para RETs reais; evita keys React duplicadas.
+function idRetRemoto(uuid: string): number {
+  let h = 2166136261;
+  for (const c of uuid) h = Math.imul(h ^ c.charCodeAt(0), 16777619);
+  return -(h >>> 0) - 1;
+}
 
 export default function Page() {
   const router = useRouter();
@@ -22,6 +38,17 @@ export default function Page() {
   const [busca, setBusca] = useState("");
   const [tick, setTick] = useState(0);
   const [ready, setReady] = useState(false);
+  const [remotos, setRemotos] = useState<ReturnRemote[]>([]);
+  const [erroConsulta, setErroConsulta] = useState("");
+
+  async function atualizarRemotos() {
+    const db = atelSupabase();
+    if (!db) return;
+    const { data, error } = await db.rpc("atel_v3730_listar_rets");
+    if (error) { setErroConsulta("Consulta dos retornos sincronizados: " + error.message); return; }
+    setErroConsulta("");
+    setRemotos(Array.isArray(data) ? data as ReturnRemote[] : []);
+  }
 
   /* =========================================================
      ATUALIZAÇÃO
@@ -29,10 +56,24 @@ export default function Page() {
 
   useEffect(() => {
     setReady(true);
-
-    return ouvirRetornos(() => {
+    void atualizarRemotos();
+    const parar = ouvirRetornos(() => {
       setTick((valor) => valor + 1);
+      void atualizarRemotos();
     });
+    const visibilidade = () => {
+      if (document.visibilityState === "visible") {
+        setTick((valor) => valor + 1);
+        void atualizarRemotos();
+      }
+    };
+    const intervalo = window.setInterval(visibilidade, 15000);
+    document.addEventListener("visibilitychange", visibilidade);
+    return () => {
+      parar();
+      window.clearInterval(intervalo);
+      document.removeEventListener("visibilitychange", visibilidade);
+    };
   }, []);
 
   /* =========================================================
@@ -48,9 +89,28 @@ export default function Page() {
       .trim()
       .toLowerCase();
 
-    return carregarRetornos()
+    const locais = carregarRetornos();
+    const codigos = new Set(locais.map((r) => r.codigo));
+    const sincronizados = remotos
+      .filter((r) => !codigos.has(r.codigo))
+      .map((r) => ({
+        id: idRetRemoto(r.id),
+        codigo: r.codigo,
+        documentoOrigem: r.pedido_codigo,
+        tecnico: "Retorno sincronizado",
+        codigoTecnico: "",
+        base: "",
+        destinoFisico: "CD",
+        status: r.status,
+        itens: (r.itens ?? []).map((i, n) => ({ id: n + 1, quantidade: Number(i.recusado ?? 0) })),
+        recebimentoCD: undefined,
+        somenteConsulta: true,
+      }));
+    return [...locais.map((r) => ({ ...r, somenteConsulta: false })), ...sincronizados]
       .filter((retorno) =>
         [
+          "AGUARDANDO_RETORNO",
+          "COM_TECNICO",
           "EM_TRANSITO_CD",
           "AGUARDANDO_CONFERENCIA",
           "EM_CONFERENCIA",
@@ -74,7 +134,7 @@ export default function Page() {
 
         return texto.includes(termo);
       });
-  }, [ready, tick, busca]);
+  }, [ready, tick, busca, remotos]);
 
   /* =========================================================
      RENDER
@@ -109,6 +169,7 @@ export default function Page() {
           </div>
         </div>
 
+        {erroConsulta && <div role="alert" style={{ padding: "8px 12px", color: "#8a4a10", background: "#fff2d9", fontSize: 12 }}>{erroConsulta}</div>}
         {/* ===================================================
             PESQUISA
         =================================================== */}
@@ -190,11 +251,17 @@ export default function Page() {
               <button
                 type="button"
                 key={retorno.id}
-                onClick={() =>
-                  router.push(
-                    `/coletor/retornos/${retorno.id}`
-                  )
-                }
+                onClick={() => {
+                  if (retorno.somenteConsulta) {
+                    if (retorno.status === "AGUARDANDO_CONFERENCIA") {
+                      router.push(`/coletor/devolucao-cd?ret=${encodeURIComponent(retorno.codigo)}`);
+                    } else {
+                      router.push(`/coletor/retornos/ped/${encodeURIComponent(retorno.codigo)}`);
+                    }
+                    return;
+                  }
+                  router.push(`/coletor/retornos/${retorno.id}`);
+                }}
                 style={card}
               >
                 {/* CABEÇALHO */}
@@ -224,6 +291,8 @@ export default function Page() {
                   </span>
                 </div>
 
+                {retorno.somenteConsulta && <div style={{fontSize:11,padding:"6px 0",color:"#7a521a"}}>{retorno.status === "AGUARDANDO_CONFERENCIA" ? "Toque para conferir a DEV vinculada ao RET no coletor." : retorno.status === "AGUARDANDO_RETORNO" ? "Toque para validar e confirmar o envio pelo coletor do Mini-CD." : "RET em trânsito: toque para acompanhar. A chegada física é confirmada no CD."}</div>}
+                {retorno.status === "AGUARDANDO_RETORNO" && !retorno.somenteConsulta && <div style={{fontSize:11,padding:"6px 0",color:"#7a521a"}}>Aguardando confirmação de envio ao CD na Gestão de Retornos.</div>}
                 <div style={divider} />
 
                 {/* TÉCNICO */}
@@ -292,7 +361,7 @@ export default function Page() {
                   </div>
 
                   <span style={arrow}>
-                    ›
+                    {"›"}
                   </span>
                 </div>
               </button>
@@ -317,9 +386,8 @@ export default function Page() {
                 <span
                   style={emptyDescription}
                 >
-                  Nenhum retorno está em
-                  trânsito ou aguardando
-                  recebimento no CD.
+                  Nenhum retorno aguardando envio,
+                  em trânsito ou em conferência no CD.
                 </span>
               </div>
             )}
@@ -365,6 +433,10 @@ function formatarStatus(
   status: string
 ) {
   switch (status) {
+    case "AGUARDANDO_RETORNO":
+      return "AGUARDANDO ENVIO";
+    case "COM_TECNICO":
+      return "COM TÉCNICO";
     case "EM_TRANSITO_CD":
       return "EM TRÂNSITO";
 

@@ -15,7 +15,7 @@ export async function GET(request: NextRequest) {
   if (!supabaseUrl || !anonKey || !token) return NextResponse.json({ error: "Sessao obrigatoria" }, { status: 401, headers });
   const client = createClient(supabaseUrl, anonKey, { auth: { persistSession: false, autoRefreshToken: false } });
   const { data, error } = await client.auth.getUser(token);
-  if (error || data.user?.email?.toLowerCase() !== "teste@wmsexpert.com.br") return NextResponse.json({ error: "Acesso nao autorizado" }, { status: 403, headers });
+  if (error || !data.user) return NextResponse.json({ error: "Acesso nao autorizado" }, { status: 403, headers });
 
   const kind = request.nextUrl.searchParams.get("tipo");
   const id = request.nextUrl.searchParams.get("id") ?? "4157";

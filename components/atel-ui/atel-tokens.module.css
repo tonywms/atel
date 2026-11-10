@@ -1,0 +1,31 @@
+/* ATEL V80 Design Tokens: reutilizaveis, escopados; nao afetam outras telas. */
+.atelRoot {
+  --atel-primary: var(--wms-blue, #075c7c);
+  --atel-primary-hover: var(--wms-blue-2, #087fac);
+  --atel-accent: var(--wms-blue-3, #0795c7);
+  --atel-background: var(--wms-bg, #e9edf1);
+  --atel-on-dark: #ffffff;
+  --atel-text: var(--wms-text, #173448);
+  --atel-muted: var(--wms-muted, #75808b);
+  --atel-surface: #ffffff;
+  --atel-border: #d8e6ed;
+  --atel-hero-start: #04253e;
+  --atel-hero-mid: #063c5a;
+  --atel-hero-end: #064567;
+  --atel-table-header: #064266;
+  --atel-radius-card: 13px;
+  --atel-radius-panel: 18px;
+  --atel-space-unit: 4px;
+  --atel-hero-glow: rgba(2,153,202,.22);
+  --atel-hero-angle: 112deg;
+  --atel-metric-angle: 135deg;
+  --atel-metric-blue-start: #075f85;
+  --atel-metric-blue-end: #053557;
+  --atel-metric-blue-border: #0c9cce;
+  --atel-metric-green-start: #006553;
+  --atel-metric-green-end: #034341;
+  --atel-metric-green-border: #10b879;
+  --atel-metric-violet-start: #443c81;
+  --atel-metric-violet-end: #203663;
+  --atel-metric-violet-border: #8169df;
+}

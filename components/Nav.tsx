@@ -70,15 +70,29 @@ export function Sidebar() {
     <div className="wms-nav">
       <Link href="/" title="Início" className={`wms-menu-item ${pathname === "/" ? "active" : ""}`}>{icon(House)}<span className="atel-nav-label">Início</span></Link>
       {itens.map(([nome, Icone]) => {
-        const links = grupos[nome].filter(([,url]) => email?.toLowerCase() === ATEL_MASTER || rotaLiberada(url, regras));
-        if (!links.length) return null;
-        const ativo = links.some(([, url]) => pathname === url || (url !== "/" && pathname.startsWith(url + "/")));
+
+        const baseLinks = grupos[nome];
+        const links: [string, string][] = baseLinks
+          
+          .map(([label, url]) => [label, url] as [string, string]);
+        if (nome === "Cadastros") {
+          links.push(
+            ["Produtos", "/admin/homologacao-cadastros-v74/produtos"],
+            ["Depósitos", "/admin/homologacao-cadastros-v74/depositos"],
+            ["Endereços", "/admin/homologacao-cadastros-v74/enderecos"]
+          );
+        }
+        const linksPermitidos = links.filter(([, url]) => email?.toLowerCase() === ATEL_MASTER || rotaLiberada(url, regras));
+
+        if (!linksPermitidos.length) return null;
+        const ativo = linksPermitidos.some(([, url]) => pathname === url || (url !== "/" && pathname.startsWith(url + "/")));
         const aberto = abertos[nome] ?? ativo;
         return <div key={nome}>
           <button type="button" title={nome} className={`wms-menu-parent wms-menu-toggle ${aberto ? "open" : ""}`} onClick={() => { if (collapsed) setCollapsed(false); setAbertos(prev => ({...prev, [nome]: !aberto})); }} aria-expanded={!collapsed && aberto}>
             {icon(Icone)}<span className="atel-nav-label">{nome}</span>{chevron(aberto)}
           </button>
-          {!collapsed && aberto && <MenuEntries items={links} pathname={pathname}/>}
+          {!collapsed && aberto && <MenuEntries items={linksPermitidos} pathname={pathname}/>}
+          
         </div>;
       })}
       {(email?.toLowerCase() === ATEL_MASTER || rotaLiberada("/coletor", regras)) && <a href="/coletor" target="_blank" rel="noopener noreferrer" title="Abrir coletor em nova aba" className="wms-menu-item wms-coletor-link">

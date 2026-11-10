@@ -1,0 +1,14 @@
+ATEL V83 - AUDITORIA DESIGN SYSTEM
+Data: 2026-11-09 13:17:11
+Projeto: C:\wms-atel
+
+ERROS: 0
+
+OBSERVACOES: 5
+[AVISO] CSS LEGADO PRESENTE (NAO REMOVER SEM AUDITORIA DE IMPORTS): app\admin\homologacao-cadastros-v74\atel-v77.module.css
+[AVISO] CSS LEGADO PRESENTE (NAO REMOVER SEM AUDITORIA DE IMPORTS): app\admin\homologacao-cadastros-v74\atel-v78.module.css
+[AVISO] CSS LEGADO PRESENTE (NAO REMOVER SEM AUDITORIA DE IMPORTS): app\admin\homologacao-cadastros-v74\atel-v79.module.css
+[AVISO] CSS LEGADO PRESENTE (NAO REMOVER SEM AUDITORIA DE IMPORTS): app\cadastros\atel-v77.module.css
+[AVISO] CSS LEGADO PRESENTE (NAO REMOVER SEM AUDITORIA DE IMPORTS): app\cadastros\atel-v79-cadastros.module.css
+
+NOTA: auditoria estatica; nao substitui testes de navegacao e de funcionalidade.

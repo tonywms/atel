@@ -1,331 +1,337 @@
-/* V33: somente a tela inicial /coletor. Não altera o estilo das outras rotas. */
-.dispositivo {
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  background: #0d96b7;
-}
-.barraSuperior {
+﻿/* WMS Expert - V98.2 | Coletor TC501 (AMOLED 1080 x 2160, proporcao 1:2).
+   MOBILE FIRST. Medidas do corpo em mm nao equivalem aos pixels CSS.
+   Escopo: somente /coletor. Mantem a pagina TSX, as 6 rotas e Supabase inalterados.
+   Imagem local de nitidez aprimorada; sem fundos externos e sem dependencia de rede no navegador. */
+.tela {
+  color-scheme: dark;
+  --texto: #f5fdff;
+  --ciano: #79f5ff;
+  position: relative;
+  isolation: isolate;
   width: 100%;
-  height: 35px;
-  min-height: 35px;
-  flex-shrink: 0;
-  background: #050505;
-}
-.painel {
-  flex: 1;
-  min-height: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
-  padding: 14px 7px 9px;
-  overflow: hidden;
-  background: linear-gradient(165deg, #1683ab 0%, #0b8fb3 58%, #079fb9 100%);
-}
-.marca {
+  min-width: 280px;
+  min-height: 100vh;
+  min-height: 100dvh;
   display: flex;
   justify-content: center;
+  align-items: stretch;
+  overflow-x: clip;
+  background: #ffffff;
+  color: var(--texto);
+  font-family: Inter, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+.tela *, .tela *::before, .tela *::after { box-sizing: border-box; }
+.tela::before {
+  /* A fotografia fica exclusivamente dentro de .conteudo. */
+  content: none;
+  display: none;
+}
+.fundo {
+  /* Camada externa desativada: laterais brancas no desktop. */
+  display: none;
+}
+.conteudo {
+  position: relative;
+  isolation: isolate;
+  width: min(100%, 420px);
+  min-height: 100vh;
+  min-height: 100dvh;
+  padding: max(12px, env(safe-area-inset-top)) 18px max(14px, env(safe-area-inset-bottom));
+  display: flex;
+  flex-direction: column;
   align-items: center;
-  min-height: 33px;
-  height: 33px;
-  flex-shrink: 0;
-  margin-bottom: 5px;
+  gap: clamp(9px, 1.6dvh, 15px);
+  margin: 0 auto;
+  overflow: hidden;
+  /* Fotografia com maior resolucao, mantida SOMENTE no painel do coletor. */
+  background-color: #062c41;
+  background-image:
+    linear-gradient(180deg, rgba(0,22,36,.58) 0%, rgba(0,22,36,.26) 27%, rgba(0,24,39,.19) 62%, rgba(0,22,37,.62) 100%),
+    url('/atel-coletor/warehouse-v98-2-sharp.jpg');
+  background-position: center, center;
+  background-size: cover, cover;
+  background-repeat: no-repeat, no-repeat;
+  box-shadow: 0 0 60px rgba(0,6,19,.25);
+}
+.conteudo::before { content: none; display: none; }
+.conteudo::after {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(ellipse at 100% 100%,rgba(0,217,225,.20),transparent 54%);
+}
+.marca {
+  flex: 0 0 auto;
+  width: 100%;
+  min-height: clamp(49px, 7.4dvh, 69px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 .logo {
   display: block;
-  object-fit: contain;
-  width: 126px;
+  width: min(74%, 290px);
+  max-height: clamp(47px, 7dvh, 70px);
   height: auto;
-  max-height: 33px;
+  object-fit: contain;
+  filter: drop-shadow(0 3px 11px rgba(0,3,15,.55));
 }
 .identificacao {
-  position: relative;
-  height: 43px;
-  flex-shrink: 0;
-  margin: 0 auto 6px;
+  width: 100%;
+  flex: 0 0 auto;
+  min-height: clamp(61px, 8.5dvh, 78px);
   display: flex;
   align-items: center;
-  justify-content: center;
+  gap: 11px;
+  padding: 9px 12px;
+  border: 1px solid rgba(107,238,250,.83);
+  border-radius: 18px;
+  background: linear-gradient(118deg, rgba(4,119,142,.64), rgba(68,141,173,.31));
+  box-shadow: 0 7px 25px rgba(0,6,18,.24), inset 0 1px 0 rgba(255,255,255,.18);
+  -webkit-backdrop-filter: blur(13px);
+  backdrop-filter: blur(13px);
 }
 .avatar {
-  position: relative;
-  z-index: 2;
-  width: 40px;
-  height: 40px;
-  flex-shrink: 0;
+  flex: 0 0 clamp(42px, 6.5dvh, 55px);
+  width: clamp(42px, 6.5dvh, 55px);
+  height: clamp(42px, 6.5dvh, 55px);
   display: flex;
-  align-items: center;
   justify-content: center;
-  border-radius: 50%;
-  color: #1082a7;
-  background: #e9f8fc;
-  border: 1.5px solid rgba(255,255,255,.92);
+  align-items: center;
+  border-radius: 14px;
+  border: 1px solid #54edfa;
+  color: #e6fcff;
+  background: linear-gradient(145deg,#0eafc8,#03506c);
 }
-.avatar svg { width: 25px; height: 25px; }
-.capsula {
-  position: relative;
-  margin-left: -7px;
-  height: 29px;
-  min-width: 165px;
-  max-width: 235px;
-  padding: 0 12px 0 17px;
+.avatar svg { display:block;width:58%;height:58%; }
+.dadosUsuario {
+  flex: 1 1 auto;
+  min-width: 0;
+  padding-left: 12px;
+  border-left: 1px solid rgba(141,239,251,.74);
   display: flex;
-  align-items: center;
+  flex-direction: column;
   justify-content: center;
-  background: #fff;
-  border-radius: 19px;
+  gap: 4px;
 }
 .etiqueta {
-  position: absolute;
-  top: -8px;
-  left: 11px;
-  border: 1.5px solid #088bb2;
-  background: white;
-  color: #0885ae;
-  padding: 0 8px;
-  border-radius: 5px;
   font-size: 10px;
-  line-height: 13px;
   font-weight: 800;
-  letter-spacing: .4px;
+  line-height: 1;
+  letter-spacing: .19em;
+  text-transform: uppercase;
+  color: #a5f5fe;
 }
 .usuario {
-  min-width: 0;
-  max-width: 207px;
-  color: #087fa8;
-  font-size: 10.4px;
-  font-weight: 700;
+  display: block;
+  max-width: 100%;
+  font-size: clamp(12px, 3.6vw, 15px);
+  font-weight: 740;
+  line-height: 1.35;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  line-height: 1.4;
+  color: #fff;
 }
-.grade {
-  min-height: 0;
+.modulos {
+  width:100%;
+  flex: 0 0 auto;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:clamp(9px,1.5dvh,14px);
+}
+.tituloSecao {
   width: 100%;
-  flex: 1;
+  min-height: 24px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #aff5fc;
+}
+.iconeSecao { display:block;flex:0 0 21px;width:21px;height:21px; }
+.tituloSecao h1 {
+  flex: 0 0 auto;
+  margin: 0;
+  color: #d4fcff;
+  font-size: clamp(9px, 2.6vw, 11px);
+  font-weight: 790;
+  line-height: 1.35;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.linhaTitulo { flex:1 1 auto;min-width:10px;height:1px;background:linear-gradient(90deg,#80f1f9,transparent); }
+.grade {
+  width: 100%;
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  grid-template-rows: repeat(3, minmax(0, 1fr));
-  gap: 7px;
+  grid-template-columns: repeat(2, minmax(0,1fr));
+  justify-items: center;
+  align-items: center;
+  column-gap: 10px;
+  row-gap: clamp(8px, 1.4dvh, 14px);
 }
 .cartao {
+  --acento: #21f4ea;
   appearance: none;
-  min-width: 0;
-  min-height: 0;
-  border: 0;
-  border-radius: 10px;
-  padding: 12px 6px;
-  background: #fff;
-  color: #007ea8;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  position: relative;
+  isolation: isolate;
   display: flex;
   flex-direction: column;
-  justify-content: center;
   align-items: center;
-  gap: 14px;
+  justify-content: center;
+  gap: clamp(2px,.6dvh,6px);
+  width: clamp(92px, min(36vw, 17.3dvh), 145px);
+  max-width: 100%;
+  aspect-ratio: 1;
+  min-height: 92px;
+  padding: 8px 5px;
+  border-radius: 50%;
+  border: 1px solid rgba(177,244,254,.86);
+  color: #fff;
+  font: inherit;
   cursor: pointer;
-  font-family: inherit;
-  transition: box-shadow .15s ease, transform .15s ease;
+  background: radial-gradient(ellipse at 33% 10%, rgba(39,213,238,.44), transparent 55%), linear-gradient(148deg,rgba(2,102,130,.95),rgba(2,37,62,.91) 78%,rgba(0,172,180,.34));
+  box-shadow: inset 0 1px 15px rgba(199,252,255,.11), 0 10px 18px rgba(0,10,25,.25);
+  -webkit-backdrop-filter: blur(9px);
+  backdrop-filter: blur(9px);
+  transition: transform .14s ease, box-shadow .14s ease;
 }
-.cartao:hover { box-shadow: inset 0 0 0 2px #b4e6f2; }
-.cartao:active { transform: scale(.98); }
-.cartao:focus-visible { outline: 3px solid #003f69; outline-offset: -4px; }
+.cartao:nth-child(3) { --acento:#48e6ac; }
+.cartao:nth-child(4) { --acento:#35b6ff; }
+.cartao:nth-child(5) { --acento:#ffc85d; }
+.cartao:nth-child(6) { --acento:#d99afa; }
+.cartao::before {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  border-radius: inherit;
+  padding: 2.5px;
+  background: conic-gradient(from 222deg, transparent 0deg,var(--acento) 82deg,rgba(179,245,255,.8) 145deg,transparent 206deg);
+  -webkit-mask: linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
+.cartao::after {
+  content: '';
+  position: absolute;
+  z-index:-1;
+  inset: 5px;
+  border-radius:inherit;
+  background: radial-gradient(ellipse at 50% 110%, color-mix(in srgb,var(--acento) 22%,transparent),transparent 65%);
+  pointer-events:none;
+}
+.cartao:focus-visible,.sair:focus-visible { outline: 3px solid #fff; outline-offset: 4px; }
+.cartao:active { transform: scale(.963); }
+@media (hover:hover) and (pointer:fine) { .cartao:hover { transform:translateY(-2px);box-shadow:0 12px 23px rgba(0,8,23,.37); } }
 .icone {
-  display: block;
   flex: 0 0 auto;
-  width: 58px;
-  height: 58px;
-  object-fit: contain;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: clamp(30px, 6.6dvh, 49px);
+  height: clamp(30px, 6.6dvh, 49px);
+  filter: drop-shadow(0 2px 5px rgba(0,9,21,.22));
 }
+.icone svg { display:block;width:100%;height:100%; }
 .tituloCartao {
-  display: block;
-  font-size: 14px;
-  font-weight: 800;
-  letter-spacing: .05px;
-  line-height: 1.25;
-  text-align: center;
+  display:block;
+  max-width:100%;
+  font-size:clamp(11px, 3.3vw, 15px);
+  font-weight:750;
+  line-height:1.12;
+  letter-spacing:-.02em;
+  text-align:center;
+  overflow-wrap:anywhere;
+  text-shadow:0 1px 6px rgba(0,8,21,.5);
 }
 .rodape {
-  min-height: 69px;
-  height: 69px;
+  width:100%;
   flex: 0 0 auto;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  gap: 7px;
-  padding-top: 4px;
+  margin-top:auto;
+  padding-top:4px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:clamp(6px,1dvh,9px);
 }
 .sair {
-  min-width: 95px;
-  height: 30px;
-  border: 2px solid #fff;
-  border-radius: 7px;
-  background: rgba(255,255,255,.96);
-  color: #097ea5;
-  box-shadow: 0 0 0 2px #0e8bac inset;
-  display: inline-flex;
-  justify-content: center;
-  align-items: center;
-  gap: 6px;
-  font-size: 12px;
-  font-weight: 700;
-  cursor: pointer;
+  appearance:none;
+  -webkit-tap-highlight-color:transparent;
+  touch-action:manipulation;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:11px;
+  width:min(66%,260px);
+  min-height:48px;
+  border:1px solid #71f6fc;
+  border-radius:999px;
+  padding:8px 19px;
+  cursor:pointer;
+  color:#fff;
+  background:linear-gradient(140deg,rgba(7,151,179,.78),rgba(0,65,92,.88));
+  box-shadow:inset 0 1px 12px rgba(232,255,255,.12),0 9px 17px rgba(0,7,22,.23);
+  font:inherit;
+  font-size:19px;
+  font-weight:760;
+  -webkit-backdrop-filter:blur(10px);
+  backdrop-filter:blur(10px);
 }
-.sair:disabled { opacity: .65; cursor: wait; }
+.sair svg { display:block;width:24px;height:24px;color:#93faff; }
+.sair:disabled { opacity:.6;cursor:wait; }
+.sair:active { transform:scale(.98); }
 .versao {
-  color: #fff;
-  font-size: 12px;
-  font-weight: 800;
-  letter-spacing: .02px;
-  line-height: 1.2;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:11px;
+  color:#e3f7fa;
+  font-size:10px;
+  letter-spacing:.16em;
+  white-space:nowrap;
 }
-.barraInferior {
-  height: 35px;
-  min-height: 35px;
-  flex: 0 0 auto;
-  display: flex;
-  justify-content: space-around;
-  align-items: center;
-  background: #050505;
-  color: #babfc2;
+.versao span { width:clamp(20px,10vw,52px);height:1px;background:linear-gradient(90deg,transparent,#70e6f0); }
+.versao span:last-child { transform:rotate(180deg); }
+/* Pequenas alturas (Android com barras visiveis): privilegia encaixe sem cortar comandos. */
+@media (max-height: 690px) {
+  .conteudo { padding-top:max(8px,env(safe-area-inset-top));padding-bottom:max(9px,env(safe-area-inset-bottom));gap:8px; }
+  .marca { min-height:44px; }
+  .logo { max-height:48px; }
+  .identificacao { min-height:56px;padding:7px 10px; }
+  .avatar { flex-basis:40px;width:40px;height:40px; }
+  .modulos { gap:7px; }
+  .tituloSecao { min-height:20px; }
+  .cartao { width:clamp(84px,min(33vw,16dvh),120px);min-height:84px; }
+  .grade { row-gap:6px; }
+  .icone { width:clamp(29px,6dvh,42px);height:clamp(29px,6dvh,42px); }
+  .sair { min-height:43px;font-size:17px; }
+  .versao { font-size:9px; }
 }
-.voltar {
-  width: 11px;
-  height: 11px;
-  border-bottom: 1.5px solid currentColor;
-  border-left: 1.5px solid currentColor;
-  transform: rotate(45deg);
+@media (max-width: 340px) {
+  .conteudo { padding-left:10px;padding-right:10px; }
+  .usuario { font-size:11.5px; }
+  .tituloSecao { gap:5px; }
+  .tituloSecao h1 { font-size:9px;letter-spacing:.08em; }
+  .tituloCartao { font-size:11px; }
+  .grade { column-gap:6px; }
 }
-.home { width: 12px; height: 12px; border-radius: 50%; border: 1.4px solid currentColor; }
-.recentes { display: flex; gap: 3px; height: 12px; align-items: center; }
-.recentes i { height: 12px; width: 2px; border: 1px solid currentColor; border-radius: 1px; }
-
-@media (max-width: 499px) {
-  .dispositivo { width: 100%; height: 100dvh; max-height: none; transform: none; }
-  .painel { padding-bottom: max(9px, env(safe-area-inset-bottom)); }
+@media (max-width: 599px) { .conteudo { width:100%;box-shadow:none; } }
+/* Em desktop, somente uma superficie de COLETOR centrada, nao um dashboard web nem mockup de telefone. */
+@media (min-width: 600px) {
+  .conteudo { max-width:420px; }
+  .cartao { width:clamp(110px,min(36vw,17.3dvh),145px); }
+  .tituloCartao { font-size:14px; }
 }
-@media (max-height: 680px) {
-  .painel { padding-top: 6px; }
-  .marca { margin-bottom: 1px; min-height: 28px; height: 28px; }
-  .identificacao { height: 39px; margin-bottom: 4px; }
-  .cartao { gap: 6px; padding: 6px 4px; }
-  .icone { width: 48px; height: 48px; }
-  .rodape { height: 59px; min-height: 59px; gap: 3px; }
+@media (orientation:landscape) and (max-height:520px) {
+  .conteudo { min-height:100dvh; }
+  .rodape { margin-top:12px; }
+  .cartao { width:92px;min-height:92px; }
 }
-
-/* V34 — enquadramento idêntico ao coletor de referência.
-   Corrige a barra Android deslocada para o meio e o vazio azul inferior. */
-.dispositivo {
-  box-sizing: border-box !important;
-  width: min(329px, calc(100vw - 16px)) !important;
-  height: min(735px, calc(100dvh - 24px)) !important;
-  min-height: 0 !important;
-  max-height: none !important;
-  flex: 0 0 auto !important;
-  margin: 0 auto !important;
-  display: grid !important;
-  grid-template-rows: 35px minmax(0, 1fr) 35px !important;
-  overflow: hidden !important;
-}
-.barraSuperior { height: 35px !important; min-height: 0 !important; }
-.painel {
-  height: 100% !important;
-  min-height: 0 !important;
-  padding: 14px 10px 8px !important;
-  display: grid !important;
-  grid-template-rows: 33px 45px minmax(0, 1fr) 72px !important;
-  align-content: stretch !important;
-  overflow: hidden !important;
-}
-.marca { height: 33px !important; min-height: 0 !important; margin: 0 !important; }
-.identificacao { height: 40px !important; margin: 0 auto 5px !important; }
-.grade {
-  min-height: 0 !important;
-  height: 100% !important;
-  flex: none !important;
-  grid-template-rows: repeat(3, minmax(0, 1fr)) !important;
-  gap: 7px !important;
-}
-.cartao { padding: 8px 4px !important; gap: 12px !important; border-radius: 11px !important; }
-.icone { width: 51px !important; height: 51px !important; }
-.tituloCartao { font-size: 14px !important; }
-.rodape {
-  height: 72px !important;
-  min-height: 0 !important;
-  padding: 7px 0 0 !important;
-  gap: 5px !important;
-  justify-content: center !important;
-}
-.barraInferior { height: 35px !important; min-height: 0 !important; }
-@media (max-width: 499px) {
-  .dispositivo { width: 100vw !important; height: 100dvh !important; }
-  .painel { padding-left: 10px !important; padding-right: 10px !important; }
-}
-@media (max-height: 680px) {
-  .painel { grid-template-rows: 29px 40px minmax(0, 1fr) 60px !important; padding-top: 6px !important; }
-  .rodape { height: 60px !important; }
-  .cartao { gap: 5px !important; }
-  .icone { width: 43px !important; height: 43px !important; }
-}
-
-/* V35 — somente o conjunto Login/avatar/e-mail, proporcional ao original. */
-.painel { grid-template-rows: 33px 65px minmax(0, 1fr) 72px !important; }
-.identificacao {
-  box-sizing: border-box !important;
-  width: min(100%, 286px) !important;
-  height: 60px !important;
-  min-height: 60px !important;
-  margin: 2px auto 3px !important;
-  justify-content: center !important;
-  align-self: center !important;
-  z-index: 1 !important;
-}
-.avatar {
-  box-sizing: border-box !important;
-  width: 58px !important;
-  height: 58px !important;
-  border: 1px solid #d3eef8 !important;
-  background: #dff5fc !important;
-  color: #4aa6c5 !important;
-  flex: 0 0 58px !important;
-}
-.avatar svg { width: 38px !important; height: 38px !important; }
-.capsula {
-  box-sizing: border-box !important;
-  height: 45px !important;
-  min-width: 0 !important;
-  width: 222px !important;
-  max-width: calc(100% - 44px) !important;
-  margin-left: -10px !important;
-  padding: 4px 12px 0 20px !important;
-  border-radius: 25px !important;
-  background: #fff !important;
-}
-.etiqueta {
-  top: -12px !important;
-  left: 8px !important;
-  padding: 1px 11px 2px !important;
-  border: 2px solid #087ea5 !important;
-  border-radius: 8px !important;
-  color: #087ea5 !important;
-  font-size: 15px !important;
-  line-height: 19px !important;
-  letter-spacing: .4px !important;
-  font-weight: 800 !important;
-}
-.usuario {
-  max-width: 100% !important;
-  font-size: 13px !important;
-  line-height: 19px !important;
-  font-weight: 700 !important;
-  text-align: center !important;
-  color: #087da3 !important;
-}
-@media (max-height: 680px) {
-  .painel { grid-template-rows: 29px 58px minmax(0, 1fr) 60px !important; }
-  .identificacao { height: 55px !important; min-height: 55px !important; }
-  .avatar { width: 51px !important; height: 51px !important; flex-basis: 51px !important; }
-  .avatar svg { width: 33px !important; height: 33px !important; }
-  .capsula { height: 40px !important; }
-}
+@media (prefers-reduced-motion:reduce) { .cartao {transition:none;} .cartao:hover {transform:none;} }

@@ -6,6 +6,7 @@ import { useEffect, useMemo, useState } from "react";
 import type { ReactNode } from "react";
 import { createPortal } from "react-dom";
 import styles from "./gestao.module.css";
+import atelTokens from "@/components/atel-ui/atel-tokens.module.css";
 
 import {
   requisicoesTecnicasMock,
@@ -761,7 +762,7 @@ export default function RequisicoesTecnicasPage() {
     ).length;
 
   return (
-    <main className={styles.root}>
+    <main className={`${styles.root} ${atelTokens.atelRoot}`}>
       <header className={styles.heading}>
         <div>
           <div className={styles.eyebrow}>EXPEDIÇÕES / GESTÃO DE PEDIDOS</div>

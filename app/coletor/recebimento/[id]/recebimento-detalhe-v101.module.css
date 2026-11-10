@@ -1,0 +1,28 @@
+.scope {
+  font-family: Arial, "Segoe UI", sans-serif;
+  font-size: 14px;
+  line-height: 1.45;
+  color: #153b53;
+  -webkit-font-smoothing: antialiased;
+}
+.scope :global(*) { box-sizing: border-box; }
+.scope :global(button), .scope :global(input), .scope :global(textarea), .scope :global(select) {
+  font: inherit;
+}
+.scope :global(button) { letter-spacing: normal; }
+.scope :global(input), .scope :global(textarea), .scope :global(select) {
+  font-size: 14px;
+  line-height: 1.4;
+}
+.scope :global(h1) { font-size: 20px; line-height: 1.2; letter-spacing: -.02em; }
+.scope :global(h2) { font-size: 17px; line-height: 1.3; }
+.scope :global(h3) { font-size: 15px; line-height: 1.35; }
+.scope :global(p) { line-height: 1.45; }
+.scope :global(label) { line-height: 1.35; }
+.scope :global(small) { font-size: 11px; line-height: 1.35; }
+.scope :global(textarea) { min-height: 68px; resize: vertical; }
+.scope :global(button) { min-height: 38px; }
+@media (max-width: 480px) {
+  .scope { font-size: 13px; }
+  .scope :global(h1) { font-size: 18px; }
+}

@@ -1,0 +1,11 @@
+/* ATEL V82 - estilo UNICO reutilizado em Clientes, Ativos e Tecnicos. */
+.page { color:var(--atel-text); }
+.hero { background:radial-gradient(ellipse at 85% 0%,var(--atel-hero-glow),transparent 48%),linear-gradient(var(--atel-hero-angle),var(--atel-hero-start),var(--atel-hero-mid) 56%,var(--atel-hero-end)); }
+.stats { background:var(--atel-hero-mid); }
+/* Regras de especificidade evitam o conflito V77/V79 dos indicadores. */
+.page .stats > .metric { --atel-metric-current-start:var(--atel-metric-blue-start);--atel-metric-current-end:var(--atel-metric-blue-end);--atel-metric-current-border:var(--atel-metric-blue-border);background:linear-gradient(var(--atel-metric-angle),var(--atel-metric-current-start),var(--atel-metric-current-end));border:1px solid var(--atel-metric-current-border);color:var(--atel-on-dark);border-radius:var(--atel-radius-card);box-shadow:none; }
+.page .stats > .metric:nth-child(2) { --atel-metric-current-start:var(--atel-metric-green-start);--atel-metric-current-end:var(--atel-metric-green-end);--atel-metric-current-border:var(--atel-metric-green-border); }
+.page .stats > .metric:nth-child(3) { --atel-metric-current-start:var(--atel-metric-violet-start);--atel-metric-current-end:var(--atel-metric-violet-end);--atel-metric-current-border:var(--atel-metric-violet-border); }
+.page .stats > .metric::before {display:none}
+.table { border-collapse:separate;border-spacing:0; }
+.table th {background:var(--atel-table-header);color:var(--atel-on-dark)}

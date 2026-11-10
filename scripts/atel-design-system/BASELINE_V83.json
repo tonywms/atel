@@ -1,0 +1,10 @@
+{
+  "app/admin/homologacao-cadastros-v74/produtos/page.tsx": "1545ddd547b795bbf3b5845b5b77fc4f638c8153ff234ab65808f881f72eefbf",
+  "app/admin/homologacao-cadastros-v74/enderecos/page.tsx": "ebdc2b60266ee0d6f1323ca84ffbe1a3a1e63705a943d31445a2f31ba8d0b4f9",
+  "app/admin/homologacao-cadastros-v74/CadastroV81.tsx": "af753a794628f364cff64e6da2d35934c28d4a70f6d33a90fc1f8b9c4bd823d2",
+  "app/clientes/page.tsx": "bffdd6211449717bca6d874baf09a1d8206249d3050872aefb4b94745fd7119a",
+  "app/ativos/page.tsx": "652555baf5e754dd9ac6dcef58186bfd14fd2e351df1ddca441ad1c62fa8616a",
+  "app/tecnicos/page.tsx": "1c64eb5a2d6e266e112088e7ed78b3e0e3acbf9fa4a6b8a27543326df43f7da5",
+  "components/atel-ui/AtelCadastrosV82.tsx": "04374350e64ac9b696faf44f3c162154c26234038e3995d5289c01998dfd02bf",
+  "components/atel-ui/atel-cadastros.module.css": "894389cf2601ac1c7f88ae80c57b47e2a94c865fe25cf45043928ca8a0c0c17f"
+}

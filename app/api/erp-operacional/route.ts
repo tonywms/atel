@@ -15,8 +15,7 @@ export async function GET(req: NextRequest) {
   const { data, error } = await auth.auth.getUser(token);
   if (error || !data.user) return NextResponse.json({ error: "Sessao invalida" }, { status: 401, headers: noCache });
 
-  // Homologacao estritamente vinculada a conta de teste; nao aceitar ID do tecnico do cliente.
-  if (data.user.email?.toLowerCase() !== "teste@wmsexpert.com.br") return NextResponse.json({ error: "Vinculo ERP ainda nao configurado para este usuario" }, { status: 403, headers: noCache });
+  // Qualquer usuario autenticado pode consultar esta integracao de homologacao.
   const tecnico = "4157";
   const tipo = req.nextUrl.searchParams.get("tipo") as Tipo | null;
   const atendimento = req.nextUrl.searchParams.get("atendimento");

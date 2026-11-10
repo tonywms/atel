@@ -11,6 +11,8 @@ const index = new Map<number, string>();
 const revisions = new Map<string, number>();
 const snapshots = new Map<string, string>();
 const pending = new Map<string, EstadoRequisicao>();
+const lastFailures = new Map<string,{serial:string;error:string}>();
+const RESULT_EVENT_V110 = "atel-ped-sync-result-v110";
 let flushing = false;
 let hydrating = false;
 let retryRequested = false;
@@ -26,49 +28,106 @@ function publish(states: Record<number, EstadoRequisicao>) {
   localStorage.setItem(KEY, JSON.stringify(states));
   window.dispatchEvent(new CustomEvent(EVENT));
 }
+// V116.2: falha em um PED nunca bloqueia a confirmacao de outro PED.
+// Pendencias permanecem locais ate um ACK positivo da RPC correspondente.
 async function flush() {
   if (flushing || hydrating) return;
   flushing = true;
+  const attempted = new Set<string>();
   try {
     while (pending.size) {
-      const [uuid, estado] = pending.entries().next().value as [string, EstadoRequisicao];
-      // Mantenha a pendencia ate o servidor confirmar. Uma edicao mais recente
-      // pode chegar enquanto a requisicao anterior ainda esta em andamento.
-      const db = atelSupabase();
-      if (!db) { throw Error("Supabase indisponivel"); }
-      const rev = revisions.get(uuid) ?? 0;
-      const parcial = (estado.status === "RECUSA_PARCIAL" || estado.status === "RECUSA_TOTAL") && Boolean(estado.recebimentoTecnico?.finalizadoEm);
-      const {data, error} = await db.rpc(parcial ? "atel_v366_salvar_estado" : "atel_v373_salvar_e_conciliar", {p_pedido:uuid,p_revisao:rev,p_estado:estado});
-      if (error) { throw Error(error.message); }
-      const next = Array.isArray(data) ? data[0] : data;
-      if (!next || typeof next.revisao !== "number") {throw Error("Resposta de revisao invalida");}
-      revisions.set(uuid,next.revisao);
-      // O RET nasce somente apos o estado ter sido persistido no servidor.
-      // Em caso de falha, a pendencia fica na fila e pode ser reenviada.
-      if (parcial && Object.values(estado.recebimentoTecnico?.itensConferidos ?? {}).some(item => Number(item.quantidadeRecusada) > 0)) {
-        const {error: erroRet} = await db.rpc("atel_v3730_gerar_ret", {p_pedido: uuid});
-        if (erroRet) throw Error("RET nao gerado: " + erroRet.message);
+      // Cada pedido e tentado no maximo uma vez por rodada. Isso impede
+      // loop infinito quando um PED antigo apresenta conflito permanente.
+      const entry = Array.from(pending.entries()).find(([uuid, estado]) =>
+        !attempted.has(uuid) &&
+        lastFailures.get(uuid)?.serial !== JSON.stringify(estado)
+      );
+      if (!entry) break;
+      const [uuid, estado] = entry;
+      attempted.add(uuid);
+      try {
+        const db = atelSupabase();
+        if (!db) throw Error("Supabase indisponivel");
+        const rev = revisions.get(uuid) ?? 0;
+        const parcial = (estado.status === "RECUSA_PARCIAL" || estado.status === "RECUSA_TOTAL") && Boolean(estado.recebimentoTecnico?.finalizadoEm);
+        const {data, error} = await db.rpc(parcial ? "atel_v109_finalizar_recebimento_parcial" : "atel_v373_salvar_e_conciliar", {p_pedido:uuid,p_revisao:rev,p_estado:estado});
+        if (error) throw Error(error.message);
+        const next = Array.isArray(data) ? data[0] : data;
+        if (!next || typeof next.revisao !== "number") throw Error("Resposta de revisao invalida");
+        revisions.set(uuid,next.revisao);
+        snapshots.set(uuid,JSON.stringify(estado));
+        lastFailures.delete(uuid);
+        // Nunca remover uma edicao mais nova enfileirada durante a RPC.
+        if (pending.get(uuid) === estado) pending.delete(uuid);
+        window.dispatchEvent(new CustomEvent(RESULT_EVENT_V110, {detail: {uuid, ok: true}}));
+      } catch(e) {
+        const message = String(e);
+        // Um estado ja finalizado e divergente exige conciliacao manual:
+        // nao martelar o banco a cada mudanca de aba ou evento de rede.
+        if (/pedido ja finalizado com outro conteudo|estado legado ja finalizado sem comprovante|documento terminal conflitante/i.test(message)) {
+          lastFailures.set(uuid,{serial:JSON.stringify(estado),error:message});
+        }
+        window.dispatchEvent(new CustomEvent(RESULT_EVENT_V110, {detail: {uuid, ok: false, error: message}}));
+        report(e);
+        // O proximo PED segue independente do resultado deste.
       }
-      snapshots.set(uuid,JSON.stringify(estado));
-      // Apague somente a versao efetivamente confirmada; preserve edicoes
-      // feitas durante o await da RPC.
-      if (pending.get(uuid) === estado) pending.delete(uuid);
     }
-  } catch(e) { report(e); }
-  finally {
-    flushing=false;
+  } finally {
+    flushing = false;
     if (retryRequested) {
-      retryRequested=false;
+      retryRequested = false;
       if (typeof navigator !== "undefined" && navigator.onLine) void flush();
     }
   }
 }
+// V110: o coletor nao pode declarar sucesso antes da confirmacao do Supabase.
+// Reenvio idempotente: a V109 identifica o mesmo estado e nao duplica movimentacao.
+export async function aguardarConfirmacaoPedV110(requisicaoId: number, estadoEsperado: EstadoRequisicao): Promise<void> {
+  const uuid = index.get(requisicaoId);
+  if (!uuid) throw Error("Pedido real sem vinculo remoto. Reabra a listagem e tente novamente.");
+  const serial = JSON.stringify(estadoEsperado);
+  const blocked = lastFailures.get(uuid);
+  if (blocked?.serial === serial) throw Error(blocked.error);
+  if (JSON.stringify(local()[requisicaoId]) !== serial) {
+    throw Error("Estado local mudou durante a finalizacao. Atualize o pedido antes de confirmar.");
+  }
+  if (snapshots.get(uuid) === serial) return;
+  const atual = pending.get(uuid);
+  if (!atual || JSON.stringify(atual) !== serial) pending.set(uuid, structuredClone(estadoEsperado));
+  await new Promise<void>((resolve, reject) => {
+    let settled = false;
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const finish = (error?: Error) => {
+      if (settled) return;
+      settled = true;
+      window.removeEventListener(RESULT_EVENT_V110, onResult);
+      if (timer !== undefined) clearTimeout(timer);
+      if (error) reject(error); else resolve();
+    };
+    const onResult = (event: Event) => {
+      const detail = (event as CustomEvent<{uuid: string; ok: boolean; error?: string}>).detail;
+      if (!detail || detail.uuid !== uuid) return;
+      if (!detail.ok) {finish(Error(detail.error || "Falha ao sincronizar recebimento."));return;}
+      if (snapshots.get(uuid) === serial) finish();
+    };
+    window.addEventListener(RESULT_EVENT_V110, onResult);
+    timer = setTimeout(() => finish(Error("Confirmacao remota excedeu 20 segundos. Operacao local pendente; tente confirmar novamente.")), 20000);
+    if (snapshots.get(uuid) === serial) finish();
+    else if (flushing) retryRequested = true;
+    else void flush();
+  });
+}
+
 export function notificarEstadosPedV366(states: Record<number, EstadoRequisicao>) {
   if (hydrating) return;
+  const ultimoEstadoLocal = local();
   for (const [id,uuid] of index) {
     const state = states[id];
     if (!state) continue;
     const serial = JSON.stringify(state);
+    // Imports/eventos assincronos podem chegar fora de ordem. Nao permitir
+    // que uma notificacao antiga substitua o recebimento final mais recente.
+    if (JSON.stringify(ultimoEstadoLocal[id]) !== serial) continue;
     if (serial !== snapshots.get(uuid)) pending.set(uuid, structuredClone(state));
   }
   if (flushing) retryRequested=true;
@@ -90,6 +149,11 @@ export async function sincronizarPedidosPedV366(pedidos: PedidoV36[], catalogo: 
   // V37.9: registra vinculos explicitos antes de hidratar ou sincronizar o estado.
   // Nunca infere material pela quantidade ou pela ordem de retorno do banco.
   for (const pedido of pedidos) {
+    // V116.1: pedidos documentais terminais nao podem bloquear a hidratacao
+    // de pedidos ativos por auditorias legadas de vinculacao V37.10.2.
+    // Os terminais continuam no indice e recebem seu estado remoto abaixo;
+    // apenas a revalidacao de vinculos de itens e dispensada.
+    if (["RECEBIDA", "RECEBIDA_PARCIAL", "RECUSADA", "CANCELADA"].includes(pedido.status)) continue;
     const card = catalogo.find(c => c.codigo === pedido.codigo);
     if (!card || !map.has(card.id)) continue;
     for (const item of card.itens) {
@@ -128,6 +192,18 @@ export async function sincronizarPedidosPedV366(pedidos: PedidoV36[], catalogo: 
       if (remote) {
         revisions.set(uuid,remote.revisao);
         const rstate=remote.estado as EstadoRequisicao;
+        // Nao sobrescrever uma finalizacao local ainda sem comprovante remoto
+        // apos F5/reabertura: a fila em memoria pode ter sido reiniciada.
+        const localState = states[id];
+        const finalLocal = Boolean(localState?.recebimentoTecnico?.finalizadoEm) &&
+          ["RECUSA_PARCIAL", "RECUSA_TOTAL", "RECEBIDA_TECNICO"].includes(localState.status);
+        const finalRemoto = Boolean(rstate?.recebimentoTecnico?.finalizadoEm) &&
+          ["RECUSA_PARCIAL", "RECUSA_TOTAL", "RECEBIDA_TECNICO"].includes(rstate.status);
+        if (finalLocal && !finalRemoto && JSON.stringify(localState) !== JSON.stringify(rstate)) {
+          pending.set(uuid,structuredClone(localState));
+          snapshots.set(uuid,JSON.stringify(rstate));
+          continue;
+        }
         // Nunca substituir operacao local ainda aguardando gravacao.
         if (pending.has(uuid)) continue;
         snapshots.set(uuid,JSON.stringify(rstate));

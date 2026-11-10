@@ -185,11 +185,13 @@ function RecebimentoLegado() {
     }
 
     try {
-      iniciarRecebimentoTecnico(
-        req
-      );
-
+      const estadoAtual = obterEstado(req);
+      const finalizadoLocal = req.origemIntegracao === "SUPABASE_V36" &&
+        Boolean(estadoAtual.recebimentoTecnico?.finalizadoEm) &&
+        ["RECUSA_PARCIAL", "RECUSA_TOTAL", "RECEBIDA_TECNICO"].includes(estadoAtual.status);
+      if (!finalizadoLocal) iniciarRecebimentoTecnico(req);
       refresh();
+      if (finalizadoLocal) setMsg("Recebimento local finalizado. Confirme novamente para validar a gravacao no Supabase.");
     } catch (e) {
       setMsg(
         e instanceof Error
@@ -700,35 +702,30 @@ function RecebimentoLegado() {
      FINALIZAR
   ======================================================= */
 
-  function finalizar() {
+  async function finalizar() {
+    if (fim || !req) return;
+    setFim(true);
     try {
-      setFim(true);
-
-      finalizarRecebimentoTecnico(
-        req!
-      );
-
-      setMsg(
-        div
-          ? "Recebimento finalizado com divergência/recusa."
-          : "Recebimento confirmado."
-      );
-
-      setTimeout(
-        () =>
-          router.push(
-            "/coletor/recebimento"
-          ),
-        900
-      );
+      const anterior = obterEstado(req);
+      const finalizadoLocal = req.origemIntegracao === "SUPABASE_V36" &&
+        Boolean(anterior.recebimentoTecnico?.finalizadoEm) &&
+        ["RECUSA_PARCIAL", "RECUSA_TOTAL", "RECEBIDA_TECNICO"].includes(anterior.status);
+      const finalizado = finalizadoLocal ? anterior : finalizarRecebimentoTecnico(req);
+      if (req.origemIntegracao === "SUPABASE_V36") {
+        setMsg("Aguardando confirmacao do Supabase. Nao feche esta tela.");
+        const { aguardarConfirmacaoPedV110 } = await import("@/lib/atelSyncPedV366");
+        await aguardarConfirmacaoPedV110(req.id, finalizado);
+      }
+      setMsg(req.origemIntegracao === "SUPABASE_V36"
+        ? (div ? "Recebimento confirmado no servidor com divergencia/recusa." : "Recebimento confirmado no servidor.")
+        : (div ? "Recebimento finalizado com divergência/recusa." : "Recebimento confirmado."));
+      setTimeout(() => router.push("/coletor/recebimento"), 900);
     } catch (e) {
       setFim(false);
-
-      setMsg(
-        e instanceof Error
-          ? e.message
-          : "Erro ao finalizar."
-      );
+      setMsg((e instanceof Error ? e.message : "Erro ao confirmar recebimento.") +
+        (req.origemIntegracao === "SUPABASE_V36"
+          ? " Nenhuma confirmacao remota foi comprovada. Verifique a conexao e tente novamente; nao duplique a operacao."
+          : ""));
     }
   }
 
@@ -1907,61 +1904,19 @@ function RecebimentoLegado() {
                     {/* =====================================
                         RESUMO SERIAL
                     ===================================== */}
-
-                    <div
-                      style={
-                        serialResumo
-                      }
-                    >
-                      <div>
-                        <span>
-                          RECEBIDOS
-                        </span>
-
-                        <strong>
-                          {
-                            seriaisRecebidos.length
-                          }
-                        </strong>
-                      </div>
-
-                      <div>
-                        <span>
-                          ACEITOS
-                        </span>
-
-                        <strong
-                          style={{
-                            color:
-                              "#07864c",
-                          }}
-                        >
-                          {decisao ===
-                          "RECUSA_ITEM"
-                            ? 0
-                            : seriaisAceitos.length}
-                        </strong>
-                      </div>
-
-                      <div>
-                        <span>
-                          RECUSADOS
-                        </span>
-
-                        <strong
-                          style={{
-                            color:
-                              "#b77900",
-                          }}
-                        >
-                          {decisao ===
-                          "RECUSA_ITEM"
-                            ? seriaisRecebidos.length
-                            : seriaisRecebidos.length -
-                              seriaisAceitos.length}
-                        </strong>
-                      </div>
+                    <div style={{ display: "grid", gridTemplateColumns: "repeat(3, minmax(0, 1fr))", gap: 7, margin: "12px 0", width: "100%", fontFamily: "Arial, Helvetica, sans-serif" }}>
+                      {[
+                        { titulo: "Recebidos", valor: seriaisRecebidos.length, cor: "#155c80", fundo: "#edf7fc" },
+                        { titulo: "Aceitos", valor: decisao === "RECUSA_ITEM" ? 0 : seriaisAceitos.length, cor: "#087b50", fundo: "#eaf8f1" },
+                        { titulo: "Recusados", valor: decisao === "RECUSA_ITEM" ? seriaisRecebidos.length : seriaisRecebidos.length - seriaisAceitos.length, cor: "#a76700", fundo: "#fff6e7" },
+                      ].map((item) => (
+                        <div key={item.titulo} style={{ minWidth: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 5, padding: "10px 2px", borderRadius: 9, background: item.fundo, border: `1px solid ${item.cor}44`, boxSizing: "border-box" }}>
+                          <span style={{ fontFamily: "inherit", fontSize: 10, lineHeight: 1.2, fontWeight: 700, letterSpacing: "0.02em", textTransform: "uppercase", color: "#34546a" }}>{item.titulo}</span>
+                          <strong style={{ fontFamily: "inherit", fontSize: 22, lineHeight: 1.1, fontWeight: 800, color: item.cor, fontVariantNumeric: "tabular-nums" }}>{item.valor}</strong>
+                        </div>
+                      ))}
                     </div>
+
 
                     {/* =====================================
                         QUANTIDADE ACEITA AUTOMÁTICA

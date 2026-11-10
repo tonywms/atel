@@ -4,6 +4,7 @@ import styles from "./expedicoes.module.css";
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { atelSupabase } from "@/lib/atelSupabaseV08";
 
 import { requisicoesTecnicasMock } from "@/lib/requisicoesTecnicas";
 import { atualizarPedidosAtelV363, obterPedidosAtelV363, pedidosComEstadoV363 } from "@/lib/atelPedidosHomologacaoV363";
@@ -34,6 +35,7 @@ type Contadores = {
 
 export default function ColetorExpedicaoPage() {
   const router = useRouter();
+  const [devCount, setDevCount] = useState<number | null>(null);
 
   const [contadores, setContadores] =
     useState<Contadores>({
@@ -150,6 +152,48 @@ export default function ColetorExpedicaoPage() {
     };
   }, []);
 
+  // V106.3.2: contador de DEV compartilhado com a fila real do coletor.
+  useEffect(() => {
+    let ativo = true;
+    const atualizarDevs = async () => {
+      try {
+        const db = atelSupabase();
+        if (!db) throw new Error("Supabase não configurado");
+        const [a, b] = await Promise.all([
+          db.rpc("atel_v105_listar_devs"),
+          db.rpc("atel_v106_listar_devs"),
+        ]);
+        if (a.error || b.error) throw new Error(a.error?.message || b.error?.message || "Falha na consulta de DEV");
+        const registros: Array<{ codigo?: string; status?: string }> = [
+          ...(Array.isArray(a.data) ? a.data : []),
+          ...(Array.isArray(b.data) ? b.data : []),
+        ];
+        const codigos = new Set<string>();
+        for (const d of registros) {
+          if (d?.status === "AGUARDANDO_CD" && d.codigo) codigos.add(d.codigo);
+        }
+        if (ativo) setDevCount(codigos.size);
+      } catch {
+        // Não exibir 0 quando a consulta falha.
+        if (ativo) setDevCount(null);
+      }
+    };
+    void atualizarDevs();
+    const aoFoco = () => { void atualizarDevs(); };
+    const aoVisivel = () => { if (document.visibilityState === "visible") void atualizarDevs(); };
+    window.addEventListener("focus", aoFoco);
+    document.addEventListener("visibilitychange", aoVisivel);
+    const intervalo = window.setInterval(() => {
+      if (document.visibilityState === "visible") void atualizarDevs();
+    }, 15000);
+    return () => {
+      ativo = false;
+      window.removeEventListener("focus", aoFoco);
+      document.removeEventListener("visibilitychange", aoVisivel);
+      window.clearInterval(intervalo);
+    };
+  }, []);
+
   return (
     <main className={styles.screen}>
       <section className={styles.phone} aria-label="Coletor - Expedição">
@@ -166,7 +210,7 @@ export default function ColetorExpedicaoPage() {
             { label: "Embarque", href: "/coletor/embarque", count: contadores.embarque, icon: "▤" },
             { label: "Recebimento", href: "/coletor/recebimento", count: contadores.recebimento, icon: "✓" },
             { label: "Retornos ao CD", href: "/coletor/retornos", count: contadores.retornos, icon: "↩" },
-            { label: "Devolução CD", href: "/coletor/devolucao-cd", count: 0, icon: "↩" },
+            { label: "Devolução CD", href: "/coletor/devolucao-cd", count: devCount ?? "—", icon: "↩" },
             { label: "Ordens de Serviço", href: "/coletor/ordens-servico", count: contadores.ordensServico, icon: "⚙" },
           ] as const).map((item) => (
             <button key={item.href} type="button" className={styles.card} onClick={() => router.push(item.href)}>

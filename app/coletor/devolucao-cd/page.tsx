@@ -1,3 +1,3 @@
 "use client";
-import DevolucaoCD from "@/components/atel/DevolucaoCD";
-export default function Page(){return <main className="collector-screen atel-v47-screen"><div className="collector-phone"><DevolucaoCD/></div></main>}
+import DevolucaoCDRetV105 from "@/components/atel/DevolucaoCDRetV105";
+export default function Page(){return <main style={{minHeight:"100dvh",background:"#e8eef5"}}><DevolucaoCDRetV105/></main>}

@@ -1,0 +1,35 @@
+/* ATEL V79 - visual Enterprise exclusivo para Clientes, Ativos e Tecnicos. */
+.page{--ink:var(--wms-text,#173448);--accent:var(--wms-blue-2,#087fac);--line:#d6e3eb;max-width:1680px;margin:0 auto;padding:18px 24px 30px;color:var(--ink);font-size:14px}.page *{box-sizing:border-box}
+.hero{position:relative;overflow:hidden;display:flex;align-items:center;justify-content:space-between;gap:18px;flex-wrap:wrap;padding:26px 26px 20px;margin:0;border-radius:18px 18px 0 0;color:white;background:radial-gradient(ellipse at 85% 0%,rgba(2,153,202,.22),transparent 48%),linear-gradient(112deg,#04253e,#063c5a 56%,#064567);box-shadow:0 14px 30px rgba(2,33,53,.12)}
+.hero:before{content:"";position:absolute;inset:0;pointer-events:none;opacity:.23;background:repeating-linear-gradient(120deg,transparent 0 88px,rgba(80,183,221,.12) 89px,transparent 91px)}.hero>*{position:relative;z-index:1}.hero .eyebrow{color:#8de4f3;font-size:12px;letter-spacing:.09em}.hero .heading{color:white;font-size:clamp(27px,2.4vw,38px);margin:5px 0 8px;letter-spacing:-.04em}.hero .subtitle{color:#d3e6f0;font-size:13px}.hero .tag{color:#bfffea;background:rgba(0,149,128,.2);border:1px solid rgba(66,226,190,.42);padding:8px 12px;border-radius:999px;font-size:12px}
+.stats{position:relative;z-index:1;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:13px;background:#063b59;margin:0;padding:0 22px 22px;border-radius:0 0 18px 18px;box-shadow:0 14px 30px rgba(2,33,53,.12)}
+.stat{min-width:0;min-height:108px;border-radius:13px;border:1px solid #0c9cce;background:linear-gradient(135deg,rgba(7,95,133,.9),rgba(5,53,87,.85));padding:17px 18px;box-shadow:none}.stat:nth-child(2){border-color:#10b879;background:linear-gradient(135deg,rgba(0,101,83,.78),rgba(3,67,65,.83))}.stat:nth-child(3){border-color:#8169df;background:linear-gradient(135deg,rgba(68,60,129,.75),rgba(32,54,99,.85))}.statLabel{color:#dceef6;font-size:12px;font-weight:700;letter-spacing:0;text-transform:none}.statValue{color:white;font-size:30px;line-height:1.2;margin-top:8px;overflow-wrap:anywhere}.statNote{color:#c2d9e5;font-size:11px}
+.content{margin-top:20px}.card{border:1px solid var(--line);border-radius:14px;background:#f8fbfd;box-shadow:0 10px 28px rgba(16,60,85,.075);padding:20px;min-width:0}.cardTitle{color:#0b2840;font-size:19px;letter-spacing:-.025em;font-weight:800;margin-bottom:12px}.cardSub{color:#587187;font-size:12px}.tableWrap{overflow:auto;border:1px solid #d4e2eb;border-radius:11px}.table{min-width:760px;border-collapse:separate;border-spacing:0}.table th{position:sticky;top:0;z-index:1;background:#064266;color:white;font-size:12px;font-weight:800;letter-spacing:0;text-transform:none;padding:12px 14px}.table td{padding:12px 14px;border-bottom:1px solid #e4edf2;font-size:13px;color:#183a50}.table tbody tr:nth-child(odd){background:#fff}.table tbody tr:nth-child(even){background:#edf4f8}.table tbody tr:hover{background:#dff2f8}.table tbody tr:last-child td{border-bottom:0}.row{padding:15px 2px;border-bottom:1px solid #e0eaf0}.primary{font-size:14px}.secondary{font-size:12px}.pill{font-size:11px;border-radius:999px;padding:6px 11px}.empty{border-color:#c4dce7;background:#fff;color:#587187}
+.stockGrid{margin-top:20px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}.stockHead{gap:12px}.stockName{font-size:17px}.stockMetrics{gap:10px}.metric{background:#edf4f8;border:1px solid #dce8ef;border-radius:10px;padding:15px}.metricValue{color:#075c7c}.available{color:#16875e}.notice{margin-top:18px;border-radius:12px;border:1px solid #c9e4ed;background:#eaf5f9;color:#2e647c;padding:16px 19px}
+@media(max-width:900px){.stats{grid-template-columns:1fr}.stockGrid{grid-template-columns:1fr}}@media(max-width:650px){.page{padding:12px}.hero{padding:19px}.stats{padding:0 15px 16px}.card{padding:15px}.hero .tag{white-space:normal}}
+
+
+/* V79.1: corrige conflito de especificidade com atel-v77.module.css.
+   A regra V77 '.premium .stats > div' aplicava fundo branco nos KPIs. */
+.page .hero{margin-bottom:0}
+.page .stats{margin-bottom:0}
+.page .stats > .stat{
+  background:linear-gradient(135deg,#075f85,#053557);
+  border:1px solid #0c9cce;
+  box-shadow:none;
+  padding:17px 18px;
+  border-radius:13px;
+  min-height:108px;
+}
+.page .stats > .stat:nth-child(2){
+  background:linear-gradient(135deg,#006553,#034341);
+  border-color:#10b879;
+}
+.page .stats > .stat:nth-child(3){
+  background:linear-gradient(135deg,#443c81,#203663);
+  border-color:#8169df;
+}
+.page .stats > .stat::before{display:none}
+.page .stats > .stat .statLabel{color:#dceef6}
+.page .stats > .stat .statValue{color:#fff}
+.page .stats > .stat .statNote{color:#c2d9e5}

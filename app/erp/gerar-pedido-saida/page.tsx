@@ -34,6 +34,11 @@ export default function GerarPedidoSaida(){
  const [itens,setItens]=useState<Linha[]>([novaLinha()]);
  const [sincronizando,setSincronizando]=useState(false),[syncMsg,setSyncMsg]=useState("");
  const [observacao,setObservacao]=useState(""),[erro,setErro]=useState(""),[ok,setOk]=useState(""),[busy,setBusy]=useState(false),[loading,setLoading]=useState(true);
+ // ATEL_F01_T002_IDEMPOTENCIA: controle por tentativa, sem mudanca de layout.
+ const envioEmAndamentoRef=useRef(false);
+ const chavesTentativaRef=useRef<Map<string,string>>(new Map());
+ const ultimaConclusaoRef=useRef<{assinatura:string;codigo:string}|null>(null);
+ useEffect(()=>{ultimaConclusaoRef.current=null},[origem,destino,prioridade,itens,observacao]);
  useEffect(()=>{let alive=true;(async()=>{try{const db=atelSupabase();if(!db)throw Error("Supabase indisponível");const {data:{session}}=await db.auth.getSession();if(!session)throw Error("Sessão expirada");const r=await fetch("/api/estoque-wms/catalogo",{headers:{Authorization:"Bearer "+session.access_token},cache:"no-store"});const d=await r.json();if(!r.ok)throw Error(d.error||"Catálogo indisponível");if(alive){setLocais(d.locais||[]);setMateriais(d.materiais||[]);setOrigem((d.locais||[]).find((l:Local)=>l.tipo==="cd")?.id||"");}}catch(e){if(alive)setErro(e instanceof Error?e.message:"Falha de conexão")}finally{if(alive)setLoading(false)}})();return()=>{alive=false}},[]);
  useEffect(()=>{let active=true;const timer=window.setTimeout(()=>{if(active)void sincronizarERP()},250);return()=>{active=false;window.clearTimeout(timer)}},[]);
  async function sincronizarERP(){
@@ -56,7 +61,20 @@ export default function GerarPedidoSaida(){
  const todosSeriais=lista.flatMap(i=>i.seriais.map(x=>x.trim().toUpperCase()));
  if(new Set(todosSeriais).size!==todosSeriais.length){setErro("Existem seriais repetidos no pedido.");return;}
  if(!origem||!destino||lista.some(i=>!i.material_id||!Number.isFinite(i.quantidade)||i.quantidade<=0)||new Set(lista.map(i=>i.material_id)).size!==lista.length){setErro("Confira destino, produtos, quantidades e itens duplicados.");return;}
- setBusy(true);try{const db=atelSupabase();if(!db)throw Error("Supabase indisponível");const {data:{session}}=await db.auth.getSession();if(!session)throw Error("Sessão expirada");const {data,error}=await db.rpc("atel_v39_criar_pedido_rastreado",{p_org:org,p_origem:origem,p_destino:destino,p_prioridade:prioridade,p_itens:lista,p_observacao:observacao,p_chave:crypto.randomUUID()});if(error)throw Error(error.message);setOk("Pedido "+data.codigo+" criado no Supabase com rastreabilidade de seriais e metragens. A separação operacional ainda não está integrada.");setItens([novaLinha()]);setObservacao("");}catch(e){setErro(e instanceof Error?e.message:"Falha ao salvar pedido")}finally{setBusy(false)}}
+ if(envioEmAndamentoRef.current)return;envioEmAndamentoRef.current=true;setBusy(true);try{const db=atelSupabase();if(!db)throw Error("Supabase indisponível");const {data:{session}}=await db.auth.getSession();if(!session)throw Error("Sessão expirada"); // Assinatura canonica da tentativa: nao armazena itens ou observacoes no navegador.
+ const assinaturaDados=JSON.stringify({org,origem,destino,prioridade,itens:lista.map(i=>({material_id:i.material_id,quantidade:i.quantidade,seriais:i.seriais.map(s=>s.trim().toUpperCase())})),observacao});
+ const assinatura=Array.from(new Uint8Array(await crypto.subtle.digest("SHA-256",new TextEncoder().encode(assinaturaDados))),b=>b.toString(16).padStart(2,"0")).join("");
+ if(ultimaConclusaoRef.current?.assinatura===assinatura){setOk("Pedido "+ultimaConclusaoRef.current.codigo+" ja confirmado nesta tentativa. Nenhum novo pedido foi criado.");return;}
+ const chaveSessao="atel:f01:t002:"+org+":"+session.user.id+":"+assinatura;
+ let chaveIdempotencia=chavesTentativaRef.current.get(chaveSessao);
+ if(!chaveIdempotencia){try{const salva=window.sessionStorage.getItem(chaveSessao);if(salva&&/^[0-9a-f]{8}(-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i.test(salva))chaveIdempotencia=salva;}catch{}}
+ if(!chaveIdempotencia){chaveIdempotencia=crypto.randomUUID();try{window.sessionStorage.setItem(chaveSessao,chaveIdempotencia);}catch{}}
+ chavesTentativaRef.current.set(chaveSessao,chaveIdempotencia);
+const {data,error}=await db.rpc("atel_v39_criar_pedido_rastreado",{p_org:org,p_origem:origem,p_destino:destino,p_prioridade:prioridade,p_itens:lista,p_observacao:observacao,p_chave:chaveIdempotencia});if(error)throw Error(error.message);
+ ultimaConclusaoRef.current={assinatura,codigo:String(data.codigo)};
+ chavesTentativaRef.current.delete(chaveSessao);
+ try{window.sessionStorage.removeItem(chaveSessao);}catch{}
+ setOk("Pedido "+data.codigo+" criado no Supabase com rastreabilidade de seriais e metragens. A separação operacional ainda não está integrada.");setItens([novaLinha()]);setObservacao("");}catch(e){setErro(e instanceof Error?e.message:"Falha ao salvar pedido")}finally{envioEmAndamentoRef.current=false;setBusy(false)}}
  return <main className={styles.root}>
  <header className={styles.hero}><div className={styles.heroText}><div className={styles.kicker}><span className={styles.kickerIcon}><ClipboardList size={15}/></span> OPERAÇÕES ERP / WMS <span className={styles.kickerLine}/></div><h1>Gerar Pedido <span>de Saída</span></h1><p>Emissão de pedidos de abastecimento do CD Principal para mini-CDs, depósitos e técnicos, com catálogo real e rastreabilidade operacional.</p><div className={styles.heroTags}><span><ShieldCheck size={13}/> Segurança transacional</span><span><Database size={13}/> Catálogo Supabase</span><span><ClipboardList size={13}/> Abastecimento WMS</span></div></div><div className={styles.heroArt} aria-hidden="true"><div className={styles.orbit}><Warehouse size={35}/></div><span className={styles.artLine}/><div className={styles.orbitSmall}><Truck size={24}/></div><div className={styles.artLabel}>FLUXO DE ABASTECIMENTO <strong>ERP → WMS</strong></div></div></header>
  <div className={styles.sectionLabel}><span>VISÃO GERAL</span><div/></div>

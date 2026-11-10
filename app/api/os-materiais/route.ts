@@ -17,7 +17,7 @@ async function contexto(req: NextRequest) {
   if (!token || !url || !key) return null;
   const db = createClient(url, key, { global: { headers: { Authorization: `Bearer ${token}` } }, auth: { persistSession: false, autoRefreshToken: false } });
   const { data, error } = await db.auth.getUser(token);
-  if (error || !data.user || data.user.email?.toLowerCase() !== "teste@wmsexpert.com.br") return null;
+  if (error || !data.user) return null;
   return { db, userId: data.user.id, tecnico: 4157 };
 }
 async function autorizado(req: NextRequest, atendimento: number) {

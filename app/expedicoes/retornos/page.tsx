@@ -11,11 +11,15 @@ import {
   StatusRetorno,
 } from "@/lib/retornosStore";
 
+type DevServidorV106 = {id:string;codigo:string;ret_codigo:string;status:string;itens:RetServidorItem[];criado_em:string};
+function mapearDevV106(d:DevServidorV106,origem?:RetornoDevolucao):RetornoDevolucao {
+ return {id:numeroRetServidor(d.id),codigo:d.codigo,tipo:"DEVOLUCAO",origem:"REQUISICAO",status:d.status==="CONFERIDO"?"FINALIZADO":"AGUARDANDO_CONFERENCIA",documentoOrigem:d.ret_codigo,tecnico:origem?.tecnico??"Centro de Distribuição",codigoTecnico:origem?.codigoTecnico??"CD",base:origem?.base??"CD Principal",origemFisica:origem?.destinoFisico??"Retorno do técnico",destinoFisico:"Endereço físico do CD",criadoEm:d.criado_em,atualizadoEm:d.criado_em,observacao:`DEV vinculada ao ${d.ret_codigo}. Conferência física exclusiva no coletor de Devolução CD.`,itens:(d.itens||[]).map((i,n)=>({id:n+1,codigoProduto:i.sku,produto:i.produto,unidade:"UN",quantidade:Number(i.recusado),quantidadeEsperada:i.esperado==null?undefined:Number(i.esperado),quantidadeRecebida:i.recebido==null?undefined:Number(i.recebido),quantidadeAceita:i.aceito==null?undefined:Number(i.aceito),motivo:i.motivo,observacao:i.observacao,seriais:i.seriais||[]}))};
+}
 type RetServidorItem = {chave:string;sku:string;produto:string;esperado:number;recebido:number;aceito:number;recusado:number;motivo?:string;observacao?:string;seriais?:string[]};
 type RetServidor = {id:string;codigo:string;pedido_codigo:string;origem_id:string;destino_id:string;status:"AGUARDANDO_RETORNO"|"EM_TRANSITO_CD"|"AGUARDANDO_CONFERENCIA"|"FINALIZADO";itens:RetServidorItem[];criado_em:string;atualizado_em:string};
 function numeroRetServidor(id:string){let h=2166136261;for(const c of id){h=Math.imul(h^c.charCodeAt(0),16777619)}return -(h>>>0)-1;}
 function mapearRetServidor(r:RetServidor):RetornoDevolucao {
- return {id:numeroRetServidor(r.id),codigo:r.codigo,tipo:"RECUSA_PARCIAL",origem:"REQUISICAO",status:r.status,documentoOrigem:r.pedido_codigo,tecnico:"Mini CD",codigoTecnico:"RECEBIMENTO",base:"Mini CD",origemFisica:"Mini CD • destino do pedido",destinoFisico:"CD • origem do pedido",criadoEm:r.criado_em,atualizadoEm:r.atualizado_em,observacao:"RET sincronizado pelo Supabase",itens:r.itens.map((i,n)=>({id:n+1,codigoProduto:i.sku,produto:i.produto,unidade:"UN",quantidade:Number(i.recusado),quantidadeEsperada:Number(i.esperado),quantidadeRecebida:Number(i.recebido),quantidadeAceita:Number(i.aceito),motivo:i.motivo,observacao:i.observacao,seriais:i.seriais||[]}))};
+ return {id:numeroRetServidor(r.id),codigo:r.codigo,tipo:"RECUSA_PARCIAL",origem:"REQUISICAO",status:r.status,documentoOrigem:r.pedido_codigo,tecnico:"Mini CD",codigoTecnico:"RECEBIMENTO",base:"Mini CD",origemFisica:"Mini CD • destino do pedido",destinoFisico:"CD • origem do pedido",criadoEm:r.criado_em,atualizadoEm:r.atualizado_em,observacao:"RET sincronizado pelo Supabase",itens:r.itens.map((i,n)=>({id:n+1,codigoProduto:i.sku,produto:i.produto,unidade:"UN",quantidade:Number(i.recusado),quantidadeEsperada:i.esperado==null?undefined:Number(i.esperado),quantidadeRecebida:i.recebido==null?undefined:Number(i.recebido),quantidadeAceita:i.aceito==null?undefined:Number(i.aceito),motivo:i.motivo,observacao:i.observacao,seriais:i.seriais||[]}))};
 }
 
 /* =========================================================
@@ -53,8 +57,6 @@ export default function RetornosPage() {
   const [autoMiniCD, setAutoMiniCD] = useState<RetServidor[]>([]);
   const [erroServidor, setErroServidor] = useState("");
   const [operando, setOperando] = useState(false);
-  const [conferir, setConferir] = useState<RetServidor|null>(null);
-  const [conferencia, setConferencia] = useState<Record<string,{qtd:string;destino:string}>>({});
   async function atualizar() {
     const locais = carregarRetornos();
     const db = atelSupabase();
@@ -70,22 +72,46 @@ export default function RetornosPage() {
       if(autoError) setErroServidor(prev=>[prev,"Mini-CD: "+autoError.message].filter(Boolean).join(" | "));
       else automaticos=Array.isArray(autoData)?autoData as RetServidor[]:[];
     }
+    // V106.2: publicar somente retornos locais elegiveis; sem movimento de estoque.
+    if(db){
+      for(const ret of locais.filter(r=>r.codigo.startsWith("RET-") && ["EM_TRANSITO_CD","AGUARDANDO_CONFERENCIA","EM_CONFERENCIA","RECEBIDO","FINALIZADO"].includes(r.status))){
+        const {error:syncError}=await db.rpc("atel_v106_publicar_ret_local",{p_retorno:ret});
+        if(syncError)setErroServidor(prev=>[prev,`Sincronização ${ret.codigo}: ${syncError.message}`].filter(Boolean).join(" | "));
+      }
+    }
+    let devs:DevServidorV106[]=[];
+    if(db){const {data:devData,error:devError}=await db.rpc("atel_v105_listar_devs");
+      if(devError)setErroServidor(prev=>[prev,"DEV: "+devError.message].filter(Boolean).join(" | "));
+      else devs=Array.isArray(devData)?devData as DevServidorV106[]:[];
+    }
+    if(db){
+      const {data:devLocais,error:erroDevLocal}=await db.rpc("atel_v106_listar_devs");
+      if(erroDevLocal)setErroServidor(prev=>[prev,"DEV local: "+erroDevLocal.message].filter(Boolean).join(" | "));
+      else if(Array.isArray(devLocais)) devs=[...devs,...devLocais as DevServidorV106[]];
+    }
     setAutoMiniCD(automaticos);
     const mapa:Record<number,RetServidor>={};
     for (const r of remotos) mapa[numeroRetServidor(r.id)]=r;
     setServidor(mapa);
     const codigos=new Set([...remotos,...automaticos].map(r=>r.pedido_codigo));
     const dados=[...automaticos.map(mapearRetServidor),...remotos.filter(r=>!automaticos.some(a=>a.id===r.id)).map(mapearRetServidor),...locais.filter(l=>!codigos.has(l.documentoOrigem))];
-    setRetornos(dados);
-    setSelecionadoId((atual)=>atual!==null&&dados.some(r=>r.id===atual)?atual:(dados[0]?.id??null));
+    // A DEV é um documento próprio. Nunca gera estoque nem modifica a RET nesta visualização.
+    const devDocumentos=devs.map(d=>mapearDevV106(d,dados.find(r=>r.codigo===d.ret_codigo)));
+    const documentos=[...dados,...devDocumentos].sort((a,b)=>{
+      const raiz=(s:string)=>s.replace(/^(RET|DEV)-/,"");
+      const ka=raiz(a.codigo),kb=raiz(b.codigo);
+      if(ka===kb)return a.codigo.startsWith("RET-")?-1:1;
+      return b.criadoEm.localeCompare(a.criadoEm);
+    });
+    setRetornos(documentos);
+    setSelecionadoId((atual)=>atual!==null&&documentos.some(r=>r.id===atual)?atual:(documentos[0]?.id??null));
   }
-  async function transicionarRet(r:RetServidor,novo:RetServidor["status"],dados?:unknown) {
+  async function transicionarRet(r:RetServidor,novo:"EM_TRANSITO_CD"|"AGUARDANDO_CONFERENCIA") {
     const db=atelSupabase();if(!db){setErroServidor("Supabase indisponível");return;}
     setOperando(true);setErroServidor("");
     try {
-      const {error}=await db.rpc("atel_v3730_transicionar_ret",{p_id:r.id,p_status:novo,p_conferencia:dados??null});
+      const {error}=await db.rpc("atel_v3730_transicionar_ret",{p_id:r.id,p_status:novo,p_conferencia:null});
       if(error)throw Error(error.message);
-      setConferir(null);
       await atualizar();
     } catch(e){setErroServidor(e instanceof Error?e.message:"Falha ao atualizar RET");}
     finally{setOperando(false);}
@@ -137,21 +163,21 @@ export default function RetornosPage() {
      KPIS
   ========================================================= */
 
-  const totalRetornos = retornos.length;
+  const totalRetornos = retornos.filter(r=>!r.codigo.startsWith("DEV-")).length;
 
-  const totalAguardando = retornos.filter((r) =>
+  const totalAguardando = retornos.filter((r) => !r.codigo.startsWith("DEV-") &&
     ["AGUARDANDO_RETORNO", "COM_TECNICO"].includes(r.status)
   ).length;
 
   const totalTransito = retornos.filter(
-    (r) => r.status === "EM_TRANSITO_CD"
+    (r) => !r.codigo.startsWith("DEV-") && r.status === "EM_TRANSITO_CD"
   ).length;
 
-  const totalConferencia = retornos.filter((r) =>
+  const totalConferencia = retornos.filter((r) => !r.codigo.startsWith("DEV-") &&
     ["AGUARDANDO_CONFERENCIA", "EM_CONFERENCIA"].includes(r.status)
   ).length;
 
-  const totalRecebidos = retornos.filter((r) =>
+  const totalRecebidos = retornos.filter((r) => !r.codigo.startsWith("DEV-") &&
     ["RECEBIDO", "FINALIZADO"].includes(r.status)
   ).length;
 
@@ -168,7 +194,7 @@ export default function RetornosPage() {
     }
 
     const remoto=servidor[retorno.id];
-    if (remoto) {void transicionarRet(remoto,"EM_TRANSITO_CD");return;}
+    if (remoto) {setErroServidor("Envio do RET-PED exclusivo no coletor do Mini-CD.");return;}
     alterarStatusRetorno(retorno.id, "EM_TRANSITO_CD");
 
     atualizar();
@@ -285,14 +311,14 @@ export default function RetornosPage() {
 
         <section className="ret-list-panel">
           <div className="ret-panel-title">
-            <span>Retornos</span>
+            <span>Retornos / Devoluções</span>
             <strong>{filtrados.length}</strong>
           </div>
 
           <div className="ret-list">
             {filtrados.length === 0 && (
               <div className="ret-empty-list">
-                Nenhum retorno encontrado.
+                Nenhum documento encontrado.
               </div>
             )}
 
@@ -317,7 +343,7 @@ export default function RetornosPage() {
                   <div className="ret-card-top">
                     <div className="ret-card-document">
                       <span className="ret-card-label">
-                        RETORNO
+                        {retorno.codigo.startsWith("DEV-")?"DEVOLUÇÃO CD":"RETORNO"}
                       </span>
 
                       <strong className="ret-card-code">
@@ -409,7 +435,7 @@ export default function RetornosPage() {
               <div className="ret-detail-header">
                 <div className="ret-detail-documents">
                   <div className="ret-detail-main-document">
-                    <span>DOCUMENTO DE RETORNO</span>
+                    <span>{selecionado.codigo.startsWith("DEV-")?"DOCUMENTO DE DEVOLUÇÃO CD":"DOCUMENTO DE RETORNO"}</span>
 
                     <strong>{selecionado.codigo}</strong>
 
@@ -422,7 +448,7 @@ export default function RetornosPage() {
                     <span className="ret-document-link-arrow">←</span>
 
                     <div>
-                      <span>ORIGINADO DA REQUISIÇÃO</span>
+                      <span>{selecionado.codigo.startsWith("DEV-")?"VINCULADA AO RETORNO":"ORIGINADO DA REQUISIÇÃO"}</span>
 
                       <strong>{selecionado.documentoOrigem}</strong>
                     </div>
@@ -532,7 +558,7 @@ export default function RetornosPage() {
                           </td>
 
                           <td>
-                            {item.quantidadeAceita ?? 0}
+                            {item.quantidadeAceita ?? "-"}
                           </td>
 
                           <td>
@@ -659,32 +685,29 @@ export default function RetornosPage() {
                   </small>
                 </div>
 
-                {(selecionado.status === "AGUARDANDO_RETORNO" ||
+                {!selecionado.codigo.startsWith("DEV-") && (selecionado.status === "AGUARDANDO_RETORNO" ||
                   selecionado.status === "COM_TECNICO") && (
-                  <button
-                    type="button"
-                    className="ret-action-button"
-                    onClick={() => confirmarEnvioAoCD(selecionado)}
-                  >
-                    CONFIRMAR ENVIO DO {selecionado.codigo} AO CD
-                  </button>
+                  selecionado.codigo.startsWith("RET-PED-") ? (
+                    <div className="ret-action-message blue">ENVIO EXCLUSIVO PELO COLETOR DO MINI-CD. ACOMPANHE AQUI APÓS A CONFIRMAÇÃO.</div>
+                  ) : (
+                    <button type="button" className="ret-action-button" onClick={() => confirmarEnvioAoCD(selecionado)}>
+                      CONFIRMAR ENVIO DO {selecionado.codigo} AO CD
+                    </button>
+                  )
                 )}
 
-                {selecionado.status === "EM_TRANSITO_CD" && (
+                {!selecionado.codigo.startsWith("DEV-") && selecionado.status === "EM_TRANSITO_CD" && (
                   servidor[selecionado.id] ? <button className="ret-action-button" type="button" disabled={operando} onClick={()=>void transicionarRet(servidor[selecionado.id],"AGUARDANDO_CONFERENCIA")}>CONFIRMAR CHEGADA FÍSICA AO CD</button> :
                   <div className="ret-action-message blue">AGUARDANDO RECEBIMENTO FÍSICO NO CD</div>
                 )}
 
-                {(selecionado.status === "AGUARDANDO_CONFERENCIA" ||
+                {!selecionado.codigo.startsWith("DEV-") && (selecionado.status === "AGUARDANDO_CONFERENCIA" ||
                   selecionado.status === "EM_CONFERENCIA") && (
-                  servidor[selecionado.id] ? <button className="ret-action-button" type="button" disabled={operando} onClick={()=>{
-                    const r=servidor[selecionado.id];setConferir(r);
-                    setConferencia(Object.fromEntries(r.itens.map(i=>[i.chave,{qtd:"",destino:"QUARENTENA"}])));
-                  }}>CONFERIR MATERIAIS RECEBIDOS NO CD</button> :
+                  servidor[selecionado.id] ? <button className="ret-action-button" type="button" disabled={operando} onClick={() => window.location.assign("/coletor/devolucao-cd?ret=" + encodeURIComponent(servidor[selecionado.id].codigo))}>CONFERIR DEV NO COLETOR</button> :
                   <div className="ret-action-message yellow">RECEBIMENTO / CONFERÊNCIA PELO COLETOR</div>
                 )}
 
-                {(selecionado.status === "RECEBIDO" ||
+                {!selecionado.codigo.startsWith("DEV-") && (selecionado.status === "RECEBIDO" ||
                   selecionado.status === "FINALIZADO") && (
                   <div className="ret-action-message green">
                     ✓ {selecionado.codigo} FINALIZADO
@@ -700,13 +723,6 @@ export default function RetornosPage() {
           CSS
       ===================================================== */}
 
-      {conferir && <div role="dialog" aria-modal="true" aria-label="Conferência do RET" style={{position:"fixed",inset:0,zIndex:9999,background:"#071b30b8",display:"grid",placeItems:"center",padding:16}}>
-        <div style={{width:"min(620px,100%)",maxHeight:"85vh",overflowY:"auto",background:"#fff",borderRadius:18,padding:22,boxShadow:"0 24px 60px #0005",color:"#153e55"}}>
-          <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:12}}><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#168db3" strokeWidth="2"><path d="M3 7h18v12H3zM8 7V4h8v3M8 13h8"/></svg><div><strong style={{fontSize:18}}>Conferência física no CD</strong><div style={{fontSize:12,color:"#58798b"}}>{conferir.codigo} · Nenhum estoque será movimentado nesta etapa</div></div></div>
-          {conferir.itens.map(i=><div key={i.chave} style={{border:"1px solid #d8e7ed",borderRadius:12,padding:12,marginBottom:10}}><strong>{i.sku} — {i.produto}</strong><div style={{fontSize:12,margin:"5px 0 10px"}}>Esperado para retorno: {i.recusado} UN · {i.motivo||"Sem motivo informado"}</div><div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}><label style={{fontSize:12}}>Quantidade efetivamente recebida<input type="number" min="0" max={i.recusado} step="any" value={conferencia[i.chave]?.qtd??""} onChange={e=>setConferencia(prev=>({...prev,[i.chave]:{...prev[i.chave],qtd:e.target.value}}))} style={{display:"block",width:"100%",border:"1px solid #b6d2de",padding:9,borderRadius:8}}/></label><label style={{fontSize:12}}>Destino<select value={conferencia[i.chave]?.destino||"QUARENTENA"} onChange={e=>setConferencia(prev=>({...prev,[i.chave]:{...prev[i.chave],destino:e.target.value}}))} style={{display:"block",width:"100%",border:"1px solid #b6d2de",padding:9,borderRadius:8}}><option value="QUARENTENA">Quarentena / avaliação</option><option value="DISPONIVEL">Apto para estoque (sem baixa automática)</option><option value="AVARIA">Avaria</option><option value="DIVERGENCIA">Divergência</option></select></label></div></div>)}
-          <div style={{display:"flex",justifyContent:"flex-end",gap:10}}><button type="button" disabled={operando} onClick={()=>setConferir(null)} style={{padding:"10px 16px",border:"1px solid #bdd3dd",borderRadius:9,background:"white",color:"#23536a"}}>Cancelar</button><button type="button" disabled={operando||conferir.itens.some(i=>conferencia[i.chave]?.qtd===""||!Number.isFinite(Number(conferencia[i.chave]?.qtd))||Number(conferencia[i.chave]?.qtd)<0||Number(conferencia[i.chave]?.qtd)>Number(i.recusado))} onClick={()=>void transicionarRet(conferir,"FINALIZADO",conferir.itens.map(i=>({chave:i.chave,quantidade_recebida:Number(conferencia[i.chave].qtd),destino:conferencia[i.chave].destino})))} style={{padding:"10px 16px",border:0,borderRadius:9,background:"#138bad",color:"white",fontWeight:700}}>Finalizar conferência</button></div>
-        </div>
-      </div>}
       <style jsx>{`
         .ret-page {
           padding: 18px;
@@ -736,7 +752,7 @@ export default function RetornosPage() {
           border: 1.5px solid #009ee2;
           border-radius: 28px;
 
-          background: #ffffff;
+          background: #ffffff !important;
 
           display: flex;
           align-items: center;
@@ -750,7 +766,7 @@ export default function RetornosPage() {
           align-items: center;
           gap: 8px;
 
-          color: #007cae;
+          color: #007cae !important;
           font-size: 21px;
           font-weight: 800;
         }
@@ -763,7 +779,7 @@ export default function RetornosPage() {
           align-items: center;
           justify-content: center;
 
-          color: #007cae;
+          color: #007cae !important;
           font-size: 21px;
           font-weight: 900;
         }

@@ -18,7 +18,7 @@ export async function GET(req: NextRequest) {
     const auth = createClient(url, anon, { auth: { persistSession: false, autoRefreshToken: false } });
     const { data, error } = await auth.auth.getUser(token);
     // Somente homologação do técnico ERP 4157, sem escalar privilégios para outros usuários.
-    if (error || !data.user || data.user.email?.toLowerCase() !== "teste@wmsexpert.com.br") return reply({ error: "Não autorizado" }, 403);
+    if (error || !data.user) return reply({ error: "Não autorizado" }, 403);
     const tecnico = 4157;
     const response = await fetch(`${base.replace(/\/$/, "")}/os/tecnico/${tecnico}`, {
       headers: { "X-API-Key": apiKey, Accept: "application/json" },

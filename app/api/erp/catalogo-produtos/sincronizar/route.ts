@@ -48,19 +48,19 @@ export async function POST(req: NextRequest) {
       if (!mapa.has(sku)) mapa.set(sku, { organizacao_id: ORG, sku, descricao, unidade: "UN" });
     }
     if (!mapa.size) return json({ error: "O ERP não retornou produtos válidos; nenhum cadastro foi alterado" }, 422);
-    // Apenas inserir códigos inexistentes. Nunca substituir descrição/unidade de cadastro existente.
-    // ignoreDuplicates usa a restrição UNIQUE (organizacao_id,sku), inclusive em chamadas repetidas.
+    // O endpoint /inventario/usuario/{id} e estoque de tecnico, nao catalogo mestre.
+    // NAO gravar em materiais nem em produto do WMS a partir desta fonte.
     const produtos = [...mapa.values()];
-    let novos = 0;
-    for (let i = 0; i < produtos.length; i += 100) {
-      const lote = produtos.slice(i, i + 100);
-      const { data, error } = await db.from("materiais").upsert(lote, {
-        onConflict: "organizacao_id,sku", ignoreDuplicates: true
-      }).select("id");
-      if (error) return json({ error: `Falha ao persistir catálogo: ${error.message}. Verifique os produtos gravados antes de repetir.` }, 500);
-      novos += data?.length ?? 0;
-    }
-    return json({ linhasERP: payload.length, codigosUnicos: produtos.length, novos, ignorados, fonte: `inventario/usuario/${TECNICO}`, persistido: true });
+    return json({
+      modo: "DIAGNOSTICO_SEM_GRAVACAO",
+      fonte: `inventario/usuario/${TECNICO}`,
+      linhasERP: payload.length,
+      codigosUnicos: produtos.length,
+      ignorados,
+      amostra: produtos.slice(0, 10).map(({ sku, descricao }) => ({ codigoproduto: sku, nome: descricao })),
+      persistido: false,
+      motivo: "Fonte disponivel e inventario do tecnico, nao catalogo mestre de produtos; sincronizacao WMS requer fonte oficial e conexao ao PostgreSQL legado."
+    });
   } catch (e) {
     return json({ error: e instanceof Error && e.name === "AbortError" ? "Tempo limite ao consultar ERP" : "Falha na sincronização do catálogo ERP" }, 502);
   }

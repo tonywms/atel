@@ -1,0 +1,22 @@
+/* Extensões locais: layout base vem do mesmo módulo usado por /ativos. */
+.cardHeading{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:18px}
+.refresh,.pagination button{border:1px solid #cbdde8;background:#f0f7fb;color:#075676;border-radius:9px;padding:10px 14px;font-size:12px;font-weight:700;cursor:pointer}
+.refresh:hover,.pagination button:hover:not(:disabled){background:#e0f0f8}
+.refresh:disabled,.pagination button:disabled{opacity:.48;cursor:not-allowed}
+.filters{display:grid;grid-template-columns:minmax(160px,1fr) minmax(240px,2.2fr) minmax(130px,.8fr);gap:14px;margin:14px 0 20px}
+.filters label{display:flex;flex-direction:column;gap:7px;color:#58738c;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.09em}
+.filters input,.filters select{width:100%;height:40px;border:1px solid #d5e2eb;border-radius:8px;padding:0 12px;background:#fff;color:#16354b;font-size:13px;font-weight:500;letter-spacing:normal;text-transform:none;outline:none}
+.filters input:focus,.filters select:focus{border-color:#1585b4;box-shadow:0 0 0 3px #0e88b21a}
+.filters input:disabled{background:#f1f4f6;color:#8b9ba7}
+.footer{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-top:18px;color:#688096;font-size:12px}
+.pagination{display:flex;align-items:center;gap:9px}
+.source{font-size:13px;font-weight:750;color:#006b90;margin:14px 0 9px;overflow-wrap:anywhere}
+.muted{font-size:13px;color:#90a4b2;font-weight:500}
+.code{font-family:ui-monospace,SFMono-Regular,Consolas,monospace;color:#075f81;font-weight:700}
+.productName{font-weight:700;color:#12374f}
+.status{display:inline-block;border-radius:100px;padding:5px 9px;font-size:10px;font-weight:800;background:#e9f4f9;color:#00617e}
+.statusNo{background:#f2f5f7;color:#7c8b98}
+.statusYes{background:#e4f5ee;color:#177450}
+.error{border:1px solid #f0c6c6;background:#fff2f2;color:#a33232;padding:12px 14px;border-radius:8px;margin-bottom:16px;font-size:13px}
+.empty{text-align:center;padding:28px!important;color:#6b8295}
+@media(max-width:850px){.filters{grid-template-columns:1fr}.cardHeading,.footer{flex-direction:column;align-items:stretch}.pagination{flex-wrap:wrap}}

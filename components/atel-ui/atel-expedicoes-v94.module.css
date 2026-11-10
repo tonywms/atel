@@ -1,0 +1,214 @@
+/* ATEL V94 — extensao do Design System V90/V91, SEM NOVO TEMA.
+   As variaveis abaixo sao herdadas de atel-tokens.module.css (fonte unica).
+   Escopo: cinco rotas de Expedicoes. Nao modifica Gestao, APIs nem eventos. */
+.shell {
+  box-sizing: border-box;
+  min-width: 0;
+  width: 100%;
+  color: var(--atel-text);
+  background: linear-gradient(155deg,#f1f6fa 0%,#eaf2f8 58%,#f4f8fb 100%);
+  border-radius: var(--atel-radius-panel);
+  --atel-v94-hero: radial-gradient(ellipse at 85% 0%,var(--atel-hero-glow),transparent 48%),linear-gradient(var(--atel-hero-angle),var(--atel-hero-start),var(--atel-hero-mid) 56%,var(--atel-hero-end));
+  --atel-v94-card: linear-gradient(var(--atel-metric-angle),var(--atel-metric-blue-start),var(--atel-metric-blue-end));
+  --atel-v94-shadow: 0 8px 23px rgba(15,60,85,.07);
+}
+.shell :global(*), .shell :global(*::before), .shell :global(*::after) { box-sizing: border-box; }
+.shell :global(button), .shell :global(a), .shell :global(input), .shell :global(select), .shell :global(textarea) { font-family: inherit; }
+.shell :global(button:focus-visible), .shell :global(a:focus-visible), .shell :global(input:focus-visible), .shell :global(select:focus-visible), .shell :global(textarea:focus-visible) { outline: 2px solid var(--atel-accent);outline-offset: 2px; }
+
+/* 01 — OS Adapter: mesma hero, KPIs, paineis e tabela do V93. */
+.adapter > :global(div) { max-width:1680px; width:100%; margin:0 auto; padding:20px 24px 34px; }
+.adapter > :global(div) > :global(header) {
+  background:var(--atel-v94-hero); color:var(--atel-on-dark);
+  border:1px solid rgba(31,151,191,.35);border-radius:var(--atel-radius-panel) var(--atel-radius-panel) 0 0;
+  box-shadow:0 14px 30px rgba(2,33,53,.12);padding:24px 27px 27px;margin-bottom:0;
+}
+.adapter > :global(div) > :global(header) :global(h1) { color:var(--atel-on-dark);font-size:clamp(25px,2.2vw,34px);letter-spacing:-.03em; }
+.adapter > :global(div) > :global(header) :global(p) { color:#d3e6f0; }
+.adapter > :global(div) > :global(header) :global(span) { color:#67d9ed; }
+.adapter > :global(div) > :global(header) :global(a) { background:rgba(255,255,255,.09);color:#e5f7ff;border:1px solid rgba(136,204,228,.43);border-radius:11px; }
+.adapter > :global(div) > :global(header) + :global(div) { background:var(--atel-hero-mid);border-radius:0 0 var(--atel-radius-panel) var(--atel-radius-panel);padding:0 18px 19px;margin-bottom:17px;gap:11px; }
+.adapter > :global(div) > :global(header) + :global(div) > :global(div) { border-radius:var(--atel-radius-card);background:var(--atel-v94-card);border:1px solid var(--atel-metric-blue-border);box-shadow:none;padding:16px; }
+.adapter > :global(div) > :global(header) + :global(div) > :global(div:nth-child(2)) { background:linear-gradient(var(--atel-metric-angle),#81551c,#523b23);border-color:#dba34d; }
+.adapter > :global(div) > :global(header) + :global(div) > :global(div:nth-child(3)) { background:linear-gradient(var(--atel-metric-angle),var(--atel-metric-green-start),var(--atel-metric-green-end));border-color:var(--atel-metric-green-border); }
+.adapter > :global(div) > :global(header) + :global(div) :global(small) { color:#dbeef7; }
+.adapter > :global(div) > :global(header) + :global(div) :global(strong) { color:var(--atel-on-dark);font-size:clamp(23px,2.3vw,30px);font-weight:800; }
+.adapter > :global(div) > :global(section) { background:var(--atel-surface);border:1px solid var(--atel-border);border-radius:var(--atel-radius-card);box-shadow:var(--atel-v94-shadow);padding:21px 24px;margin-bottom:15px;min-width:0; }
+.adapter :global(section > div:first-child > strong) { color:var(--atel-primary); }
+.adapter :global(section h2) { color:var(--atel-primary); }
+.adapter :global(section input:not([type=checkbox])),.adapter :global(section select),.adapter :global(section textarea) { background:var(--atel-surface);border:1px solid var(--atel-border);border-radius:11px;min-height:39px;color:var(--atel-text); }
+.adapter :global(section button[type=button]) { border-radius:11px; }
+.adapter :global(section button:not(:disabled):hover) { filter:brightness(.97); }
+.adapter :global(section table) {width:100%;border-collapse:collapse;}
+.adapter :global(section th) {background:var(--atel-table-header);color:var(--atel-on-dark);padding:12px 10px;font-weight:750;}
+.adapter :global(section td) {padding:12px 10px;border-bottom:1px solid var(--atel-border);}
+
+/* 02 — Regularizacao: usa os MESMOS tokens; sobrepoe somente a subrota. */
+.regularizacao {background:transparent;}
+.regularizacao > :global(main) { max-width:1680px;width:100%;margin:0 auto;padding:20px 24px 34px;color:var(--atel-text); }
+.regularizacao > :global(main) > :global(header) {background:var(--atel-v94-hero);color:var(--atel-on-dark);border:1px solid rgba(31,151,191,.35);border-radius:var(--atel-radius-panel) var(--atel-radius-panel) 0 0;padding:24px 27px;box-shadow:0 12px 26px rgba(2,33,53,.1); }
+.regularizacao > :global(main) > :global(header) :global(h1) {color:var(--atel-on-dark);font-size:clamp(25px,2.2vw,34px);}
+.regularizacao > :global(main) > :global(header) :global(p) {color:#d3e6f0;}
+.regularizacao > :global(main) > :global(header) :global(small) {color:#67d9ed;}
+.regularizacao > :global(main) > :global(header) :global(a) {background:rgba(255,255,255,.09);color:#e5f7ff;border-color:rgba(136,204,228,.43);}
+.regularizacao > :global(main) > :global(header) + :global(div) {background:var(--atel-hero-mid);padding:0 18px 18px;margin:0 0 18px;gap:11px;border-radius:0 0 var(--atel-radius-panel) var(--atel-radius-panel);}
+.regularizacao > :global(main) > :global(header) + :global(div) > :global(div) {background:var(--atel-v94-card);border:1px solid var(--atel-metric-blue-border);border-radius:var(--atel-radius-card);padding:15px;}
+.regularizacao > :global(main) > :global(header) + :global(div) > :global(div:nth-child(2)) {background:linear-gradient(var(--atel-metric-angle),var(--atel-metric-violet-start),var(--atel-metric-violet-end));border-color:var(--atel-metric-violet-border);}
+.regularizacao > :global(main) > :global(header) + :global(div) > :global(div:nth-child(3)) {background:linear-gradient(var(--atel-metric-angle),var(--atel-metric-green-start),var(--atel-metric-green-end));border-color:var(--atel-metric-green-border);}
+.regularizacao > :global(main) > :global(header) + :global(div) :global(strong),.regularizacao > :global(main) > :global(header) + :global(div) :global(small) {color:var(--atel-on-dark);}
+.regularizacao > :global(main) > :global(section) {background:#fff;border:1px solid var(--atel-border);border-radius:var(--atel-radius-card);box-shadow:var(--atel-v94-shadow);padding:22px;margin-bottom:14px;}
+.regularizacao :global(main section h2) {color:var(--atel-primary);}
+.regularizacao :global(main section input),.regularizacao :global(main section select),.regularizacao :global(main section textarea) {border:1px solid var(--atel-border);border-radius:11px;min-height:39px;}
+.regularizacao :global(main section button) {border-radius:11px;}
+
+/* 03 — Retornos: preserva lista, estados e eventos, aplica V93 nos blocos existentes. */
+.shell.retornos :global(.ret-page) {max-width:1680px;margin:0 auto;padding:20px 24px 34px;min-width:0;}
+.shell.retornos :global(.ret-kpis) {padding:17px;gap:11px;background:var(--atel-hero-mid);border-radius:var(--atel-radius-panel);box-shadow:0 12px 25px rgba(2,33,53,.1);}
+.shell.retornos :global(.ret-kpis) > :global(div) {background:var(--atel-v94-card) !important;border:1px solid var(--atel-metric-blue-border) !important;border-radius:var(--atel-radius-card) !important;min-width:0;}
+.shell.retornos :global(.ret-kpis) > :global(div:nth-child(2)) {background:linear-gradient(var(--atel-metric-angle),var(--atel-metric-green-start),var(--atel-metric-green-end)) !important;border-color:var(--atel-metric-green-border) !important;}
+.shell.retornos :global(.ret-kpis) > :global(div:nth-child(3)) {background:linear-gradient(var(--atel-metric-angle),#81551c,#523b23) !important;border-color:#dba34d !important;}
+.shell.retornos :global(.ret-kpis) > :global(div:nth-child(4)) {background:linear-gradient(var(--atel-metric-angle),var(--atel-metric-violet-start),var(--atel-metric-violet-end)) !important;border-color:var(--atel-metric-violet-border) !important;}
+.shell.retornos :global(.ret-kpis) > :global(div:nth-child(5)) {background:linear-gradient(var(--atel-metric-angle),var(--atel-metric-green-start),var(--atel-metric-green-end)) !important;border-color:var(--atel-metric-green-border) !important;}
+.shell.retornos :global(.ret-kpis) > :global(div) > :global(div:first-child) {background:transparent !important;color:#dbeef7 !important;}
+.shell.retornos :global(.ret-kpis) > :global(div) :global(strong) {color:var(--atel-on-dark) !important;font-weight:800 !important;}
+.shell.retornos :global(.ret-kpis) > :global(div) :global(span) {color:#d0e6ed !important;}
+.shell.retornos :global(.ret-header) {background:var(--atel-v94-hero);border:1px solid rgba(31,151,191,.35);border-radius:var(--atel-radius-panel);min-height:84px;height:auto;padding:17px 22px;margin:16px 0;box-shadow:0 11px 28px rgba(2,33,53,.12);gap:14px;}
+.shell.retornos :global(.ret-title),.shell.retornos :global(.ret-title-icon) {color:var(--atel-on-dark);}
+.shell.retornos :global(.ret-search) {background:rgba(255,255,255,.98);border:1px solid var(--atel-border);border-radius:11px;}
+.shell.retornos :global(.ret-header-icon) {color:#dbeef7;background:rgba(255,255,255,.08);border:1px solid rgba(136,204,228,.35);border-radius:10px;width:34px;height:34px;}
+.shell.retornos :global(.ret-content) {grid-template-columns:minmax(270px,310px) minmax(0,1fr);gap:13px;min-width:0;}
+.shell.retornos :global(.ret-list-panel),.shell.retornos :global(.ret-detail-panel) {background:#fff;border:1px solid var(--atel-border);border-radius:var(--atel-radius-card);box-shadow:var(--atel-v94-shadow);min-width:0;}
+.shell.retornos :global(.ret-panel-title) {background:var(--atel-table-header);color:var(--atel-on-dark);height:auto;min-height:45px;padding:11px 15px;}
+.shell.retornos :global(.ret-card) {border-radius:var(--atel-radius-card);border-color:var(--atel-border);}
+.shell.retornos :global(.ret-card.selected) {background:#eaf7ff;border-color:var(--atel-accent);box-shadow:inset 4px 0 var(--atel-accent);}
+.shell.retornos :global(.ret-table) {width:100%;border-collapse:collapse;}
+.shell.retornos :global(.ret-table th) {background:var(--atel-table-header);color:var(--atel-on-dark);}
+.shell.retornos :global(.ret-table td) {border-bottom:1px solid var(--atel-border);}
+
+/* 04 — Pendencias: estilos sao inline. Apenas nesta rota os overrides pontuais
+   !important sao necessarios, sem tocar no JSX ou nas regras da operacao. */
+.pendencias > :global(main) {background:linear-gradient(155deg,#f1f6fa,#eaf2f8 58%,#f4f8fb) !important;max-width:1680px;min-width:0;margin:0 auto;padding:20px 24px 34px !important;}
+.pendencias > :global(main) > :global(section:first-of-type) {background:var(--atel-hero-mid);padding:18px;border-radius:var(--atel-radius-panel);box-shadow:0 12px 27px rgba(2,33,53,.1);}
+.pendencias > :global(main) > :global(section:first-of-type) > :global(button) {background:var(--atel-v94-card) !important;border:1px solid var(--atel-metric-blue-border) !important;border-radius:var(--atel-radius-card) !important;min-width:0;}
+.pendencias > :global(main) > :global(section:first-of-type) > :global(button:nth-child(2)) {background:linear-gradient(var(--atel-metric-angle),#81551c,#523b23) !important;border-color:#dba34d !important;}
+.pendencias > :global(main) > :global(section:first-of-type) > :global(button:nth-child(3)) {background:linear-gradient(var(--atel-metric-angle),var(--atel-metric-violet-start),var(--atel-metric-violet-end)) !important;border-color:var(--atel-metric-violet-border) !important;}
+.pendencias > :global(main) > :global(section:first-of-type) > :global(button:nth-child(4)) {background:linear-gradient(var(--atel-metric-angle),var(--atel-metric-green-start),var(--atel-metric-green-end)) !important;border-color:var(--atel-metric-green-border) !important;}
+.pendencias > :global(main) > :global(section:first-of-type) > :global(button) > :global(div:first-child) {background:transparent !important;color:#dbeef7 !important;}
+.pendencias > :global(main) > :global(section:first-of-type) > :global(button) > :global(div:nth-child(2)) {color:var(--atel-on-dark) !important;font-weight:800 !important;}
+.pendencias > :global(main) > :global(section:first-of-type) > :global(button) > :global(div:nth-child(3)) {color:#d0e6ed !important;}
+.pendencias > :global(main) > :global(section:nth-of-type(2)) {background:var(--atel-v94-hero) !important;border:1px solid rgba(31,151,191,.35) !important;border-radius:var(--atel-radius-panel) !important;padding:16px 22px !important;margin:15px 0 !important;min-height:76px;box-shadow:0 12px 25px rgba(2,33,53,.1);}
+.pendencias > :global(main) > :global(section:nth-of-type(2)) :global(h1) {color:var(--atel-on-dark) !important;font-size:clamp(22px,2vw,30px) !important;}
+.pendencias > :global(main) > :global(section:nth-of-type(2)) :global(select),.pendencias > :global(main) > :global(section:nth-of-type(2)) :global(input) {border:1px solid var(--atel-border) !important;border-radius:11px !important;background:#fff !important;min-height:39px;color:var(--atel-text) !important;}
+.pendencias > :global(main) > :global(section:nth-of-type(2)) :global(button) {border-radius:11px !important;color:var(--atel-primary) !important;background:#eef8fd !important;}
+.pendencias > :global(main) > :global(section:nth-of-type(3)) {gap:13px !important;min-width:0;}
+.pendencias > :global(main) > :global(section:nth-of-type(3)) > :global(div) {background:#fff !important;border:1px solid var(--atel-border) !important;border-radius:var(--atel-radius-card) !important;box-shadow:var(--atel-v94-shadow);min-width:0;}
+.pendencias > :global(main) > :global(section:nth-of-type(3)) > :global(div) > :global(div:first-child) {background:var(--atel-table-header) !important;color:var(--atel-on-dark) !important;}
+
+/* 05 — Transferencia: ja tem componentes premium. Mantemos seus layouts e
+   substituimos apenas cores-raiz por tokens compartilhados do ATEL. */
+.transferencia :global(main) {max-width:1680px;min-width:0;margin:0 auto;color:var(--atel-text);}
+.transferencia :global(main header) {background:var(--atel-v94-hero);border-radius:var(--atel-radius-panel);border:1px solid rgba(31,151,191,.35);box-shadow:0 14px 30px rgba(2,33,53,.11);}
+.transferencia :global(main header h1),.transferencia :global(main header h2) {color:var(--atel-on-dark);}
+.transferencia :global(main section),.transferencia :global(main aside) {border-radius:var(--atel-radius-card);}
+.transferencia :global(main input),.transferencia :global(main select),.transferencia :global(main textarea) {border-radius:11px;}
+.transferencia :global(main table th) {background:var(--atel-table-header);color:var(--atel-on-dark);}
+
+@media(max-width:1100px){
+ .shell.retornos :global(.ret-content){grid-template-columns:minmax(245px,30%) minmax(0,1fr);}
+ .adapter > :global(div) {padding:16px;}
+}
+@media(max-width:850px){
+ .shell.retornos :global(.ret-content){grid-template-columns:1fr;}
+ .shell.retornos :global(.ret-kpis){grid-template-columns:repeat(2,minmax(0,1fr));}
+ .adapter > :global(div) > :global(header) + :global(div){grid-template-columns:repeat(2,minmax(0,1fr));}
+ .regularizacao > :global(main) > :global(header) + :global(div){grid-template-columns:repeat(2,minmax(0,1fr));}
+ .pendencias > :global(main) > :global(section:first-of-type){grid-template-columns:repeat(2,minmax(0,1fr)) !important;}
+}
+@media(max-width:560px){
+ .adapter > :global(div),.regularizacao > :global(main),.shell.retornos :global(.ret-page){padding:12px;}
+ .adapter > :global(div) > :global(header),.regularizacao > :global(main) > :global(header){padding:18px;flex-wrap:wrap;}
+ .adapter > :global(div) > :global(header) + :global(div),.regularizacao > :global(main) > :global(header) + :global(div){grid-template-columns:1fr;}
+ .shell.retornos :global(.ret-kpis){grid-template-columns:1fr;}
+ .shell.retornos :global(.ret-header){flex-wrap:wrap;}
+ .shell.retornos :global(.ret-search){width:100%;max-width:100%;}
+ .pendencias > :global(main){padding:12px !important;}
+ .pendencias > :global(main) > :global(section:first-of-type){grid-template-columns:1fr !important;}
+ .pendencias > :global(main) > :global(section:nth-of-type(2)){flex-wrap:wrap;}
+}
+
+/* ATEL V94.1 | AJUSTE KPIS OS ADAPTER
+   Correcao localizada: preserva V90/V91 e as outras quatro rotas V94.
+   Fonte visual: tokens herdados de atel-tokens.module.css. */
+.adapter > :global(div) > :global(header) {
+  border-radius: var(--atel-radius-panel);
+  margin-bottom: 16px;
+  padding: 26px 28px;
+}
+.adapter > :global(div) > :global(header) + :global(div) {
+  background: linear-gradient(145deg, var(--atel-hero-start), var(--atel-hero-mid));
+  border: 1px solid rgba(100, 181, 211, .24);
+  border-radius: var(--atel-radius-panel);
+  padding: 22px 22px 24px;
+  column-gap: 16px;
+  row-gap: 16px;
+  margin-top: 0;
+  margin-bottom: 24px;
+  align-items: stretch;
+  box-shadow: 0 12px 27px rgba(2, 33, 53, .11);
+}
+.adapter > :global(div) > :global(header) + :global(div) > :global(div) {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start;
+  min-height: 138px;
+  min-width: 0;
+  gap: 7px;
+  padding: 20px 24px;
+  border-radius: var(--atel-radius-card);
+  box-shadow: inset 0 1px rgba(255,255,255,.07), 0 6px 16px rgba(0,28,44,.09);
+}
+.adapter > :global(div) > :global(header) + :global(div) > :global(div) :global(small) {
+  display: block;
+  color: #dbeef7;
+  font-size: 11px;
+  line-height: 1.4;
+}
+.adapter > :global(div) > :global(header) + :global(div) > :global(div) :global(strong) {
+  display: block;
+  color: var(--atel-on-dark);
+  font-size: clamp(26px, 2.25vw, 32px);
+  line-height: 1.1;
+  font-weight: 800;
+}
+/* Corrige o texto do cabecalho azul do formulario, sem afetar outras secoes. */
+.adapter > :global(div) > :global(section:first-of-type) > :global(div:first-child) > :global(strong) {
+  color: var(--atel-on-dark);
+}
+.adapter > :global(div) > :global(section:first-of-type) > :global(div:first-child) > :global(span) {
+  color: #e3f2fa;
+}
+@media (max-width: 850px) {
+  .adapter > :global(div) > :global(header) + :global(div) {
+    padding: 16px;
+    gap: 12px;
+  }
+  .adapter > :global(div) > :global(header) + :global(div) > :global(div) {
+    padding: 17px 18px;
+    min-height: 124px;
+  }
+}
+@media (max-width: 560px) {
+  .adapter > :global(div) > :global(header) {
+    padding: 18px;
+  }
+  .adapter > :global(div) > :global(header) + :global(div) {
+    padding: 12px;
+    gap: 10px;
+  }
+  .adapter > :global(div) > :global(header) + :global(div) > :global(div) {
+    min-height: 112px;
+    padding: 16px;
+  }
+}
+

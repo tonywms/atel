@@ -21,7 +21,7 @@ export async function GET(req: NextRequest) {
   try {
     const auth = createClient(url, publicKey, { auth: { persistSession: false, autoRefreshToken: false } });
     const { data: session, error: authError } = await auth.auth.getUser(token);
-    if (authError || !session.user || session.user.email?.toLowerCase() !== "teste@wmsexpert.com.br") return reply({ error: "Acesso nao autorizado" }, 403);
+    if (authError || !session.user) return reply({ error: "Acesso nao autorizado" }, 403);
     const tecnico = 4157;
     const endpoint = base.replace(/\/$/, "");
     const headers = { "X-API-Key": apiKey, Accept: "application/json" };

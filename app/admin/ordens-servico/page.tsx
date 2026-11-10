@@ -4,6 +4,7 @@ import type { ReactNode } from "react";
 import { useEffect, useMemo, useState } from "react";
 import { obterEstadoFSMOS, type OrdemServico } from "@/lib/ordensServicoStore";
 import styles from "./page.module.css";
+import atelTokens from "@/components/atel-ui/atel-tokens.module.css";
 import { consultarOsErpV52, type OsErpV52 } from "@/lib/erpOperacionalV52";
 import { atelSupabase } from "@/lib/atelSupabaseV08";
 
@@ -212,7 +213,7 @@ export default function PainelOrdensServico() {
     { nome: "Com ocorrência", icone: "alert" as const, valor: contagem(temOcorrencia), cor: "rosa" },
     { nome: "Finalizadas", icone: "check" as const, valor: contagem(o => estado(o) === "FINALIZADA"), cor: "turquesa" },
   ];
-  return <main className={styles.root}>
+  return <main className={`${styles.root} ${atelTokens.atelRoot}`}>
     <header className={styles.heading}><div><span className={styles.eyebrow}>EXPEDIÇÕES / GESTÃO OS</span><h1>Gestão de Ordens de Serviço</h1><p>Acompanhamento dos atendimentos, materiais e histórico técnico.</p></div><span className={styles.readonly}>Consulta ERP · homologação</span></header>
     <section className={styles.kpis} aria-label="Indicadores de ordens de serviço">{indicadores.map(i=><div className={styles.kpi} key={i.nome}><div className={`${styles.kpiHead} ${styles[i.cor]}`}><span>{i.nome}</span><OsIcon name={i.icone} size={19}/></div><div className={styles.kpiBody}><strong>{i.valor}</strong><span>{lista.length ? Math.round(i.valor / lista.length * 100) : 0}% do total</span></div></div>)}</section>
     <section className={styles.toolbar}><div><strong className={styles.toolbarTitle}><OsIcon name="list" size={19}/> Acompanhamento de Ordens de Serviço</strong><small>{filtradas.length} de {lista.length} OS</small></div><div className={styles.filters}><input aria-label="Pesquisar OS" value={busca} onChange={e=>{setBusca(e.target.value);setPagina(1)}} placeholder="Pesquisar OS, cliente, técnico..."/><select aria-label="Filtrar status" value={filtroStatus} onChange={e=>{setFiltroStatus(e.target.value);setPagina(1)}}><option value="TODOS">Todos os status</option>{status.map(x=><option key={x} value={x}>{rotulo(x)}</option>)}</select><select aria-label="Filtrar técnico" value={filtroTecnico} onChange={e=>{setFiltroTecnico(e.target.value);setPagina(1)}}><option value="TODOS">Todos os técnicos</option>{tecnicos.map(x=><option key={x} value={x}>{x}</option>)}</select><button onClick={()=>{setBusca("");setFiltroStatus("TODOS");setFiltroTecnico("TODOS");setPagina(1)}}>Limpar</button></div></section>

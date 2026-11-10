@@ -363,3 +363,45 @@
 
 :global(.req-card-menu.req-card-menu-floating button.req-actions-close svg){display:block!important;width:18px!important;height:18px!important;min-width:18px;min-height:18px;stroke-width:2.25;flex:none;transform:none}
 :global(.req-card-menu.req-card-menu-floating button.req-actions-close:focus-visible){outline:2px solid #bdefff;outline-offset:2px}
+
+
+/* ATEL V91 — camada visual reutilizando tokens V90; sem mudancas funcionais. */
+.root { max-width: 1680px; margin: 0 auto; padding: 20px 24px 32px; color: var(--atel-text); font-family: inherit; }
+.root .heading { position: relative; overflow: hidden; border-radius: var(--atel-radius-panel) var(--atel-radius-panel) 0 0; margin-bottom: 0; padding: 24px 26px 27px; align-items: center; background: radial-gradient(ellipse at 85% 0%, var(--atel-hero-glow), transparent 48%), linear-gradient(var(--atel-hero-angle),var(--atel-hero-start),var(--atel-hero-mid) 56%,var(--atel-hero-end)); box-shadow: 0 14px 30px rgba(2,33,53,.12); }
+.root .heading h1 { font-size: clamp(26px,2.4vw,36px); letter-spacing: -.035em; font-weight: 800; color: var(--atel-on-dark); }
+.root .heading p { color: #d3e6f0; font-size: 13px; line-height: 1.5; }
+.root .eyebrow { color: #67d9ed; letter-spacing: 1.3px; font-size: 11px; }
+.root .readonly { background: rgba(0,149,128,.2); border-color: rgba(66,226,190,.42); color: #bfffea; border-radius: 999px; font-weight: 700; }
+.root :global(.stock-summary) { background: var(--atel-hero-mid); padding: 0 18px 19px; margin-bottom: 0; gap: 11px; border-radius: 0 0 var(--atel-radius-panel) var(--atel-radius-panel); box-shadow: 0 14px 30px rgba(2,33,53,.1); }
+.root :global(.summary-card) { background: linear-gradient(var(--atel-metric-angle),var(--atel-metric-blue-start),var(--atel-metric-blue-end)); border: 1px solid var(--atel-metric-blue-border); border-radius: var(--atel-radius-card); box-shadow: none; min-height: 104px; }
+.root :global(.summary-card.c2) { background: linear-gradient(var(--atel-metric-angle),#81551c,#523b23); border-color: #dba34d; }
+.root :global(.summary-card.c3) { background: linear-gradient(var(--atel-metric-angle),var(--atel-metric-violet-start),var(--atel-metric-violet-end)); border-color: var(--atel-metric-violet-border); }
+.root :global(.summary-card.c4) { background: linear-gradient(var(--atel-metric-angle),var(--atel-metric-green-start),var(--atel-metric-green-end)); border-color: var(--atel-metric-green-border); }
+.root :global(.summary-card.c5) { background: linear-gradient(var(--atel-metric-angle),#12667b,#153f5a); border-color: #3ca5bf; }
+.root :global(.summary-card .top),.root :global(.summary-card.c2 .top),.root :global(.summary-card.c3 .top),.root :global(.summary-card.c4 .top),.root :global(.summary-card.c5 .top) { background: transparent; color: #dbeef7; font-size: 11px; padding: 14px 14px 0; }
+.root :global(.summary-card .value) { color: var(--atel-on-dark); font-size: 30px; font-weight: 800; padding: 5px 14px 0; letter-spacing: -.03em; }
+.root :global(.summary-card .detail) { color: #c2d9e5; padding: 2px 14px 13px; font-size: 10px; }
+.root :global(.wms-page-header) { margin-top: 18px; border-color: var(--atel-border); border-radius: 12px; box-shadow: 0 5px 20px rgba(15,60,85,.05); }
+.root :global(.req-sidebar-panel),.root :global(.req-detail) { border-color: var(--atel-border); box-shadow: 0 8px 22px rgba(15,60,85,.06); }
+.root :global(.req-sidebar-title) { background: var(--atel-table-header); }
+.root :global(.req-card) { border-color: var(--atel-border); }
+.root :global(.req-card.selected) { border-color: var(--atel-accent); box-shadow: inset 4px 0 var(--atel-accent); }
+.root :global(.req-products th) { background: var(--atel-table-header); color: var(--atel-on-dark); }
+@media(max-width:760px) { .root { padding: 12px; } .root .heading { padding: 18px; flex-wrap: wrap; } .root :global(.stock-summary) { padding: 0 12px 14px; grid-template-columns: repeat(2,minmax(0,1fr)); } }
+@media(max-width:460px) { .root :global(.stock-summary) { grid-template-columns: 1fr; } }
+
+/* ATEL V99 - INICIO CORRECAO CONTRASTE CABECALHO ITENS DO PEDIDO
+   Evita conflito de especificidade entre .req-products th (texto claro)
+   e .req-products-scroll thead th (fundo claro).
+   Restrito a tabela de itens desta pagina. */
+.root :global(.req-products .req-products-scroll table thead tr th) {
+  background: linear-gradient(180deg, #104e6d 0%, #093c58 100%);
+  color: #ffffff;
+  border-bottom: 2px solid #19a4cf;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.35px;
+  text-shadow: none;
+}
+/* ATEL V99 - FIM CORRECAO CONTRASTE CABECALHO ITENS DO PEDIDO */
+

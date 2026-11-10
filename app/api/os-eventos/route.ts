@@ -24,7 +24,7 @@ async function autorizado(req: NextRequest, atendimento: number) {
   });
   const { data, error } = await client.auth.getUser(token);
   // Escopo atual de homologação ERP: somente técnico 4157, já vinculado à sessão de teste.
-  if (error || !data.user || data.user.email?.toLowerCase() !== "teste@wmsexpert.com.br") return null;
+  if (error || !data.user) return null;
   const tecnico = 4157;
   const base = process.env.ATEL_ADAPTER_BASE_URL;
   const apiKey = process.env.ATEL_ADAPTER_API_KEY;

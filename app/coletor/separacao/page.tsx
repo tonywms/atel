@@ -1,4 +1,6 @@
 "use client";
+import v157ListaStyles from "./atel-v157-1-lista.module.css";
+import "./atel-v156-separacao.css"; // ATEL_E1_V156_2_SEPARACAO_HEADER
 import { pedidosComEstadoV363 } from "@/lib/atelPedidosHomologacaoV363";
 
 import {carregarPedidosV36,pedidoParaCardV36} from "@/lib/atelPedidosReaisV36";
@@ -232,7 +234,7 @@ export default function SeparacaoListaPage() {
   ======================================================= */
 
   return (
-    <div className="collector-screen">
+    <div className="collector-screen atel-v156-separacao">
       <div
         className="collector-phone"
         style={phoneStyle}
@@ -291,10 +293,27 @@ export default function SeparacaoListaPage() {
               </svg>
             </button>
             <strong style={{ margin: 0, color: "#ffffff", fontSize: 21, lineHeight: 1.2, fontWeight: 700, textAlign: "left" }}>
-              Ordens - Separação
+              Separação
             </strong>
           </div>
-        </div>
+        
+          
+</div>
+        {/* ATEL_E1_V157_1_PAINEL_LISTA: resumo da carteira, nao confirma operacoes */}
+        <section className={v157ListaStyles.painel} aria-label="Resumo da carteira de separação">
+          <div className={v157ListaStyles.topo}>
+            <span className={v157ListaStyles.simbolo} aria-hidden="true"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M3 20h18M6 16v-5M11 16V7M16 16V4M21 16V9" /></svg></span>
+            <div className={v157ListaStyles.titulos}><span className={v157ListaStyles.kicker}>VISÃO OPERACIONAL</span><strong>Minha fila de separação</strong></div>
+            <span className={v157ListaStyles.tag}>Em tempo real</span>
+          </div>
+          <div className={v157ListaStyles.metricas}>
+            <div><strong>{filtradas.length}</strong><span>Pedidos na lista</span></div>
+            <div><strong>{filtradas.filter(req => req.status === "EM_SEPARACAO").length}</strong><span>Em separação</span></div>
+            <div><strong>{filtradas.filter(req => req.status === "PENDENTE").length}</strong><span>Aguardando</span></div>
+          </div>
+          <p>Abra um pedido abaixo para acompanhar o progresso dos itens e a próxima pendência.</p>
+        </section>
+
 
 {/* =================================================
             PESQUISA

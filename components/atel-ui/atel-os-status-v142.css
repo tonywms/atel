@@ -1,0 +1,40 @@
+/* ATEL DS-COL-1.0 - V142: estados de integração ERP, escopo isolado. */
+.atel-os-v142-status {box-sizing:border-box;width:100%;max-width:348px;min-height:280px;margin:auto;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:24px 18px 26px;color:#123b51;font-family:inherit;}
+.atel-os-v142-visual{width:76px;height:76px;position:relative;display:grid;place-items:center;border-radius:23px;margin-bottom:15px;background:linear-gradient(145deg,#e6f7fb,#f3fbff);border:1px solid #cdeaf3;color:#0d93b6;box-shadow:0 9px 26px rgba(7,111,153,.09)}
+.atel-os-v142-visual.is-error{color:#b97727;background:linear-gradient(145deg,#fff7e7,#f9fcff);border-color:#f0e1c9}
+.atel-os-v142-spin{animation:atel-os-v142-rotate 1s linear infinite}
+.atel-os-v142-center-icon{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%)}
+.atel-os-v142-eyebrow{font-size:9px;font-weight:850;letter-spacing:1.3px;color:#0786a9;margin-bottom:6px}
+.atel-os-v142-status h2{font-size:17px;font-weight:850;letter-spacing:-.35px;line-height:1.22;margin:0 0 8px;color:#0b4d69}
+.atel-os-v142-status p{font-size:11.5px;line-height:1.55;color:#638093;margin:0;max-width:270px}
+.atel-os-v142-progress{height:5px;width:134px;margin:21px auto 0;background:#dceef5;border-radius:99px;overflow:hidden}
+.atel-os-v142-progress span{display:block;width:44%;height:100%;border-radius:99px;background:#078eb2;animation:atel-os-v142-bar 1.5s ease-in-out infinite}
+.atel-os-v142-error-detail{font-size:10px;color:#8e4d27;line-height:1.5;padding:9px 11px;margin-top:13px;border-radius:9px;border:1px solid #f0dfc7;background:#fffaf2;overflow-wrap:anywhere;max-width:100%;box-sizing:border-box}
+.atel-os-v142-retry{display:flex;align-items:center;justify-content:center;gap:8px;border:0;border-radius:11px;background:linear-gradient(110deg,#087fa8,#139bb9);color:white;font-size:11px;font-weight:850;letter-spacing:.3px;min-height:43px;padding:0 16px;margin-top:15px;cursor:pointer;box-shadow:0 5px 13px rgba(5,125,166,.16)}
+.atel-os-v142-retry:focus-visible{outline:3px solid #69c9df;outline-offset:3px}
+.atel-os-v142-footnote{font-size:9px;line-height:1.4;color:#879eaa;max-width:250px;margin-top:20px}
+@keyframes atel-os-v142-rotate{to{transform:rotate(360deg)}}
+@keyframes atel-os-v142-bar{0%{transform:translateX(-100%)}50%{transform:translateX(135%)}100%{transform:translateX(275%)}}
+@media(prefers-reduced-motion:reduce){.atel-os-v142-spin,.atel-os-v142-progress span{animation:none}}
+/* A tela de OS ja possui geometria estabelecida. Estas regras nao alteram collector-screen/phone. */
+.atel-os-v142-list-area{display:flex!important;flex-direction:column;min-height:0}
+.atel-os-v142-list-area > .atel-os-v142-status{flex:1 0 auto}
+.atel-os-v142-order-card{transition:transform .18s,box-shadow .18s,border-color .18s!important}
+.atel-os-v142-order-card:hover{transform:translateY(-1px);box-shadow:0 9px 22px rgba(10,83,112,.10)!important}
+.atel-os-v142-order-card:focus-visible{outline:3px solid #69c9df;outline-offset:2px}
+.atel-os-v142-detail-area{display:flex!important;flex-direction:column;min-height:0}
+.atel-os-v142-detail-area > .atel-os-v142-status{flex:1 0 auto}
+
+/* ATEL E1 V143 - cards da lista nao devem encolher */
+.atel-os-v142-list-area > button.atel-os-v142-order-card {
+  flex: 0 0 auto !important;
+  flex-shrink: 0 !important;
+  height: auto !important;
+  min-height: 120px;
+  box-sizing: border-box;
+}
+.atel-os-v142-order-card { overflow: hidden; }
+.atel-os-v143-partial { box-sizing:border-box; flex:0 0 auto; margin:8px 10px 12px; padding:12px; border:1px solid #f0d6a6; border-radius:12px; background:#fff9ec; color:#764c15; font-size:11px; line-height:1.5; }
+.atel-os-v143-partial strong { display:block; margin-bottom:4px; color:#885412; font-size:12px; }
+.atel-os-v143-partial ul { padding-left:18px; margin:5px 0 9px; }
+.atel-os-v143-partial button { border:1px solid #d7a755; border-radius:8px; background:#fff; color:#805113; padding:8px 11px; font:inherit; font-weight:800; cursor:pointer; }

@@ -226,22 +226,41 @@ export default function ColetorExpedicaoPage() {
           <button type="button" className={styles.back} onClick={() => router.push("/coletor")} aria-label="Voltar ao menu do coletor">
             <svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
           </button>
-          <h1>Expedição</h1>
+          <div className={styles.heading}>
+            <span className={styles.headingKicker}>CENTRAL OPERACIONAL</span>
+            <h1>Expedição</h1>
+          </div>
+          <span className={styles.headerMark} aria-hidden="true">
+            <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="8" height="8" rx="1.5"/><rect x="13" y="3" width="8" height="8" rx="1.5"/><rect x="3" y="13" width="8" height="8" rx="1.5"/><path d="M17 13v8m-4-4h8"/></svg>
+          </span>
         </header>
         <nav className={styles.content} aria-label="Rotinas de expedição">
+          <div className={styles.intro}>
+            <div className={styles.introCopy}>
+              <span className={styles.introLabel}>Menu de operações</span>
+              <strong className={styles.introTitle}>Selecione o processo</strong>
+            </div>
+            <span className={styles.introBadge}>7 rotinas</span>
+          </div>
           {([
-            { label: "Separação", href: "/coletor/separacao", count: contadores.separacao, icon: "↗" },
-            { label: "Conferência", href: "/coletor/conferencia", count: contadores.conferencia, icon: "▣" },
-            { label: "Embarque", href: "/coletor/embarque", count: contadores.embarque, icon: "▤" },
-            { label: "Recebimento", href: "/coletor/recebimento", count: contadores.recebimento, icon: "✓" },
-            { label: "Retornos ao CD", href: "/coletor/retornos", count: contadores.retornos, icon: "↩" },
-            { label: "Devolução CD", href: "/coletor/devolucao-cd", count: devCount ?? "—", icon: "↩" },
-            { label: "Ordens de Serviço", href: "/coletor/ordens-servico", count: contadores.ordensServico, icon: "⚙" },
+            { label: "Separação", description: "Preparar os itens dos pedidos", href: "/coletor/separacao", count: contadores.separacao, icon: "↗" },
+            { label: "Conferência", description: "Validar produtos e volumes", href: "/coletor/conferencia", count: contadores.conferencia, icon: "▣" },
+            { label: "Embarque", description: "Ler e liberar os volumes", href: "/coletor/embarque", count: contadores.embarque, icon: "▤" },
+            { label: "Recebimento", description: "Confirmar materiais recebidos", href: "/coletor/recebimento", count: contadores.recebimento, icon: "✓" },
+            { label: "Retornos ao CD", description: "Conferir o retorno do técnico", href: "/coletor/retornos", count: contadores.retornos, icon: "↩" },
+            { label: "Devolução CD", description: "Receber e classificar materiais", href: "/coletor/devolucao-cd", count: devCount ?? "—", icon: "↩" },
+            { label: "Ordens de Serviço", description: "Acompanhar atendimentos", href: "/coletor/ordens-servico", count: contadores.ordensServico, icon: "⚙" },
           ] as const).map((item) => (
             <button key={item.href} type="button" className={styles.card} onClick={() => router.push(item.href)}>
               <span className={styles.icon} aria-hidden="true"><IconeExpedicao rota={item.href} /></span>
-              <span className={styles.name}>{item.label}</span>
-              <span className={styles.counter} aria-label={`${item.count} registros`}>{item.count}</span>
+              <span className={styles.cardText}>
+                <span className={styles.name}>{item.label}</span>
+                <span className={styles.description}>{item.description}</span>
+              </span>
+              <span className={styles.cardRight}>
+                <span className={styles.counter} aria-label={`${item.count} registros`}>{item.count}</span>
+                <span className={styles.arrow} aria-hidden="true"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6"/></svg></span>
+              </span>
             </button>
           ))}
         </nav>

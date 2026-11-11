@@ -1,9 +1,11 @@
 "use client";
+import AtelSeparacaoProgressoV157 from "@/components/atel-ui/AtelSeparacaoProgressoV157";
 import { usePedidoAtelV363 } from "@/lib/atelPedidosHomologacaoV363";
 
 import { useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import styles from "./separacao-detalhe.module.css";
+import "./atel-v136-premium.css";
 
 import { requisicoesTecnicasMock } from "@/lib/requisicoesTecnicas";
 import {
@@ -555,7 +557,7 @@ export default function SeparacaoDetalhePage() {
     atendido >= solicitado;
 
   return (
-    <div className={`collector-screen ${styles.screen}`}>
+    <div className={`collector-screen ${styles.screen} atel-v136-separacao`}>
       <div
         className={`collector-phone ${styles.phone}`}
         style={{
@@ -565,7 +567,7 @@ export default function SeparacaoDetalhePage() {
       >
 
         {/* HEADER */}
-        <div className={styles.header}
+        <div className={`${styles.header} atel-v136-header`}
           style={{
             minHeight: 66,
             background: "#1686b0",
@@ -599,80 +601,37 @@ export default function SeparacaoDetalhePage() {
             <svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M19 12H5M12 19l-7-7 7-7" /></svg>
           </button>
 
-          <strong
-            style={{
-              fontSize: 21,
-              fontWeight: 700,
-            }}
-          >
-            Separação
-          </strong>
+          <div className="atel-v136-header-heading"><span className="atel-v136-header-eyebrow">OPERAÇÃO DO COLETOR</span><strong>Separação</strong></div>
+<span className="atel-v136-header-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4V2h6v2M9 11l2 2 4-4M9 17h6"/></svg></span>
         </div>
 
         {/* RESUMO DO PEDIDO */}
-        <div className={styles.summary}
-          style={{
-            background: "#fff",
-            padding: "14px 15px 12px",
-            borderBottom:
-              "1px solid #d7d7d7",
-            boxShadow:
-              "0 2px 3px rgba(0,0,0,.08)",
-            flex: "0 0 auto",
-          }}
-        >
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns:
-                "1.35fr 1fr 1fr",
-              gap: 10,
-              fontSize: 18,
-              lineHeight: 1.25,
-            }}
-          >
-            <div>
-              <strong>
-                Pedido:
-              </strong>{" "}
-              {requisicao.codigo.replace(
-                "REQ-",
-                ""
-              )}
+        {/* ATEL_V136_4_RESUMO_LIMPO: resumo compacto sem cards internos */}
+        <section className={styles.cleanSummary} aria-label="Resumo da separação">
+          <div className={styles.cleanSummaryMetrics}>
+            <div className={styles.cleanSummaryMetric}>
+              <span>Pedido</span>
+              <strong>{requisicao.codigo.replace("REQ-", "")}</strong>
             </div>
-
-            <div>
-              <strong>
-                Itens:
-              </strong>{" "}
-              {itemAtual + 1}/
-              {requisicao.itens.length}
+            <div className={styles.cleanSummaryMetric}>
+              <span>Itens</span>
+              <strong>{itemAtual + 1}<small>/{requisicao.itens.length}</small></strong>
             </div>
-
-            <div>
-              <strong>
-                Separados:
-              </strong>{" "}
-              {itensSeparados}/
-              {requisicao.itens.length}
+            <div className={styles.cleanSummaryMetric}>
+              <span>Separados</span>
+              <strong>{itensSeparados}<small>/{requisicao.itens.length}</small></strong>
             </div>
           </div>
-
-          <div
-            style={{
-              marginTop: 8,
-              fontSize: 18,
-            }}
-          >
-            <strong>
-              Cliente:
-            </strong>{" "}
-            {requisicao.tecnico}
+          <div className={styles.cleanSummaryClient}>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <circle cx="12" cy="8" r="4" /><path d="M4.5 21v-1.5A6.5 6.5 0 0 1 11 13h2a6.5 6.5 0 0 1 6.5 6.5V21" />
+            </svg>
+            <span>Cliente</span>
+            <strong>{requisicao.tecnico}</strong>
           </div>
-        </div>
-
-        {/* CONTEÚDO */}
-        <div className={styles.content}
+        </section>
+{/* CONTEÚDO */}
+        <div className={`${styles.content} atel-v136-content`}
           style={{
             flex: 1,
             overflowY: "auto",
@@ -680,15 +639,34 @@ export default function SeparacaoDetalhePage() {
               "14px 13px 110px",
           }}
         >
+          {/* ATEL_E1_V157_PROGRESSO - painel somente leitura; nenhuma baixa ou confirmacao */}
+          <AtelSeparacaoProgressoV157
+            linhas={requisicao.itens.map((produto) => ({
+              id: produto.id,
+              codigo: produto.codigoProduto,
+              descricao: produto.produto,
+              solicitado: produto.solicitado,
+              separado: quantidades[produto.id] ?? 0,
+              unidade: produto.unidade,
+            }))}
+            itemAtualId={item.id}
+            onIrPendente={(indice) => {
+              if (indice < 0 || indice >= requisicao.itens.length) return;
+              if (indice !== itemAtual) {
+                setItemAtual(indice);
+                limparLeitura();
+              }
+              document.getElementById("atel-v157-leitura")?.scrollIntoView({ behavior: "smooth", block: "start" });
+            }}
+          />
+
           {/* =========================
               ENDEREÇO
           ========================= */}
 
-          <section className={styles.card} style={cardStyle}>
+          <section className={`${styles.card} atel-v136-address`} style={cardStyle} id="atel-v157-leitura">
             <div style={cardTitleRowStyle}>
-              <strong style={cardTitleStyle}>
-                Informações de Endereço
-              </strong>
+              <div className="atel-v136-card-heading"><strong>Informações de Endereço</strong><small>Valide a localização antes de separar o produto</small></div>
 
               <div
                 style={{
@@ -696,17 +674,11 @@ export default function SeparacaoDetalhePage() {
                   gap: 10,
                 }}
               >
-                <button
-                  type="button"
-                  style={roundButtonStyle}
-                >
+                <button type="button" aria-label="Focar bipagem do endereço" title="Bipar endereço" onClick={() => document.getElementById("atel-v136-address-code")?.focus()} style={roundButtonStyle}>
                   <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><circle cx="10.8" cy="10.8" r="6.8"/><path d="m16 16 5 5"/></svg>
                 </button>
 
-                <button
-                  type="button"
-                  style={roundButtonStyle}
-                >
+                <button type="button" aria-label="Limpar leitura do endereço" title="Limpar leitura" onClick={() => { setEnderecoLido(""); setEnderecoConfirmado(false); setProdutoConfirmado(false); }} style={roundButtonStyle}>
                   <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 11a8 8 0 0 1 14-5l2 2"/><path d="M20 3v5h-5"/><path d="M20 13a8 8 0 0 1-14 5l-2-2"/><path d="M4 21v-5h5"/></svg>
                 </button>
               </div>
@@ -714,7 +686,7 @@ export default function SeparacaoDetalhePage() {
 
             {/* R / P / A / A */}
 
-            <div className={styles.addressGrid}
+            <div className={`${styles.addressGrid} atel-v136-address-grid`}
               style={{
                 display: "grid",
                 gridTemplateColumns:
@@ -726,33 +698,33 @@ export default function SeparacaoDetalhePage() {
               <EnderecoBox
                 letra="R"
                 valor={endereco.rua}
+                legenda="Rua"
                 preenchido
               />
 
               <EnderecoBox
                 letra="P"
                 valor={endereco.predio}
+                legenda="Prédio"
               />
 
               <EnderecoBox
                 letra="A"
                 valor={endereco.andar}
+                legenda="Andar"
                 preenchido
               />
 
               <EnderecoBox
                 letra="A"
                 valor={endereco.apto}
+                legenda="Apto"
               />
             </div>
 
             {/* LEITURA DO ID/CÓDIGO INTERNO */}
 
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns:
-                  "1fr 118px",
+            <div className="atel-v136-scan" style={{ display:"grid", gridTemplateColumns:"1fr 118px",
                 marginTop: 14,
                 border:
                   "1px solid #1686b0",
@@ -770,17 +742,9 @@ export default function SeparacaoDetalhePage() {
                   padding: "0 16px",
                 }}
               >
-                <span
-                  style={{
-                    color: "#8a8a8a",
-                    fontSize: 20,
-                  }}
-                >
-                  ♧
-                </span>
+                <span className="atel-v136-barcode" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><path d="M3 5v14M6 5v14M10 5v14M13 5v14M17 5v14M20 5v14"/></svg></span>
 
-                <input
-                  value={enderecoLido}
+                <input id="atel-v136-address-code" aria-label="Bipar codigo do endereco" value={enderecoLido}
                   onChange={(e) => {
                     setEnderecoLido(
                       e.target.value
@@ -828,8 +792,7 @@ export default function SeparacaoDetalhePage() {
                   cursor: "pointer",
                 }}
               >
-                ✓
-              </button>
+                <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="m5 12 4 4L19 6"/></svg></button>
             </div>
 
             {/*
@@ -860,34 +823,20 @@ export default function SeparacaoDetalhePage() {
             </button>
 
             {enderecoConfirmado && (
-              <div style={successStyle}>
-                ✓ Endereço{" "}
-                <strong>
-                  {endereco.id}
-                </strong>{" "}
-                confirmado pelo ID{" "}
-                <strong>
-                  {endereco.codigo}
-                </strong>
-              </div>
-            )}
+  <div className="atel-v136-address-success" role="status">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m8 12 3 3 5-6"/></svg>
+    <div><strong>Endereço validado · {endereco.codigo}</strong><span>Localização {endereco.id}</span></div>
+  </div>
+)}
           </section>
 
           {/* =========================
               PRODUTO
           ========================= */}
 
-          <section
-            className={styles.card}
-            style={{
-              ...cardStyle,
-              marginTop: 14,
-            }}
-          >
+          <section className={`${styles.card} atel-v136-product`} style={{...cardStyle, marginTop:14}}>
             <div style={cardTitleRowStyle}>
-              <strong style={cardTitleStyle}>
-                Informações do produto
-              </strong>
+              <div className="atel-v136-card-heading"><strong>Informações do produto</strong><small>Identificação e conferência do item</small></div>
 
               <button
                 type="button"
@@ -1392,58 +1341,17 @@ export default function SeparacaoDetalhePage() {
   );
 }
 
-function EnderecoBox({
-  letra,
-  valor,
-  preenchido = false,
-}: {
-  letra: string;
-  valor: string;
-  preenchido?: boolean;
+function EnderecoBox({ letra, valor, preenchido = false, legenda }: {
+  letra: string; valor: string; preenchido?: boolean; legenda?: string;
 }) {
   return (
-    <div
-      style={{
-        height: 90,
-        border:
-          "1.5px solid #1686b0",
-        borderRadius: 10,
-        background: preenchido
-          ? "#1686b0"
-          : "#fff",
-        color: preenchido
-          ? "#fff"
-          : "#1686b0",
-        position: "relative",
-      }}
-    >
-      <strong
-        style={{
-          position: "absolute",
-          top: 7,
-          left: 10,
-          fontSize: 18,
-        }}
-      >
-        {letra}
-      </strong>
-
-      <strong
-        style={{
-          position: "absolute",
-          inset: 0,
-          display: "grid",
-          placeItems: "center",
-          paddingTop: 10,
-          fontSize: 21,
-        }}
-      >
-        {valor}
-      </strong>
+    <div className={"atel-v136-tile" + (preenchido ? " atel-v136-tile-primary" : "")}>
+      <span className="atel-v136-tile-letter">{letra}</span>
+      <strong>{valor}</strong>
+      <small>{legenda ?? "Posição"}</small>
     </div>
   );
 }
-
 function QuantidadeBox({
   titulo,
   valor,

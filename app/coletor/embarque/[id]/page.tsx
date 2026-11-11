@@ -1,4 +1,5 @@
 "use client";
+import "./atel-v137-embarque.css";
 import { usePedidoAtelV363 } from "@/lib/atelPedidosHomologacaoV363";
 
 import {
@@ -220,7 +221,7 @@ export default function EmbarqueDetalhePage() {
     );
 
   return (
-    <div className="collector-screen">
+    <div className="collector-screen atel-ds-v137-embarque">
       <div
         className="collector-phone"
         style={{
@@ -236,7 +237,7 @@ export default function EmbarqueDetalhePage() {
           }}
         />
 
-        <div
+        <div className="atel-v137-embarque-header"
           style={{
             minHeight: 76,
             background: "#168bb2",
@@ -248,24 +249,9 @@ export default function EmbarqueDetalhePage() {
             flex: "0 0 auto",
           }}
         >
-          <button
-            type="button"
-            onClick={() =>
-              router.push(
-                "/coletor/embarque"
-              )
-            }
-            style={{
-              border: 0,
-              background:
-                "transparent",
-              color: "#fff",
-              fontSize: 34,
-              padding: 0,
-              cursor: "pointer",
-            }}
-          >
-            ‹
+          <button type="button" onClick={() => router.push("/coletor/embarque")}
+            aria-label="Voltar à lista de embarques" style={{border:0,background:"transparent",color:"white",cursor:"pointer"}}>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
           </button>
 
           <div
@@ -308,16 +294,10 @@ export default function EmbarqueDetalhePage() {
             </div>
           </div>
 
-          <span
-            style={{
-              fontSize: 24,
-            }}
-          >
-            ⋮
-          </span>
+          <span aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M4 7h16M7 7l1 13h10l1-13M9 7V4h6v3"/></svg></span>
         </div>
 
-        <div
+        <div className="atel-v137-embarque-body"
           style={{
             flex: 1,
             minHeight: 0,
@@ -337,13 +317,7 @@ export default function EmbarqueDetalhePage() {
             >
               Embarque de Volumes
 
-              <span
-                style={
-                  iconeStyle
-                }
-              >
-                ▤
-              </span>
+              <span style={iconeStyle}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4V2h6v2M9 11l2 2 4-4M9 17h6"/></svg></span>
             </div>
 
             <div
@@ -364,15 +338,7 @@ export default function EmbarqueDetalhePage() {
               liberar o transporte.
             </div>
 
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns:
-                  "repeat(3, 1fr)",
-                gap: 8,
-                marginTop: 12,
-              }}
-            >
+            <div className="atel-v137-embarque-metrics" style={{display:"grid",gridTemplateColumns:"repeat(3, 1fr)",gap:8,marginTop:12}}>
               <Resumo
                 titulo="ESPERADOS"
                 valor={
@@ -407,13 +373,7 @@ export default function EmbarqueDetalhePage() {
             >
               Destino
 
-              <span
-                style={
-                  iconeStyle
-                }
-              >
-                ↗
-              </span>
+              <span style={iconeStyle}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 22s8-7 8-12a8 8 0 1 0-16 0c0 5 8 12 8 12Z"/><circle cx="12" cy="10" r="2.5"/></svg></span>
             </div>
 
             <div
@@ -465,13 +425,7 @@ export default function EmbarqueDetalhePage() {
             >
               Leitura do Volume
 
-              <span
-                style={
-                  iconeStyle
-                }
-              >
-                ▣
-              </span>
+              <span style={iconeStyle}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M3 5v14M7 5v14M11 5v14M15 5v14M19 5v14M22 8v8"/></svg></span>
             </div>
 
             <div
@@ -571,13 +525,7 @@ export default function EmbarqueDetalhePage() {
             >
               Volumes
 
-              <span
-                style={
-                  iconeStyle
-                }
-              >
-                ▦
-              </span>
+              <span style={iconeStyle}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><rect x="4" y="4" width="7" height="7" rx="1"/><rect x="13" y="4" width="7" height="7" rx="1"/><rect x="4" y="13" width="7" height="7" rx="1"/><rect x="13" y="13" width="7" height="7" rx="1"/></svg></span>
             </div>
 
             <div
@@ -706,11 +654,10 @@ export default function EmbarqueDetalhePage() {
           )}
         </div>
 
-        <div
+        <div className="atel-v137-embarque-actions"
           style={{
             flex: "0 0 auto",
-            padding:
-              "10px 12px 12px",
+            padding: "10px 12px 12px",
             background: "#fff",
             borderTop:
               "1px solid #ddd",

@@ -1,7 +1,9 @@
 "use client";
+import "./atel-v145-os-erp-header.css";
 
 import { consultarDetalheErpV52, consultarEstoqueErpV52, type EstoqueErpV52, type DetalheErpV52 } from "@/lib/erpOperacionalV52";
 import { useSearchParams } from "next/navigation";
+import AtelOsEstadoERP from "@/components/atel-ui/AtelOsEstadoERP"; // ATEL_OS_ESTADOS_V142
 import { atelSupabase } from "@/lib/atelSupabaseV08";
 
 import {
@@ -2570,7 +2572,9 @@ function DetalheOrdemErpSomenteLeitura() {
  const [quantidade,setQuantidade]=useState("1");
  const [edicaoMaterial,setEdicaoMaterial]=useState<string|null>(null);
  const [erro,setErro]=useState(""),[aviso,setAviso]=useState("");
+ const [falhasConsultaErp,setFalhasConsultaErp]=useState<string[]>([]); // ATEL_E1_V143
  const [ocupado,setOcupado]=useState(false),[carregando,setCarregando]=useState(true),[alterado,setAlterado]=useState(false);
+ const [tentativaERP,setTentativaERP]=useState(0);
  const [eventos,setEventos]=useState<HistoricoErpV525D4[]>([]);
  const [pendencia,setPendencia]=useState<PendenciaErpV525D4|null>(null);
  const [mostrarHistorico,setMostrarHistorico]=useState(false);
@@ -2607,17 +2611,37 @@ function DetalheOrdemErpSomenteLeitura() {
 
  useEffect(()=>{
   let ativo=true;
-  Promise.all([
+  setCarregando(true);setErro("");setDetalhe(null);setFalhasConsultaErp([]);
+  Promise.allSettled([
    consultarDetalheErpV52(id),
    consultarEstoqueErpV52(),
    apiAtel<AndamentoAtel>(`/api/os-andamento?atendimento=${id}`),
    apiAtel<ApontamentoAtel>(`/api/os-materiais?atendimento=${id}`),
    apiAtel<RespostaEventosErpV525D4>(`/api/os-eventos?atendimento=${id}`)
-  ]).then(([d,e,a,m,h])=>{if(!ativo)return;setDetalhe(d);setEstoqueErp(e);setAndamento(a);setApontamento(m);setItens(m.itens);setEventos(h.eventos);setPendencia(h.pendencia);setErro("");})
-  .catch(e=>{if(ativo)setErro(e instanceof Error?e.message:"Falha de consulta");})
+  ]).then(([d,e,a,m,h])=>{
+   if(!ativo)return;
+   const mensagem=(r:PromiseRejectedResult)=>r.reason instanceof Error?r.reason.message:String(r.reason??"Falha desconhecida");
+   if(d.status==='rejected'){
+    setErro('Detalhe da OS indisponível: '+mensagem(d));
+    setEstoqueErp([]);setAndamento(null);setApontamento(null);setItens([]);
+    return;
+   }
+   setDetalhe(d.value);
+   const pendencias:string[]=[];
+   if(e.status==='fulfilled')setEstoqueErp(e.value);
+   else {setEstoqueErp([]);pendencias.push('Estoque do técnico: '+mensagem(e));}
+   if(a.status==='fulfilled')setAndamento(a.value);
+   else {setAndamento(null);pendencias.push('Andamento da OS: '+mensagem(a));}
+   if(m.status==='fulfilled'){setApontamento(m.value);setItens(m.value.itens);}
+   else {setApontamento(null);setItens([]);pendencias.push('Materiais apontados: '+mensagem(m));}
+   if(h.status==='fulfilled'){setEventos(h.value.eventos);setPendencia(h.value.pendencia);}
+   else {setEventos([]);setPendencia(null);pendencias.push('Histórico de eventos: '+mensagem(h));}
+   setFalhasConsultaErp(pendencias);
+   setErro('');
+  }).catch(e=>{if(ativo)setErro(e instanceof Error?e.message:'Falha de consulta');})
   .finally(()=>{if(ativo)setCarregando(false);});
   return()=>{ativo=false;};
- },[id]);
+ },[id,tentativaERP]);
  const contrato=detalhe?.Contrato as {Cliente?:{Nome?:string};IDContrato?:number}|undefined;
  const enderecos=detalhe?.Enderecos as Array<{Endereco?:string;Numero?:number;NomeBairro?:string;NomeCidade?:string;Estado?:string}>|undefined;
  const endereco=enderecos?.[0];
@@ -2685,15 +2709,21 @@ function DetalheOrdemErpSomenteLeitura() {
   finally{setOcupado(false);}
  }
  const btn:CSSProperties={width:"100%",minHeight:47,border:0,borderRadius:4,fontSize:12,fontWeight:900,background:"#0d7897",color:"#fff",cursor:"pointer"};
- return <div className="collector-screen"><div className="collector-phone" style={phoneStyle}>
-  <div style={headerStyle}>
-   <button type="button" style={backButtonStyle} onClick={()=>router.push("/coletor/ordens-servico")}>‹</button>
-   <div style={headerInfoStyle}><strong style={headerCodigoStyle}>OS-{id}</strong><span>{String(detalhe?.NomeTecnicoVisita??"TÉCNICO ERP").toUpperCase()}</span><span>ERP · {String(detalhe?.IdTecnicoVisita??"—")}</span></div>
-   <button type="button" style={menuButtonStyle} aria-label="Mais opções">⋮</button>
+ return <div className="collector-screen atel-v145-erp"><div className="collector-phone" style={phoneStyle}>
+  <div style={headerStyle} className="atel-v145-erp-header">
+   <button type="button" style={backButtonStyle} onClick={()=>router.push("/coletor/ordens-servico")}><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M19 12H5"/><path d="m12 19-7-7 7-7"/></svg></button>
+   <div style={headerInfoStyle} className="atel-v145-erp-title"><span className="atel-v145-erp-eyebrow">ORDEM DE SERVIÇO · ERP</span><strong style={headerCodigoStyle}>OS nº {id}</strong><span>{String(detalhe?.NomeTecnicoVisita??"TÉCNICO ERP").toUpperCase()}</span><span>ERP · {String(detalhe?.IdTecnicoVisita??"—")}</span></div>
+   <span className="atel-v145-erp-header-icon" aria-hidden="true"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"><rect x="6" y="4" width="12" height="17" rx="2"/><path d="M9 4.5V3h6v1.5M9 10h6M9 14h3m1 3 1.5 1.5L18 15"/></svg></span>
   </div>
-  <div style={scrollStyle}>
-   {carregando&&<p style={{padding:15}}>Carregando OS...</p>}
-   {erro&&<div role="alert" style={{padding:12,margin:10,background:"#fff0ed",color:"#a12424",borderRadius:8,fontSize:12}}>{erro}</div>}
+  <div style={scrollStyle} className="atel-os-v142-detail-area">
+   {!detalhe && (carregando || erro) && <AtelOsEstadoERP carregando={carregando} erro={carregando ? undefined : erro} titulo={`OS nº ${id}`} onRetry={() => setTentativaERP(n => n + 1)} />}
+   {detalhe && erro && <div role="alert" style={{padding:12,margin:10,background:"#fff0ed",color:"#a12424",borderRadius:8,fontSize:12}}>{erro}</div>}
+   {detalhe && falhasConsultaErp.length>0 && <div className="atel-os-v143-partial" role="status">
+    <strong>Algumas informações da OS não foram carregadas</strong>
+    <div>Os dados disponíveis foram mantidos, mas não conclua operações que dependam das consultas pendentes.</div>
+    <ul>{falhasConsultaErp.map((falha,indice)=><li key={indice}>{falha}</li>)}</ul>
+    <button type="button" onClick={()=>setTentativaERP(n=>n+1)}>TENTAR CONSULTAR NOVAMENTE</button>
+   </div>}
    {aviso&&<div role="status" style={{padding:12,margin:10,background:"#e8f8ee",color:"#087b43",borderRadius:8,fontSize:12}}>{aviso}</div>}
    {detalhe&&<>
     <section style={compactOsCardStyle}>
@@ -2913,7 +2943,7 @@ function DetalheOrdemErpSomenteLeitura() {
     <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginTop:15}}><button type="button" onClick={()=>setPreflightAberto(false)} style={{minHeight:43,border:"1px solid #c7dce6",background:"white",borderRadius:9,color:"#17627c",fontWeight:800}}>FECHAR</button><button type="button" disabled={preflightCarregando} onClick={()=>void conferirFinalizacao()} style={{minHeight:43,border:0,background:"#087fa3",borderRadius:9,color:"white",fontWeight:800}}>RECONSULTAR</button></div>
    </div>
   </div>}
-  <div style={footerStyle}>
+  {detalhe && <div style={footerStyle}>
    {pendenciaAtiva?<>
     <div style={{fontSize:11,textAlign:"center",background:"#fff7e6",color:"#885b18",padding:"10px 8px",fontWeight:850,marginBottom:8}}>
      OS aguardando tratativa{pendencia?.nova_data?` · Nova data: ${dataBrAtel(pendencia.nova_data)}`:""}
@@ -2923,7 +2953,7 @@ function DetalheOrdemErpSomenteLeitura() {
     {(["DESLOCAMENTO","NO_CLIENTE","ATENDIMENTO"] as EtapaAtel[]).includes(etapa)&&<button type="button" disabled={ocupado} style={{...footerButtonStyle,background:"#b7791f",marginBottom:8}} onClick={()=>{setErroModal("");setModalOcorrencia(true);}}>REGISTRAR OCORRÊNCIA / REAGENDAR</button>}
     {prox?<button type="button" onClick={()=>void avancar()} disabled={ocupado||carregando||!andamento} style={footerButtonStyle}>{rotulo}</button>:<button type="button" onClick={()=>void conferirFinalizacao()} disabled={ocupado||carregando||!andamento} style={{...footerButtonStyle,background:"#147e9f"}}>CONFERIR FINALIZAÇÃO</button>}
    </>}
-  </div>
+  </div>}
  </div></div>;
 }
 

@@ -1,0 +1,13 @@
+.painel{flex:0 0 auto;box-sizing:border-box;margin:10px 12px 2px;padding:12px 12px 10px;background:#fff;border:1px solid #d5e7ee;border-left:4px solid #129abe;border-radius:13px;box-shadow:0 3px 10px rgba(15,70,100,.045);color:#1a4057}
+.topo{display:flex;align-items:center;gap:8px;min-width:0}
+.simbolo{flex:0 0 34px;width:34px;height:34px;border-radius:10px;background:#e8f6fb;color:#0d8fb4;display:flex;align-items:center;justify-content:center}
+.titulos{display:flex;flex:1;min-width:0;flex-direction:column;gap:1px}
+.titulos strong{font-size:13px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.kicker{font-size:8px;font-weight:900;letter-spacing:.8px;color:#6f8a9a}
+.tag{font-size:9px;font-weight:750;white-space:nowrap;color:#087ea1;background:#e9f7fc;border-radius:99px;padding:5px 7px}
+.metricas{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;margin-top:10px}
+.metricas>div{text-align:center;background:#f2f8fb;border:1px solid #e9f0f5;padding:7px 3px;border-radius:9px;min-width:0}
+.metricas strong{display:block;font-size:19px;font-weight:850;line-height:1.1;color:#174058}
+.metricas span{font-size:9px;display:block;color:#698697;margin-top:4px;font-weight:750}
+.painel p{font-size:10px;color:#6d8798;line-height:1.35;margin:8px 0 0}
+@media(max-width:365px){.painel{padding:10px;margin-left:9px;margin-right:9px}.tag{font-size:8px}.metricas span{font-size:8px}}

@@ -1,0 +1,28 @@
+/* DS-COL-1.0 — Retorno individual. Only content styles, NEVER outer collector geometry. */
+.atel-v138-ret-detail .atel-v138-header{background:linear-gradient(105deg,#087ba4,#1598b4)!important;display:flex!important;align-items:center!important;gap:11px!important;padding:0 15px!important}
+.atel-v138-ret-detail .atel-v138-header strong{flex:1!important;text-align:left!important;font-size:16px!important;letter-spacing:-.3px!important}
+.atel-v138-ret-detail .atel-v138-header-icon{display:grid;place-items:center;width:34px;height:34px;border-radius:11px;background:rgba(255,255,255,.14);color:#fff;flex-shrink:0}
+.atel-v138-ret-detail .atel-v138-header-icon svg{width:19px;height:19px}
+.atel-v138-ret-detail .atel-v138-body{background:#f4f8fb!important;padding:12px 12px 26px!important;scrollbar-width:thin;scrollbar-color:#a8c6d4 transparent}
+.atel-v138-ret-detail .atel-v138-document,.atel-v138-ret-detail .atel-v138-panel,.atel-v138-ret-detail .atel-v138-summary{background:#fff!important;border:1px solid #159fc5!important;border-radius:15px!important;padding:13px!important;box-shadow:0 3px 12px rgba(12,70,100,.055)!important}
+.atel-v138-ret-detail .atel-v138-document{border-color:#d0e5ef!important}
+.atel-v138-ret-detail .atel-v138-document-code{font-size:17px!important;color:#087da7!important;letter-spacing:-.3px!important;overflow-wrap:anywhere}
+.atel-v138-ret-detail .atel-v138-document-stats{background:transparent!important;padding:0!important;gap:8px!important;grid-template-columns:repeat(2,minmax(0,1fr))!important}
+.atel-v138-ret-detail .atel-v138-document-stats>div{min-width:0;padding:9px;border:1px solid #d8e9f2;border-radius:11px;background:#fbfdff;text-align:center}
+.atel-v138-ret-detail .atel-v138-document-stats span,.atel-v138-ret-detail .atel-v138-summary-stat>span{display:block!important;color:#788da0!important;font-size:9px!important;letter-spacing:.3px}
+.atel-v138-ret-detail .atel-v138-document-stats strong,.atel-v138-ret-detail .atel-v138-summary-stat>strong{display:block!important;color:#087da7!important;font-size:19px!important;font-weight:900!important}
+.atel-v138-ret-detail .atel-v138-item{width:100%!important;border:1px solid #d0e4ed!important;border-left:4px solid #159fc5!important;border-radius:13px!important;background:#fff!important;padding:12px!important;margin-bottom:10px!important;box-shadow:0 3px 10px rgba(12,70,100,.05)!important}
+.atel-v138-ret-detail .atel-v138-item:focus-visible{outline:3px solid rgba(16,151,188,.3)!important;outline-offset:2px}
+.atel-v138-ret-detail .atel-v138-item-code{font-size:13px!important;color:#087da7!important;font-weight:900!important}
+.atel-v138-ret-detail .atel-v138-item-name{font-size:11px!important;color:#34576d!important;line-height:1.4!important}
+.atel-v138-ret-detail .atel-v138-summary-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:8px!important}
+.atel-v138-ret-detail .atel-v138-summary-stat{border:1px solid #d8e9f2!important;border-radius:11px!important;background:#fbfdff!important;padding:10px 6px!important}
+.atel-v138-ret-detail .atel-v138-field{border:1px solid #c6dee9!important;border-radius:10px!important;background:#fbfdff!important;color:#21475c!important;box-sizing:border-box!important;min-height:43px!important;font-size:13px!important}
+.atel-v138-ret-detail .atel-v138-field:focus{outline:2px solid rgba(21,159,197,.18)!important;border-color:#159fc5!important}
+.atel-v138-ret-detail .atel-v138-action{border-radius:11px!important;min-height:46px!important;background:linear-gradient(105deg,#087da7,#0c9bb4)!important;box-shadow:0 5px 13px rgba(8,116,151,.15)!important;font-weight:850!important}
+.atel-v138-ret-detail .atel-v138-action:disabled{background:#acc7d3!important;box-shadow:none!important}
+.atel-v138-ret-detail .atel-v138-sheet{background:#fbfdff!important;border-radius:18px 18px 0 0!important;box-shadow:0 -10px 35px rgba(6,40,62,.14)!important}
+.atel-v138-ret-detail .atel-v138-choice{border-radius:12px!important;min-height:54px!important}
+.atel-v138-ret-detail .atel-v138-choice:focus-visible{outline:3px solid rgba(21,159,197,.27)!important}
+.atel-v138-ret-detail .atel-v138-simulate{border:1px dashed #8fcee2!important;background:#f0f9fc!important;border-radius:10px!important}
+@media(max-width:380px){.atel-v138-ret-detail .atel-v138-header strong{font-size:14px!important}}

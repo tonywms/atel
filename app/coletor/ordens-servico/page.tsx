@@ -1,6 +1,7 @@
 "use client";
 
 import "./atel-v47.css";
+import AtelOsEstadoERP from "@/components/atel-ui/AtelOsEstadoERP"; // ATEL_OS_ESTADOS_V142
 import { consultarOsErpV52, type OsErpV52 } from "@/lib/erpOperacionalV52";
 
 import {
@@ -522,6 +523,7 @@ export default function OrdensServicoPage() {
   const [ordens, setOrdens] = useState<OrdemServico[]>([]);
   const [erroERP, setErroERP] = useState("");
   const [carregandoERP, setCarregandoERP] = useState(true);
+  const [tentativaERP, setTentativaERP] = useState(0);
 
   /* =======================================================
      CARREGAR
@@ -529,6 +531,8 @@ export default function OrdensServicoPage() {
 
   useEffect(() => {
     let ativo = true;
+    setCarregandoERP(true);
+    setErroERP("");
     consultarOsErpV52().then((lista) => {
       if (!ativo) return;
       if (!Array.isArray(lista)) throw new Error("Formato de OS invalido");
@@ -554,7 +558,7 @@ export default function OrdensServicoPage() {
       setErroERP(e instanceof Error ? e.message : "Falha na consulta ERP");
     }).finally(() => { if (ativo) setCarregandoERP(false); });
     return () => { ativo = false; };
-  }, []);
+  }, [tentativaERP]);
 
   /* =======================================================
      FILTRO
@@ -695,11 +699,11 @@ export default function OrdensServicoPage() {
         ================================================= */}
 
         <div
-          className="collector-request-list"
+          className="collector-request-list atel-os-v142-list-area"
           style={listStyle}
         >
-          {carregandoERP && <div style={emptyStyle}>Consultando ordens de servico no ERP...</div>}
-          {erroERP && <div role="alert" style={emptyStyle}>ERP indisponivel: {erroERP}. Nenhuma OS demonstrativa foi carregada.</div>}
+          {carregandoERP && <AtelOsEstadoERP carregando titulo="Ordens de Serviço" />}
+          {!carregandoERP && erroERP && <AtelOsEstadoERP carregando={false} erro={erroERP} titulo="Ordens de Serviço" onRetry={() => setTentativaERP(n => n + 1)} />}
           {!carregandoERP && !erroERP && filtradas.length === 0 && (
             <div style={emptyStyle}>
               Nenhuma ordem de serviço encontrada.
@@ -723,6 +727,7 @@ export default function OrdensServicoPage() {
               <button
                 type="button"
                 key={ordem.id}
+                className="atel-os-v142-order-card"
                 onClick={() =>
                   abrirOrdem(ordem)
                 }

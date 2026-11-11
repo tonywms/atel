@@ -62,13 +62,22 @@ async function flush() {
         window.dispatchEvent(new CustomEvent(RESULT_EVENT_V110, {detail: {uuid, ok: true}}));
       } catch(e) {
         const message = String(e);
-        // Um estado ja finalizado e divergente exige conciliacao manual:
-        // nao martelar o banco a cada mudanca de aba ou evento de rede.
-        if (/pedido ja finalizado com outro conteudo|estado legado ja finalizado sem comprovante|documento terminal conflitante/i.test(message)) {
-          lastFailures.set(uuid,{serial:JSON.stringify(estado),error:message});
+        // V146: regra de negocio permanente nao deve virar erro infinito no console.
+        // A pendencia continua local: jamais simular ACK ou mexer no estoque.
+        const materialSerialBloqueado = /material n[aã]o permitido/i.test(message);
+        const motivo = materialSerialBloqueado
+          ? "Recebimento pendente: o pedido contem material rastreado por serial sem conciliacao de custodia habilitada. Nenhuma baixa foi confirmada no Supabase. Encaminhe para a conciliacao dos seriais; nao repita o aceite."
+          : message;
+        const bloqueioPersistente = materialSerialBloqueado || /pedido ja finalizado com outro conteudo|estado legado ja finalizado sem comprovante|documento terminal conflitante/i.test(message);
+        if (bloqueioPersistente) {
+          lastFailures.set(uuid,{serial:JSON.stringify(estado),error:motivo});
         }
-        window.dispatchEvent(new CustomEvent(RESULT_EVENT_V110, {detail: {uuid, ok: false, error: message}}));
-        report(e);
+        window.dispatchEvent(new CustomEvent(RESULT_EVENT_V110, {detail: {uuid, ok: false, error: motivo}}));
+        if (materialSerialBloqueado) {
+          // Aviso operacional controlado: evita o overlay de Console Error do Next.
+          console.warn("ATEL V146 - conciliacao de serial pendente", motivo);
+          window.dispatchEvent(new CustomEvent("atel-ped-sync-error", {detail: motivo}));
+        } else report(e);
         // O proximo PED segue independente do resultado deste.
       }
     }

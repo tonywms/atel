@@ -1,9 +1,11 @@
 "use client";
 import { usePedidoAtelV363 } from "@/lib/atelPedidosHomologacaoV363";
 import TransferenciaInternaAceite from "@/components/atel-v35/TransferenciaInternaAceite";
+import "../atel-v135-recebimento.css";
 
 import { useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
+import "./atel-v135-3-indicadores.css";
 
 import { requisicoesTecnicasMock } from "@/lib/requisicoesTecnicas";
 
@@ -734,7 +736,7 @@ function RecebimentoLegado() {
   ======================================================= */
 
   return (
-    <div className="collector-screen">
+    <div className="collector-screen atel-v135-recebimento">
       <div
         className="collector-phone"
         style={{
@@ -754,14 +756,10 @@ function RecebimentoLegado() {
                   "/coletor/recebimento"
                 )
               }
-            >
-              ‹
-            </button>
+            ><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M19 12H5" /><path d="m12 19-7-7 7-7" /></svg></button>
 
-            <div>
-              <strong>
-                #
-                {req.codigo.replace(
+            <div className="atel-v135-header-text"><strong>
+                Pedido nº {req.codigo.replace(
                   "REQ-",
                   ""
                 )}
@@ -786,13 +784,7 @@ function RecebimentoLegado() {
             </div>
           </div>
 
-          <span
-            style={{
-              fontSize: 22,
-            }}
-          >
-            ⋮
-          </span>
+          <span className="atel-v135-head-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="7" width="18" height="14" rx="2"/><path d="M7 7V5a3 3 0 0 1 3-3h4a3 3 0 0 1 3 3v2M3 13h18M10 13v2h4v-2"/></svg></span>
         </div>
 
         {/* =================================================
@@ -808,13 +800,13 @@ function RecebimentoLegado() {
             paddingBottom: 110,
           }}
         >
-          <section className="collector-section">
+          <section className="collector-section atel-v135-main-panel">
             <div className="collector-section-title">
               <span>
                 Recebimento de Volumes
               </span>
 
-              <span>✓</span>
+              <span className="atel-v135-section-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4V2h6v2M9 11l2 2 4-4M9 17h6"/></svg></span>
             </div>
 
             <div style={info}>
@@ -827,7 +819,7 @@ function RecebimentoLegado() {
                 CONTADORES
             ============================================= */}
 
-            <div className="collector-quantity-grid">
+            <div className="collector-quantity-grid atel-v135-3-indicadores">
               <div>
                 <span>
                   Esperados
@@ -863,8 +855,7 @@ function RecebimentoLegado() {
                 DESTINO
             ============================================= */}
 
-            <div style={box}>
-              <div style={lab}>
+            <div className="atel-v135-destino" style={box}><div style={lab}>
                 DESTINO
               </div>
 
@@ -920,7 +911,7 @@ function RecebimentoLegado() {
               LEITURA DO VOLUME
             </div>
 
-            <div className="collector-input-action">
+            <div className="collector-input-action atel-v135-scan">
               <input
                 value={codigo}
                 onChange={(e) =>
@@ -936,11 +927,7 @@ function RecebimentoLegado() {
                 }
               />
 
-              <button
-                onClick={ler}
-              >
-                ✓
-              </button>
+              <button type="button" aria-label="Validar volume" onClick={ler}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round"><path d="m5 12 4 4L19 6"/></svg></button>
             </div>
 
             {/* =============================================
@@ -974,9 +961,7 @@ function RecebimentoLegado() {
                   );
 
                 return (
-                  <div
-                    key={v.id}
-                    style={{
+                  <div key={v.id} className="atel-v135-volume" style={{
                       marginTop: 10,
 
                       border: `1.5px solid ${
@@ -1445,8 +1430,7 @@ function RecebimentoLegado() {
             ============================================= */}
 
             {qtdLidos > 0 && (
-              <div style={box}>
-                <b
+              <div className="atel-v135-resumo" style={box}><b
                   style={{
                     fontSize: 10,
                   }}

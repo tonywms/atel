@@ -1,5 +1,11 @@
 "use client";
 
+import "./atel-v149-consulta-premium.css";
+import "./atel-v150-qualidade.css";
+import "./atel-v152-devolucao.css";
+// ATEL_V152_DEVOLUCAO
+// ATEL_V150_QUALIDADE_OPERACIONAL
+
 import React, { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 
@@ -11,7 +17,8 @@ import {
 } from "@/lib/estoqueTecnicoStore";
 
 export default function Page() {
-  const router = useRouter();
+
+const router = useRouter();
 
   const [estoque, setEstoque] = useState<EstoqueTecnico[]>([]);
   const [busca, setBusca] = useState("");
@@ -21,9 +28,11 @@ export default function Page() {
   const [quantidade, setQuantidade] = useState("1");
   const [seriais, setSeriais] = useState<string[]>([]);
   const [motivo, setMotivo] = useState("DEVOLUÇÃO DO TÉCNICO");
+  const [motivosAbertos, setMotivosAbertos] = useState(false);
   const [observacao, setObservacao] = useState("");
   const [mensagem, setMensagem] = useState("");
   const [confirmando, setConfirmando] = useState(false);
+  const v150ProcessandoRef = React.useRef(false);
 
   function carregar() {
     setEstoque(carregarEstoqueTecnico());
@@ -85,6 +94,7 @@ export default function Page() {
 
     setSeriais([]);
     setMotivo("DEVOLUÇÃO DO TÉCNICO");
+    setMotivosAbertos(false);
     setObservacao("");
     setMensagem("");
     setConfirmando(false);
@@ -112,14 +122,23 @@ export default function Page() {
 
   function prepararDevolucao() {
     if (!selecionado) return;
+    if (selecionado.seriais.length > 0) {
+      const validos = new Set(selecionado.seriais);
+      if (new Set(seriais).size !== seriais.length || seriais.some(serial => !validos.has(serial))) {
+        setMensagem("Selecao de seriais inconsistente. Reabra a devolucao e selecione novamente.");
+        return;
+      }
+    }
+    if (!motivo.trim()) {
+      setMensagem("Selecione o motivo da devolucao.");
+      return;
+    }
+
 
     const qtd =
       Number(quantidade);
 
-    if (
-      !Number.isFinite(qtd) ||
-      qtd <= 0
-    ) {
+    if (!Number.isSafeInteger(qtd) || qtd <= 0) {
       setMensagem(
         "Informe uma quantidade válida."
       );
@@ -150,12 +169,23 @@ export default function Page() {
     }
 
     setMensagem("");
-    setConfirmando(true);
+    
+    // ATEL V152 - material com serie exige identificacao e motivo documentado.
+    if ((motivo === "AVARIA" || motivo === "OUTRO") && !observacao.trim()) {
+      setMensagem("Informe uma justificativa para " + motivo.toLowerCase() + ".");
+      return;
+    }
+    if (selecionado.seriais.length > 0 &&
+        (seriais.length === 0 || seriais.length > selecionado.quantidade)) {
+      setMensagem("Selecione seriais validos dentro do saldo disponivel.");
+      return;
+    }
+setConfirmando(true);
   }
 
   function confirmarDevolucao() {
-    if (!selecionado) return;
-
+    if (!selecionado || v150ProcessandoRef.current) return;
+    v150ProcessandoRef.current = true;
     try {
       const resultado =
         devolverEstoqueTecnicoAoCD({
@@ -191,11 +221,11 @@ export default function Page() {
           ? error.message
           : "Não foi possível gerar a devolução."
       );
-    }
+    } finally { v150ProcessandoRef.current = false; }
   }
 
   return (
-    <div className="collector-screen">
+    <div className="collector-screen atel-v149-consulta-screen">
       <div className="collector-phone">
 
         {/* ================================================
@@ -214,52 +244,22 @@ export default function Page() {
             CABEÇALHO
         ================================================= */}
 
-        <div className="collector-header">
-          <div className="collector-header-title">
-
-            <button
-              type="button"
-              className="collector-back-button"
-              onClick={() =>
-                router.push(
-                  "/coletor/consulta"
-                )
-              }
-            >
-              ‹
-            </button>
-
-            <strong>
-              Estoque Técnico
-            </strong>
-
-          </div>
+        <div className="collector-header atel-v149-header">
+          <button type="button" className="atel-v149-back" onClick={() => router.push("/coletor/consulta")} aria-label="Voltar às consultas"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M19 12H5m7 7-7-7 7-7"/></svg></button>
+          <div className="atel-v149-header-text"><span>CENTRAL DE CONSULTAS</span><strong>Estoque Técnico</strong></div>
+          <span className="atel-v149-header-icon" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="12" cy="7" r="3"/><path d="M5 21v-2a7 7 0 0 1 14 0v2M18 6h4m-2-2v4"/></svg></span>
         </div>
 
         {/* ================================================
             PESQUISA
         ================================================= */}
 
-        <div className="collector-search-area">
-
-          <div className="collector-search-box">
-
-            <span>
-              ⌕
-            </span>
-
-            <input
-              value={busca}
-              onChange={(e) =>
-                setBusca(
-                  e.target.value
-                )
-              }
-              placeholder="Técnico, produto ou serial..."
-            />
-
+        <div className="collector-search-area atel-v149-search-area">
+          <div className="atel-v149-search-box">
+            <span className="atel-v149-search-icon" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg></span>
+            <input type="search" aria-label="Pesquisar no estoque" value={busca} onChange={(event) => setBusca(event.target.value)} placeholder="Técnico, produto ou serial..." />
+            {busca && <button type="button" className="atel-v149-clear" aria-label="Limpar pesquisa" onClick={() => setBusca("")}>×</button>}
           </div>
-
         </div>
 
         {/* ================================================
@@ -497,19 +497,7 @@ export default function Page() {
 
           {!grupos.length && (
 
-            <div
-              style={{
-                padding: 35,
-
-                textAlign:
-                  "center",
-
-                color:
-                  "#819098",
-              }}
-            >
-              Nenhum estoque móvel encontrado.
-            </div>
+            <div className="atel-v150-empty" role="status"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><rect x="4" y="5" width="16" height="14" rx="2"/><path d="M8 10h8m-8 4h5"/></svg><strong>Nenhum estoque móvel encontrado</strong><span>Revise o filtro ou consulte outro técnico ou produto.</span></div>
 
           )}
 
@@ -545,12 +533,13 @@ export default function Page() {
 
         {selecionado && (
 
-          <div style={S.overlay}>
+          <div className="atel-v151-overlay" style={S.overlay}>
 
-            <div style={S.modal}>
+            <div className="atel-v151-modal" style={S.modal}>
 
-              <div style={S.modalTitle}>
-                Devolução ao CD
+              <div className="atel-v150-modal-heading">
+                <span className="atel-v150-heading-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="m3 7 9-4 9 4v10l-9 4-9-4V7Zm0 0 9 5 9-5m-9 5v9"/></svg></span>
+                <div><small>OPERACAO DE ESTOQUE</small><strong>Devolucao ao CD</strong></div>
               </div>
 
               <div style={S.infoBand}>
@@ -569,18 +558,13 @@ export default function Page() {
 
               {/* SALDO */}
 
-              <div style={S.balance}>
-
-                SALDO DISPONÍVEL
-
-                <strong>
-                  {selecionado.quantidade}{" "}
-                  {selecionado.unidade}
-                </strong>
-
+              
+              <div className="atel-v150-summary" role="group" aria-label="Resumo da devolucao">
+                <div><span>DISPONIVEL</span><strong>{selecionado.quantidade}</strong></div>
+                <div><span>DEVOLVER</span><strong>{selecionado.seriais.length ? seriais.length : (Number(quantidade) || 0)}</strong></div>
+                <div><span>RESTANTE</span><strong>{Math.max(0, selecionado.quantidade - (selecionado.seriais.length ? seriais.length : (Number(quantidade) || 0)))}</strong></div>
               </div>
-
-              {/* QUANTIDADE / SERIAIS */}
+{/* QUANTIDADE / SERIAIS */}
 
               {selecionado.seriais.length === 0 ? (
 
@@ -617,6 +601,19 @@ export default function Page() {
                     SERIAIS PARA DEVOLUÇÃO
                   </div>
 
+                  <div className="atel-v152-serial-tools" role="group" aria-label="Acoes de selecao dos seriais">
+  <span className="atel-v152-serial-count" aria-live="polite">{seriais.length} de {selecionado.seriais.length} selecionados</span>
+  <div className="atel-v152-serial-actions">
+    <button type="button" onClick={() => {
+      const disponiveis = Array.from(new Set(selecionado.seriais));
+      const selecionaveis = disponiveis.slice(0, Math.max(0, Math.floor(selecionado.quantidade)));
+      setSeriais(selecionaveis);
+      setQuantidade(String(selecionaveis.length));
+      setMensagem("");
+    }}>Selecionar todos</button>
+    <button type="button" onClick={() => {setSeriais([]);setQuantidade("0");setMensagem("");}}>Limpar</button>
+  </div>
+</div>
                   {selecionado.seriais.map(
                     (serial) => (
 
@@ -668,39 +665,18 @@ export default function Page() {
 
                 MOTIVO
 
-                <select
-                  value={motivo}
-                  onChange={(
-                    event
-                  ) =>
-                    setMotivo(
-                      event.target.value
-                    )
-                  }
-                  style={S.input}
-                >
-
-                  <option>
-                    DEVOLUÇÃO DO TÉCNICO
-                  </option>
-
-                  <option>
-                    SOBRA DE MATERIAL
-                  </option>
-
-                  <option>
-                    TROCA DE TÉCNICO
-                  </option>
-
-                  <option>
-                    AVARIA
-                  </option>
-
-                  <option>
-                    OUTRO
-                  </option>
-
-                </select>
+                <div className="atel-v149-motivo-picker">
+                  <button type="button" className="atel-v149-motivo-trigger" aria-expanded={motivosAbertos} aria-controls="atel-v149-motivos" onClick={() => setMotivosAbertos(!motivosAbertos)}>
+                    <span>{motivo}</span><span className={motivosAbertos ? "atel-v149-rotate" : ""}><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></span>
+                  </button>
+                  {motivosAbertos && <div id="atel-v149-motivos" role="listbox" aria-label="Selecione o motivo" className="atel-v149-motivo-list">
+                    <button key="DEVOLUÇÃO DO TÉCNICO" type="button" role="option" aria-selected={motivo === "DEVOLUÇÃO DO TÉCNICO"} className={motivo === "DEVOLUÇÃO DO TÉCNICO" ? "atel-v149-motivo-option is-selected" : "atel-v149-motivo-option"} onClick={() => { setMotivo("DEVOLUÇÃO DO TÉCNICO"); setMotivosAbertos(false); }}><span>DEVOLUÇÃO DO TÉCNICO</span>{motivo === "DEVOLUÇÃO DO TÉCNICO" && <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="m5 12 4 4L19 6"/></svg>}</button>
+                    <button key="SOBRA DE MATERIAL" type="button" role="option" aria-selected={motivo === "SOBRA DE MATERIAL"} className={motivo === "SOBRA DE MATERIAL" ? "atel-v149-motivo-option is-selected" : "atel-v149-motivo-option"} onClick={() => { setMotivo("SOBRA DE MATERIAL"); setMotivosAbertos(false); }}><span>SOBRA DE MATERIAL</span>{motivo === "SOBRA DE MATERIAL" && <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="m5 12 4 4L19 6"/></svg>}</button>
+                    <button key="TROCA DE TÉCNICO" type="button" role="option" aria-selected={motivo === "TROCA DE TÉCNICO"} className={motivo === "TROCA DE TÉCNICO" ? "atel-v149-motivo-option is-selected" : "atel-v149-motivo-option"} onClick={() => { setMotivo("TROCA DE TÉCNICO"); setMotivosAbertos(false); }}><span>TROCA DE TÉCNICO</span>{motivo === "TROCA DE TÉCNICO" && <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="m5 12 4 4L19 6"/></svg>}</button>
+                    <button key="AVARIA" type="button" role="option" aria-selected={motivo === "AVARIA"} className={motivo === "AVARIA" ? "atel-v149-motivo-option is-selected" : "atel-v149-motivo-option"} onClick={() => { setMotivo("AVARIA"); setMotivosAbertos(false); }}><span>AVARIA</span>{motivo === "AVARIA" && <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="m5 12 4 4L19 6"/></svg>}</button>
+                    <button key="OUTRO" type="button" role="option" aria-selected={motivo === "OUTRO"} className={motivo === "OUTRO" ? "atel-v149-motivo-option is-selected" : "atel-v149-motivo-option"} onClick={() => { setMotivo("OUTRO"); setMotivosAbertos(false); }}><span>OUTRO</span>{motivo === "OUTRO" && <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="m5 12 4 4L19 6"/></svg>}</button>
+                  </div>}
+                </div>
 
               </label>
 
@@ -746,7 +722,7 @@ export default function Page() {
 
               {/* AÇÕES */}
 
-              <div style={S.actions}>
+              <div className="atel-v151-actions" style={S.actions}>
 
                 <button
                   type="button"
@@ -818,6 +794,16 @@ export default function Page() {
                 ?
 
               </p>
+              <div className="atel-v150-confirm-summary" role="group" aria-label="Conferencia antes de gerar o retorno">
+                <div className="atel-v150-confirm-heading"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4V2h6v2M9 9h6m-6 4h6m-6 4h4"/></svg> <strong>CONFIRA OS DADOS DA OPERACAO</strong></div>
+                <div className="atel-v150-summary-line"><span>Produto</span><b>{selecionado.codigoProduto}</b></div>
+                <div className="atel-v150-summary-line"><span>Tecnico</span><b>{selecionado.codigoTecnico}</b></div>
+                <div className="atel-v150-summary-line"><span>Motivo</span><b>{motivo}</b></div>
+                <div className="atel-v150-summary-line"><span>Quantidade</span><b>{quantidade} {selecionado.unidade}</b></div>
+                <div className="atel-v150-summary-line"><span>Saldo restante</span><b>{Math.max(0, selecionado.quantidade - Number(quantidade))} {selecionado.unidade}</b></div>
+                {seriais.length > 0 && <div className="atel-v150-serial-summary"><span>Seriais selecionados</span>{seriais.map(s => <code key={s}>{s}</code>)}</div>}
+              </div>
+
 
               <div style={S.warning}>
 

@@ -1,5 +1,7 @@
 "use client";
 
+import "./atel-v149-consulta-premium.css";
+
 import React, {
   useEffect,
   useMemo,
@@ -15,7 +17,8 @@ import {
 } from "@/lib/estoqueTecnicoStore";
 
 export default function Page() {
-  const router = useRouter();
+
+const router = useRouter();
 
   const [e, setE] = useState<EstoqueTecnico[]>([]);
   const [q, setQ] = useState("");
@@ -53,7 +56,7 @@ export default function Page() {
   }, [e, q]);
 
   return (
-    <div className="collector-screen">
+    <div className="collector-screen atel-v149-consulta-screen">
       <div className="collector-phone">
 
         {/* BARRA PRETA SUPERIOR */}
@@ -67,42 +70,19 @@ export default function Page() {
 
         {/* HEADER */}
 
-        <div className="collector-header">
-          <div className="collector-header-title">
-
-            <button
-              className="collector-back-button"
-              onClick={() =>
-                router.push("/coletor/consulta")
-              }
-            >
-              ‹
-            </button>
-
-            <strong>
-              Estoque
-            </strong>
-
-          </div>
+        <div className="collector-header atel-v149-header">
+          <button type="button" className="atel-v149-back" onClick={() => router.push("/coletor/consulta")} aria-label="Voltar às consultas"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M19 12H5m7 7-7-7 7-7"/></svg></button>
+          <div className="atel-v149-header-text"><span>CENTRAL DE CONSULTAS</span><strong>Estoque</strong></div>
+          <span className="atel-v149-header-icon" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="m3 7 9-4 9 4v10l-9 4-9-4V7Zm0 0 9 5 9-5m-9 5v9"/></svg></span>
         </div>
 
         {/* BUSCA */}
 
-        <div className="collector-search-area">
-          <div className="collector-search-box">
-
-            <span>
-              ⌕
-            </span>
-
-            <input
-              value={q}
-              onChange={(x) =>
-                setQ(x.target.value)
-              }
-              placeholder="Produto, técnico, base ou serial..."
-            />
-
+        <div className="collector-search-area atel-v149-search-area">
+          <div className="atel-v149-search-box">
+            <span className="atel-v149-search-icon" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg></span>
+            <input type="search" aria-label="Pesquisar no estoque" value={q} onChange={(event) => setQ(event.target.value)} placeholder="Produto, técnico, base ou serial..." />
+            {q && <button type="button" className="atel-v149-clear" aria-label="Limpar pesquisa" onClick={() => setQ("")}>×</button>}
           </div>
         </div>
 

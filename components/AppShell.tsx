@@ -16,7 +16,13 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     if (!client) { setAutorizado(false); if (!login) router.replace("/login"); return; }
     let alive = true;
     setAutorizado(null);
-    client.auth.getUser().then(({data}) => {
+    // ATEL_V140_AUTH_TIMEOUT: resposta lenta/indisponivel nao deixa a tela travada indefinidamente.
+    Promise.race([
+      client.auth.getUser(),
+      new Promise<never>((_, reject) => {
+        window.setTimeout(() => reject(new Error("Tempo limite de autenticacao")), 12000);
+      }),
+    ]).then(({data}) => {
       if (!alive) return;
       const ok = [ATEL_MASTER, ATEL_TESTE].includes(data.user?.email?.toLowerCase() ?? "");
       if (data.user && !ok) void client.auth.signOut();

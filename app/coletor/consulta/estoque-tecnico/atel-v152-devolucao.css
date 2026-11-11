@@ -1,0 +1,7 @@
+/* ATEL E1 V152 - somente ferramentas de selecao no modal de devolucao. */
+.atel-v151-modal .atel-v152-serial-tools{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;margin:8px 0 10px;padding:8px 10px;background:#f1f9fd;border:1px solid #d1eaf4;border-radius:12px;}
+.atel-v151-modal .atel-v152-serial-count{font-size:11px;font-weight:900;color:#166a8d;letter-spacing:.01em}
+.atel-v151-modal .atel-v152-serial-actions{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.atel-v151-modal .atel-v152-serial-actions button{min-height:34px!important;border:1px solid #a9d9eb!important;padding:0 10px!important;border-radius:9px!important;background:white!important;color:#087da7!important;font-size:10px!important;font-weight:900!important;box-shadow:none!important;white-space:nowrap;cursor:pointer}
+.atel-v151-modal .atel-v152-serial-actions button:hover{background:#e2f5fc!important}
+.atel-v151-modal .atel-v152-serial-actions button:focus-visible{outline:2px solid #0e99c1;outline-offset:2px}

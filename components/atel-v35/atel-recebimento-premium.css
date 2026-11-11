@@ -1,0 +1,66 @@
+/* ATEL E1 V135 - Transferencia Interna no padrao visual aprovado V133/V134.
+   Escopo estrito: NAO altera width/height da collector-screen ou collector-phone. */
+.atel-v135-recebimento > .collector-phone { display:flex; flex-direction:column; overflow:hidden; padding:0; background:#f4f8fb; }
+.atel-v135-recebimento .atel-v135-header {flex:0 0 68px; min-height:68px; display:flex; align-items:center; gap:11px; padding:0 15px; box-sizing:border-box; background:linear-gradient(105deg,#087ba4,#1598b4); color:#fff;}
+.atel-v135-recebimento .atel-v135-back {width:38px;height:38px;flex:0 0 38px;border:0;border-radius:11px;display:grid;place-items:center;background:rgba(255,255,255,.13);color:#fff;cursor:pointer}
+.atel-v135-recebimento .atel-v135-header strong{display:block;font-size:18px;line-height:1.25;font-weight:850;letter-spacing:-.3px}
+.atel-v135-recebimento .atel-v135-header small{display:block;font-size:10px;color:#dbf4fb;margin-top:2px;font-weight:600}
+.atel-v135-recebimento .atel-v135-body {flex:1 1 0%;min-height:0;overflow-y:auto;overscroll-behavior:contain;padding:12px 12px 16px;box-sizing:border-box;color:#24475b;background:#f4f8fb}
+.atel-v135-recebimento .atel-v135-loading,.atel-v135-recebimento .atel-v135-error{padding:13px 12px;border-radius:11px;font-size:12px;margin-bottom:12px}
+.atel-v135-recebimento .atel-v135-loading{background:#e7f5fa;color:#176889}
+.atel-v135-recebimento .atel-v135-error{display:flex;gap:8px;align-items:flex-start;background:#fff0ed;color:#a33736;border:1px solid #f6cbca}
+.atel-v135-recebimento .atel-v135-document {background:#fff;border:1px solid #d5e6ef;border-radius:14px;box-shadow:0 2px 9px rgba(7,60,88,.05);padding:13px;margin-bottom:12px}
+.atel-v135-recebimento .atel-v135-doc-row {display:flex;align-items:center;gap:10px;min-width:0}
+.atel-v135-recebimento .atel-v135-icon {width:40px;height:40px;flex:0 0 40px;display:grid;place-items:center;background:#e8f6fb;border:1px solid #d7eef7;border-radius:11px;color:#087da7}
+.atel-v135-recebimento .atel-v135-doc-row > div{flex:1;min-width:0}
+.atel-v135-recebimento .atel-v135-doc-row small{display:block;font-size:9px;letter-spacing:.55px;font-weight:800;color:#688296}
+.atel-v135-recebimento .atel-v135-doc-row strong{display:block;color:#087ca6;font-size:16px;font-weight:850;overflow-wrap:anywhere;margin-top:3px}
+.atel-v135-recebimento .atel-v135-route {display:grid;grid-template-columns:minmax(0,1fr) 19px minmax(0,1fr);gap:8px;align-items:center;border-top:1px solid #edf2f6;margin-top:12px;padding-top:11px}
+.atel-v135-recebimento .atel-v135-route > div{min-width:0}
+.atel-v135-recebimento .atel-v135-route > svg{color:#188fb2}
+.atel-v135-recebimento .atel-v135-route span{display:block;color:#7d95a4;font-size:9px;font-weight:800}
+.atel-v135-recebimento .atel-v135-route strong{display:block;color:#36566b;font-size:11px;overflow-wrap:anywhere;margin-top:3px}
+.atel-v135-recebimento .atel-v135-badge{display:inline-flex;align-items:center;gap:5px;margin-top:12px;padding:6px 9px;font-size:9px;font-weight:800;color:#087ba1;background:#e6f6fa;border-radius:100px}
+.atel-v135-recebimento .atel-v135-panel{background:#fff;border:1.5px solid #169dce;border-radius:16px;padding:14px;margin-bottom:12px;min-width:0;box-sizing:border-box}
+.atel-v135-recebimento .atel-v135-heading{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
+.atel-v135-recebimento .atel-v135-heading h2{font-size:14px;line-height:1.3;font-weight:850;color:#087ea7;margin:0}
+.atel-v135-recebimento .atel-v135-heading p{font-size:10px;line-height:1.35;color:#7a8e9e;margin:4px 0 0}
+.atel-v135-recebimento .atel-v135-round{width:40px;height:40px;flex:0 0 40px;border-radius:50%;display:grid;place-items:center;background:#0b8fb6;color:#fff}
+.atel-v135-recebimento .atel-v135-strip{display:flex;align-items:flex-start;gap:8px;margin:12px 0;padding:10px;border-radius:9px;background:#eaf7fc;color:#146a8f;font-size:11px;font-weight:650;line-height:1.4}
+.atel-v135-recebimento .atel-v135-strip svg{flex:0 0 17px}
+.atel-v135-recebimento .atel-v135-metrics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;margin-bottom:15px}
+.atel-v135-recebimento .atel-v135-metrics > div{min-width:0;border:1px solid #dce8ef;border-radius:9px;padding:10px 4px;display:flex;align-items:center;flex-direction:column;gap:5px}
+.atel-v135-recebimento .atel-v135-metrics small{color:#5e778b;font-size:9px;font-weight:750}
+.atel-v135-recebimento .atel-v135-metrics strong{color:#0486af;font-size:19px;font-weight:850;overflow-wrap:anywhere}
+.atel-v135-recebimento .atel-v135-section-label{font-size:10px;letter-spacing:.4px;font-weight:850;color:#253c4d;margin-bottom:9px}
+.atel-v135-recebimento .atel-v135-product{padding:12px;background:#fcfeff;border:1px solid #d5e4eb;border-radius:11px}
+.atel-v135-recebimento .atel-v135-product-head{display:flex;gap:9px;min-width:0;align-items:flex-start;border-bottom:1px solid #e6eef3;padding-bottom:11px;margin-bottom:12px}
+.atel-v135-recebimento .atel-v135-product-head > div{flex:1;min-width:0}
+.atel-v135-recebimento .atel-v135-product-head strong{font-size:12px;font-weight:850;color:#0d7399}
+.atel-v135-recebimento .atel-v135-product-head p{font-size:10px;line-height:1.4;margin:3px 0 0;color:#466071;overflow-wrap:anywhere}
+.atel-v135-recebimento .atel-v135-number{width:28px;height:28px;flex:0 0 28px;border-radius:8px;display:grid;place-items:center;background:#e6f5fb;color:#087fa5;font-size:11px;font-weight:850}
+.atel-v135-recebimento .atel-v135-qty{padding:6px 7px;background:#e5f6fa;border-radius:7px;color:#127fa2;font-weight:800;font-size:10px;white-space:nowrap}
+.atel-v135-recebimento label{display:block;font-size:11px;color:#345468;font-weight:750;margin-bottom:6px}
+.atel-v135-recebimento input,.atel-v135-recebimento select,.atel-v135-recebimento textarea{display:block;width:100%;max-width:100%;min-width:0;box-sizing:border-box;font-family:inherit;font-size:13px;line-height:1.4;border:1px solid #cbdfe8;border-radius:9px;background:#fff;color:#193e52;padding:10px 11px;outline:none}
+.atel-v135-recebimento input,.atel-v135-recebimento select{height:43px}
+.atel-v135-recebimento textarea{min-height:72px;resize:vertical}
+.atel-v135-recebimento input:focus,.atel-v135-recebimento select:focus,.atel-v135-recebimento textarea:focus{border-color:#058eb7;box-shadow:0 0 0 3px rgba(19,149,189,.13)}
+.atel-v135-recebimento .atel-v135-actions{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin:13px 0}
+.atel-v135-recebimento .atel-v135-actions button{display:flex;align-items:center;justify-content:center;flex-direction:column;gap:5px;min-width:0;min-height:68px;padding:7px 4px;color:#597485;background:#f8fcfe;border:1px solid #d9e7ef;border-radius:10px;font-family:inherit;font-size:10px;font-weight:800;cursor:pointer}
+.atel-v135-recebimento .atel-v135-actions button.selected.ok{color:#057e5a;border-color:#27aa84;background:#eefaf5}
+.atel-v135-recebimento .atel-v135-actions button.selected.partial{color:#99641b;border-color:#db9d43;background:#fff7e8}
+.atel-v135-recebimento .atel-v135-actions button.selected.reject{color:#a63e48;border-color:#e28086;background:#fff0f1}
+.atel-v135-recebimento .atel-v135-actions button:disabled{opacity:.55;cursor:not-allowed}
+.atel-v135-recebimento .atel-v135-reason{padding:11px;background:#fcfeff;border:1px solid #e0ebf2;border-radius:10px}
+.atel-v135-recebimento .atel-v135-reason label:not(:first-child){margin-top:12px}
+.atel-v135-recebimento .atel-v135-reason label span{color:#cb5050}
+.atel-v135-recebimento .atel-v135-select-wrap{position:relative}
+.atel-v135-recebimento .atel-v135-select-wrap select{appearance:none;padding-right:36px}
+.atel-v135-recebimento .atel-v135-select-wrap svg{position:absolute;pointer-events:none;right:12px;top:13px;color:#168eb1}
+.atel-v135-recebimento .atel-v135-hint{margin:11px 0 0;color:#6b8290;font-size:10px;line-height:1.4}
+.atel-v135-recebimento .atel-v135-footer-action{flex:0 0 auto;padding:10px 12px;background:#f4f8fb;border-top:1px solid #e3eef4}
+.atel-v135-recebimento .atel-v135-footer-action button{width:100%;min-height:48px;display:flex;align-items:center;justify-content:center;gap:8px;border:0;border-radius:10px;background:linear-gradient(105deg,#087da7,#0c9bb4);color:#fff;font-family:inherit;font-size:11px;font-weight:900;box-shadow:0 5px 13px rgba(7,116,151,.17);cursor:pointer}
+.atel-v135-recebimento .atel-v135-footer-action button:disabled{background:#a7c7d5;box-shadow:none;cursor:not-allowed}
+.atel-v135-recebimento .atel-v135-blackbar{height:30px;min-height:30px;flex:0 0 30px;background:#000}
+@media(max-width:380px){.atel-v135-recebimento .atel-v135-panel{padding:11px}.atel-v135-recebimento .atel-v135-body{padding:10px}.atel-v135-recebimento .atel-v135-actions button{font-size:9px}}
+@media(prefers-reduced-motion:reduce){.atel-v135-recebimento input,.atel-v135-recebimento button{transition:none}}

@@ -1,0 +1,39 @@
+/* ATEL_E1_V149_CONSULTA: regras locais, sem alterar geometria do coletor */
+.atel-v149-consulta-screen .atel-v149-header {
+  background: linear-gradient(105deg,#087da7,#159bbd) !important;
+  color: #fff; display:flex; flex-direction:row; align-items:center;
+  gap:11px; padding:0 12px !important; flex:0 0 auto;
+}
+.atel-v149-consulta-screen .atel-v149-back,
+.atel-v149-consulta-screen .atel-v149-header-icon {
+  flex:0 0 36px; width:36px; height:36px; display:grid; place-items:center;
+  border-radius:11px; background:rgba(255,255,255,.15); color:#fff;
+  border:1px solid rgba(255,255,255,.14); padding:0;
+}
+.atel-v149-consulta-screen .atel-v149-back { cursor:pointer; }
+.atel-v149-consulta-screen .atel-v149-back:hover { background:rgba(255,255,255,.24); }
+.atel-v149-consulta-screen .atel-v149-header-text {min-width:0; flex:1; display:flex; flex-direction:column; gap:2px;}
+.atel-v149-consulta-screen .atel-v149-header-text > span {font-size:8px; line-height:1.2; font-weight:850; letter-spacing:.10em; color:#c8f3ff;}
+.atel-v149-consulta-screen .atel-v149-header-text > strong {font-size:16px; font-weight:900; line-height:1.16; color:#fff;}
+.atel-v149-consulta-screen .atel-v149-search-area {padding:11px 12px 10px !important; flex:0 0 auto;}
+.atel-v149-consulta-screen .atel-v149-search-box {height:45px; display:flex; align-items:center; gap:10px; padding:0 12px; border:1px solid #cbdfea; background:#fff; border-radius:13px; box-shadow:0 3px 12px rgba(10,70,98,.06);}
+.atel-v149-consulta-screen .atel-v149-search-icon {color:#6f8ca0; display:grid; place-items:center; flex:0 0 20px;}
+.atel-v149-consulta-screen .atel-v149-search-box input[type="search"] {
+  min-width:0; width:100%; flex:1; height:100%; min-height:0; padding:0 !important; margin:0 !important;
+  border:0 !important; outline:0 !important; background:transparent !important;
+  box-shadow:none !important; border-radius:0 !important; color:#1d425e; font-family:inherit; font-weight:500;
+  font-size:12px; appearance:none;
+}
+.atel-v149-consulta-screen .atel-v149-search-box input[type="search"]:focus {outline:0!important;box-shadow:none!important;}
+.atel-v149-consulta-screen .atel-v149-search-box:focus-within {border-color:#1395be; box-shadow:0 0 0 3px rgba(19,149,190,.13);}
+.atel-v149-consulta-screen .atel-v149-clear {flex:0 0 25px; width:25px; height:25px; background:#edf6fa; color:#517d95; border:0; border-radius:7px; font-size:19px; cursor:pointer; line-height:1; padding:0;}
+.atel-v149-consulta-screen .atel-v149-motivo-picker {margin-top:6px; width:100%;}
+.atel-v149-consulta-screen .atel-v149-motivo-trigger {width:100%;display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:43px;padding:0 12px;border:1px solid #b7d7e6;border-radius:11px;background:#fff;color:#15435c;font:800 11px inherit;font-size:11px;font-weight:800;text-align:left;cursor:pointer;}
+.atel-v149-consulta-screen .atel-v149-motivo-trigger > span:last-child {display:grid;place-items:center;color:#168cb6;transform:rotate(90deg);transition:transform .16s ease;}
+.atel-v149-consulta-screen .atel-v149-motivo-trigger > span.atel-v149-rotate {transform:rotate(-90deg);}
+.atel-v149-consulta-screen .atel-v149-motivo-list {display:grid;gap:5px;margin-top:7px;padding:7px;background:#f0f7fb;border:1px solid #c8e5f0;border-radius:13px;max-height:228px;overflow-y:auto;}
+.atel-v149-consulta-screen .atel-v149-motivo-option {display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 11px;min-height:39px;background:#fff;color:#244960;border:1px solid #d9eaf1;border-radius:9px;font-size:10px;font-weight:800;letter-spacing:.01em;text-align:left;cursor:pointer;}
+.atel-v149-consulta-screen .atel-v149-motivo-option:hover {border-color:#42a5c5;background:#eefaff;}
+.atel-v149-consulta-screen .atel-v149-motivo-option.is-selected {background:#e4f5fc;border-color:#1696c0;color:#007da9;}
+.atel-v149-consulta-screen .atel-v149-motivo-option svg {height:16px;width:16px;}
+@media(prefers-reduced-motion:reduce){.atel-v149-consulta-screen .atel-v149-motivo-trigger > span:last-child{transition:none;}}

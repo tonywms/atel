@@ -1,0 +1,72 @@
+/* ATEL E1 V135.3 - apenas indicadores de RecebimentoLegado.
+   Reproduz o card de metricas aprovado na Devolucao CD V133.
+   Nenhuma regra para collector-screen, collector-phone, body ou rodape. */
+.collector-phone .collector-quantity-grid.atel-v135-3-indicadores {
+  display: grid !important;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  gap: 7px !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  margin: 13px 0 15px !important;
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  background: transparent !important;
+  overflow: visible !important;
+  box-sizing: border-box !important;
+}
+.collector-phone .collector-quantity-grid.atel-v135-3-indicadores > div {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  min-width: 0 !important;
+  min-height: 52px !important;
+  height: auto !important;
+  margin: 0 !important;
+  padding: 9px 4px 8px !important;
+  border: 1px solid #dce8ef !important;
+  border-radius: 9px !important;
+  background: #fff !important;
+  box-shadow: none !important;
+  box-sizing: border-box !important;
+}
+.collector-phone .collector-quantity-grid.atel-v135-3-indicadores > div > span {
+  display: block !important;
+  width: auto !important;
+  max-width: 100% !important;
+  height: auto !important;
+  margin: 0 0 5px !important;
+  padding: 0 !important;
+  border: 0 !important;
+  background: transparent !important;
+  color: #5e778b !important;
+  font-family: inherit !important;
+  font-size: 9px !important;
+  font-weight: 750 !important;
+  line-height: 1.2 !important;
+  text-align: center !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0 !important;
+}
+.collector-phone .collector-quantity-grid.atel-v135-3-indicadores > div > strong {
+  display: block !important;
+  width: auto !important;
+  max-width: 100% !important;
+  height: auto !important;
+  min-height: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  color: #0486af !important;
+  font-family: inherit !important;
+  font-size: 19px !important;
+  font-weight: 850 !important;
+  line-height: 1.1 !important;
+  text-align: center !important;
+  font-variant-numeric: tabular-nums;
+}

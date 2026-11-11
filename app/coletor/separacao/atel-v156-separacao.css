@@ -1,0 +1,71 @@
+/* ATEL V156: cabeçalho da Separação idêntico ao padrão visual de Conferência.
+   Restrito à rota de Separação, sem afetar outras telas ou o tamanho do coletor. */
+.atel-v156-separacao > .collector-phone > .collector-header {
+  width: 100% !important;
+  height: 68px !important;
+  min-height: 68px !important;
+  flex: 0 0 68px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  padding: 0 18px !important;
+  margin: 0 !important;
+  box-sizing: border-box !important;
+  background: linear-gradient(105deg, #087ba4, #1598b4) !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  color: #fff !important;
+}
+.atel-v156-separacao > .collector-phone > .collector-header > .collector-header-title {
+  display: flex !important;
+  flex: 1 1 auto !important;
+  min-width: 0 !important;
+  width: auto !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+  gap: 12px !important;
+  color: white !important;
+}
+.atel-v156-separacao > .collector-phone > .collector-header > .collector-header-title > .collector-back-button {
+  display: inline-flex !important;
+  flex: 0 0 38px !important;
+  min-width: 38px !important;
+  width: 38px !important;
+  height: 38px !important;
+  min-height: 38px !important;
+  align-items: center !important;
+  justify-content: center !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 11px !important;
+  background: rgba(255,255,255,.12) !important;
+  color: #fff !important;
+  cursor: pointer;
+}
+.atel-v156-separacao > .collector-phone > .collector-header > .collector-header-title > .collector-back-button:hover {
+  background: rgba(255,255,255,.22) !important;
+}
+.atel-v156-separacao > .collector-phone > .collector-header > .collector-header-title > .collector-back-button:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 2px;
+}
+.atel-v156-separacao > .collector-phone > .collector-header > .collector-header-title > strong {
+  min-width: 0;
+  margin: 0 !important;
+  color: #fff !important;
+  font-size: 19px !important;
+  font-weight: 750 !important;
+  line-height: 1.2 !important;
+  letter-spacing: -.35px !important;
+  white-space: nowrap;
+}
+/* Atalho V155 permanece clicável e alinhado à direita. */
+.atel-v156-separacao > .collector-phone > .collector-header > .atel-prod-shortcut-v155 {
+  flex-shrink: 0;
+}
+
+/* V155 or autonomous shortcut: maintain right aligned header action. */
+.atel-v156-separacao > .collector-phone > .collector-header > .collector-header-title { order: 1; }
+.atel-v156-separacao > .collector-phone > .collector-header > .atel-v155-shortcut { order: 2; margin-left: auto; flex: 0 0 auto; }
+.atel-v156-separacao > .collector-phone > .collector-header > button[aria-label="Abrir produtividade da separação"] { order: 2; margin-left: auto; }

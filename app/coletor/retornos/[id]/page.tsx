@@ -1,5 +1,6 @@
 // ATEL E1 V128.2 - icone SVG do retorno
 "use client";
+import "./atel-v138-retorno-premium.css";
 
 import {
   useEffect,
@@ -484,7 +485,7 @@ export default function Page() {
   ========================================================= */
 
   return (
-    <div className="collector-screen">
+    <div className="collector-screen atel-v138-ret-detail">
       <div
         className="collector-phone"
         style={phone}
@@ -499,7 +500,7 @@ export default function Page() {
             HEADER
         ============================================= */}
 
-        <div style={header}>
+        <div className="atel-v138-header" style={header}>
           <button
             type="button"
             onClick={() =>
@@ -516,22 +517,22 @@ export default function Page() {
             Recebimento de Retorno
           </strong>
 
-          <div style={{ width: 32 }} />
+          <span className="atel-v138-header-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M9 8h6M9 12h6M9 16h4"/></svg></span>
         </div>
 
         {/* =============================================
             CONTEÚDO
         ============================================= */}
 
-        <div style={content}>
+        <div className="atel-v138-body" style={content}>
           {/* ===========================================
               DADOS DO RETORNO
           =========================================== */}
 
-          <div style={returnCard}>
+          <div className="atel-v138-document" style={returnCard}>
             <div style={returnHeader}>
               <div>
-                <div style={returnCode}>
+                <div className="atel-v138-document-code" style={returnCode}>
                   {retornoSeguro.codigo}
                 </div>
 
@@ -575,7 +576,7 @@ export default function Page() {
               }
             />
 
-            <div style={miniSummary}>
+            <div className="atel-v138-document-stats" style={miniSummary}>
               <div>
                 <span style={miniLabel}>
                   SKUs
@@ -611,7 +612,7 @@ export default function Page() {
           =========================================== */}
 
           {!lido && (
-            <div style={scanCard}>
+            <div className="atel-v138-panel" style={scanCard}>
               <div style={sectionTitle}>
                 LEITURA DO RETORNO
               </div>
@@ -819,13 +820,13 @@ export default function Page() {
                     >
                       <div style={itemTop}>
                         <div>
-                          <div style={productCode}>
+                          <div className="atel-v138-item-code" style={productCode}>
                             {
                               itemRetorno.codigoProduto
                             }
                           </div>
 
-                          <div style={productName}>
+                          <div className="atel-v138-item-name" style={productName}>
                             {
                               itemRetorno.produto
                             }
@@ -936,12 +937,12 @@ export default function Page() {
                   RESUMO
               ======================================= */}
 
-              <div style={summaryCard}>
+              <div className="atel-v138-summary" style={summaryCard}>
                 <div style={sectionTitle}>
                   RESUMO DO RECEBIMENTO
                 </div>
 
-                <div style={summaryGrid}>
+                <div className="atel-v138-summary-grid" style={summaryGrid}>
                   <SummaryItem
                     label="AVALIADOS"
                     value={`${resumo.avaliados}/${retornoSeguro.itens.length}`}
@@ -1015,7 +1016,7 @@ export default function Page() {
 
         {modal && (
           <div style={overlay}>
-            <div style={sheet}>
+            <div className="atel-v138-sheet" style={sheet}>
               <div style={sheetHandle} />
 
               <div style={modalHeader}>
@@ -1374,7 +1375,7 @@ function SummaryItem({
   value: string | number;
 }) {
   return (
-    <div style={summaryItem}>
+    <div className="atel-v138-summary-stat" style={summaryItem}>
       <span style={summaryLabel}>
         {label}
       </span>
@@ -1450,8 +1451,7 @@ function Choice({
     <button
       type="button"
       onClick={onClick}
-      style={{
-        ...choiceButton,
+      className="atel-v138-choice" style={{...choiceButton,
 
         border: active
           ? "2px solid #1596bc"

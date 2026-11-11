@@ -1,0 +1,34 @@
+/* ATEL DS-COL-1.0 | V137 | EMBARQUE
+   Only inner layout and typography. Outer collector geometry not touched. */
+.atel-ds-v137-embarque{--atel-c:#0989af;--atel-border:#d4e7ef;}
+.atel-ds-v137-embarque>.collector-phone{background:#f3f8fb!important;}
+/* The first child (legacy black top bar) remains unchanged; original structure preserved. */
+.atel-ds-v137-embarque .atel-v137-embarque-header{background:linear-gradient(112deg,#087ba4,#1597b6)!important;color:white!important;min-height:72px!important;box-sizing:border-box!important;padding:0 14px!important;gap:11px!important;}
+.atel-ds-v137-embarque .atel-v137-embarque-header>button{display:grid!important;place-items:center!important;width:36px!important;height:36px!important;flex:0 0 36px!important;background:rgba(255,255,255,.15)!important;border-radius:10px!important;border:0!important;color:white!important;font-size:0!important;}
+.atel-ds-v137-embarque .atel-v137-embarque-header>button svg{width:19px;height:19px}
+.atel-ds-v137-embarque .atel-v137-embarque-header>div{min-width:0!important;line-height:1.2!important;}
+.atel-ds-v137-embarque .atel-v137-embarque-header>div>div:first-child{font-size:16px!important;line-height:1.3!important;font-weight:850!important;letter-spacing:-.35px!important;overflow-wrap:anywhere;}
+.atel-ds-v137-embarque .atel-v137-embarque-header>div>div:nth-child(2){font-size:10px!important;margin-top:3px!important;}
+.atel-ds-v137-embarque .atel-v137-embarque-header>span:last-child{display:grid!important;place-items:center!important;width:34px!important;height:34px!important;flex:0 0 34px!important;border-radius:50%!important;background:rgba(255,255,255,.16)!important;color:white!important;font-size:0!important;}
+.atel-ds-v137-embarque .atel-v137-embarque-header>span:last-child svg{width:18px;height:18px;}
+.atel-ds-v137-embarque .atel-v137-embarque-body{background:#f2f8fb!important;padding-left:12px!important;padding-right:12px!important;}
+.atel-ds-v137-embarque .atel-v137-embarque-body>section{background:#fff!important;border:1.5px solid #159fd0!important;border-radius:15px!important;padding:14px!important;margin:0 0 12px!important;box-shadow:0 2px 12px rgba(13,75,105,.045)!important;box-sizing:border-box!important;}
+.atel-ds-v137-embarque .atel-v137-embarque-body>section>div:first-child{font-size:14px!important;font-weight:850!important;color:#087ca6!important;line-height:1.35!important;}
+.atel-ds-v137-embarque .atel-v137-embarque-body>section>div:first-child>span:last-child{width:38px!important;height:38px!important;flex:0 0 38px!important;display:grid!important;place-items:center!important;border-radius:50%!important;background:#0d91b6!important;color:#fff!important;font-size:0!important;}
+.atel-ds-v137-embarque .atel-v137-embarque-body>section>div:first-child>span:last-child svg{width:19px;height:19px;}
+.atel-ds-v137-embarque .atel-v137-embarque-body>section:first-child>div:nth-child(2){border-radius:9px!important;background:#eaf7fc!important;color:#146b8e!important;font-size:11px!important;line-height:1.45!important;}
+.atel-ds-v137-embarque .atel-v137-embarque-metrics{gap:7px!important;margin-top:12px!important;}
+.atel-ds-v137-embarque .atel-v137-embarque-metrics>div{min-width:0!important;min-height:62px!important;border:1px solid #d8e8ef!important;border-radius:9px!important;background:#fff!important;box-shadow:none!important;}
+.atel-ds-v137-embarque .atel-v137-embarque-metrics>div>span{color:#6a8596!important;font-size:9px!important;font-weight:800!important;letter-spacing:.2px!important;text-align:center!important;}
+.atel-ds-v137-embarque .atel-v137-embarque-metrics>div>strong{color:#0789b1!important;font-size:19px!important;font-weight:900!important;line-height:1.2!important;}
+.atel-ds-v137-embarque .atel-v137-embarque-body input{font-family:inherit!important;font-size:12px!important;color:#24475c!important;}
+.atel-ds-v137-embarque .atel-v137-embarque-scan{border-radius:10px!important;min-height:46px!important;overflow:hidden!important;border-color:#169ec6!important;background:#eef8fc!important;grid-template-columns:minmax(0,1fr) 52px!important;}
+.atel-ds-v137-embarque .atel-v137-embarque-scan>input{background:#eef8fc!important;border:0!important;outline:0!important;}
+.atel-ds-v137-embarque .atel-v137-embarque-scan>button{background:#0c91b6!important;color:#fff!important;font-size:20px!important;display:grid!important;place-items:center!important;}
+.atel-ds-v137-embarque .atel-v137-embarque-scan>button svg{width:20px;height:20px;}
+.atel-ds-v137-embarque .atel-v137-embarque-volume{border-radius:11px!important;border-color:#d5e6ed!important;padding:11px!important;}
+.atel-ds-v137-embarque .atel-v137-embarque-volume strong{color:#0b789f!important;font-size:12px!important;overflow-wrap:anywhere;}
+.atel-ds-v137-embarque .atel-v137-embarque-actions{background:#f5fafc!important;border-top:1px solid #dcebf2!important;padding:10px 12px!important;}
+.atel-ds-v137-embarque .atel-v137-embarque-actions>button{border-radius:10px!important;min-height:48px!important;background:#0b91b6!important;color:#fff!important;font-size:12px!important;font-weight:850!important;box-shadow:0 3px 12px rgba(6,109,148,.13)!important;}
+.atel-ds-v137-embarque .atel-v137-embarque-actions>button:disabled{background:#a5c7d4!important;box-shadow:none!important;}
+@media(max-width:370px){.atel-ds-v137-embarque .atel-v137-embarque-body>section{padding:11px!important}}

@@ -1,4 +1,5 @@
 "use client";
+import "./atel-v137-conferencia.css";
 import { usePedidoAtelV363 } from "@/lib/atelPedidosHomologacaoV363";
 
 import { useEffect, useMemo, useState } from "react";
@@ -1160,7 +1161,7 @@ export default function ConferenciaDetalhePage() {
   ======================================================= */
 
   return (
-    <div className="collector-screen">
+    <div className="collector-screen atel-ds-v137-conferencia">
       <div className="collector-phone">
 
         {/* ===============================================
@@ -1173,14 +1174,8 @@ export default function ConferenciaDetalhePage() {
 
             <button
               type="button"
-              className="collector-back-button"
-              onClick={() =>
-                router.push(
-                  "/coletor/conferencia"
-                )
-              }
-            >
-              ‹
+              className="collector-back-button" onClick={() => router.push("/coletor/conferencia")} aria-label="Voltar à lista de conferências">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
             </button>
 
             <div>
@@ -1216,13 +1211,7 @@ export default function ConferenciaDetalhePage() {
 
           </div>
 
-          <span
-            style={{
-              fontSize: 22,
-            }}
-          >
-            ⋮
-          </span>
+          <span className="atel-v137-headicon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4V2h6v2M9 11l2 2 4-4M9 17h6"/></svg></span>
 
         </div>
 
@@ -1253,7 +1242,7 @@ export default function ConferenciaDetalhePage() {
                     Informações do Produto
                   </span>
 
-                  <span>☷</span>
+                  <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg></span>
                 </div>
 
                 {/* PRODUTO / VOLUME */}
@@ -1964,7 +1953,7 @@ export default function ConferenciaDetalhePage() {
                     Volumes
                   </span>
 
-                  <span>▦</span>
+                  <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><rect x="4" y="4" width="7" height="7" rx="1"/><rect x="13" y="4" width="7" height="7" rx="1"/><rect x="4" y="13" width="7" height="7" rx="1"/><rect x="13" y="13" width="7" height="7" rx="1"/></svg></span>
                 </div>
 
                 {volumes.length ===

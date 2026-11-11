@@ -1,0 +1,46 @@
+/* ATEL E1 V128.3 - geometria padronizada com o coletor de Retornos.
+   Somente a tela Devolucao CD. Nao altera cores, cards ou operacoes. */
+[data-atel-v128-2="devolucao-cd"] {
+  width: 100% !important;
+  min-height: 100dvh !important;
+  height: 100dvh !important;
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 20px !important;
+  box-sizing: border-box !important;
+}
+[data-atel-v128-2="devolucao-cd"] > .collector-phone {
+  display: flex !important;
+  flex-direction: column !important;
+  flex: 0 0 420px !important;
+  width: 420px !important;
+  max-width: 100% !important;
+  height: calc(100dvh - 40px) !important;
+  min-height: 0 !important;
+  max-height: none !important;
+  overflow: hidden !important;
+  box-sizing: border-box !important;
+}
+[data-atel-v128-2="devolucao-cd"] > .collector-phone > .collector-operation-body {
+  flex: 1 1 auto !important;
+  min-height: 0 !important;
+  overflow-y: auto !important;
+  overscroll-behavior: contain;
+}
+[data-atel-v128-2="devolucao-cd"] > .collector-phone > div:last-child {
+  flex: 0 0 36px !important;
+  height: 36px !important;
+  min-height: 36px !important;
+  margin-top: auto !important;
+}
+@media (max-width: 500px) {
+  [data-atel-v128-2="devolucao-cd"] { padding: 0 !important; }
+  [data-atel-v128-2="devolucao-cd"] > .collector-phone {
+    flex: 1 1 auto !important;
+    width: 100% !important;
+    height: 100dvh !important;
+    max-height: none !important;
+  }
+}

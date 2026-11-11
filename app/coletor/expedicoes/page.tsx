@@ -36,6 +36,8 @@ type Contadores = {
 export default function ColetorExpedicaoPage() {
   const router = useRouter();
   const [devCount, setDevCount] = useState<number | null>(null);
+  // ATEL E1 V127: contador unificado entre RETs locais e sincronizados.
+  const [retRemotos, setRetRemotos] = useState<Array<{codigo: string; status: string}>>([]);
 
   const [contadores, setContadores] =
     useState<Contadores>({
@@ -89,14 +91,15 @@ export default function ColetorExpedicaoPage() {
       }
     });
 
-    const retornos =
-      carregarRetornos().filter((r) =>
-        [
-          "EM_TRANSITO_CD",
-          "AGUARDANDO_CONFERENCIA",
-          "EM_CONFERENCIA",
-        ].includes(r.status)
-      ).length;
+    const estadosRet = ["AGUARDANDO_RETORNO", "COM_TECNICO", "EM_TRANSITO_CD", "AGUARDANDO_CONFERENCIA", "EM_CONFERENCIA"];
+    const codigosRet = new Set<string>();
+    for (const r of carregarRetornos()) {
+      if (estadosRet.includes(r.status)) codigosRet.add(r.codigo);
+    }
+    for (const r of retRemotos) {
+      if (estadosRet.includes(r.status)) codigosRet.add(r.codigo);
+    }
+    const retornos = codigosRet.size;
 
     const ordensServico =
       carregarOrdensServico().filter(
@@ -151,6 +154,28 @@ export default function ColetorExpedicaoPage() {
       offOs();
     };
   }, []);
+
+  // V127: atualizacao automatica da mesma origem remota exibida na lista de Retornos.
+  useEffect(() => {
+    let ativo = true;
+    const consultar = async () => {
+      try {
+        const db = atelSupabase();
+        if (!db) return;
+        const { data, error } = await db.rpc("atel_v3730_listar_rets");
+        if (error) throw error;
+        if (ativo) setRetRemotos(Array.isArray(data) ? data.map((r: {codigo: string; status: string}) => ({codigo:r.codigo,status:r.status})) : []);
+      } catch (error) { console.error("ATEL V127: falha na consulta dos RETs sincronizados", error); }
+    };
+    void consultar();
+    const foco = () => { void consultar(); };
+    const visivel = () => { if (document.visibilityState === "visible") void consultar(); };
+    window.addEventListener("focus", foco);
+    document.addEventListener("visibilitychange", visivel);
+    const intervalo = window.setInterval(visivel, 15000);
+    return () => { ativo = false; window.removeEventListener("focus", foco); document.removeEventListener("visibilitychange", visivel); window.clearInterval(intervalo); };
+  }, []);
+  useEffect(() => { atualizarContadores(); }, [retRemotos]);
 
   // V106.3.2: contador de DEV compartilhado com a fila real do coletor.
   useEffect(() => {

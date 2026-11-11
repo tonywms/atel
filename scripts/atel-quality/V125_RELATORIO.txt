@@ -1,0 +1,18 @@
+ATEL E1 V125 - DIAGNOSTICO ESTATICO RET-PED
+Data: 2026-11-10 21:49:06
+Arquivo: C:\wms-atel\app\coletor\retornos\ped\[codigo]\page.tsx
+SHA256: C5ECA8582BCD267A4D96CCBD49F0B0BFF720F810DA4CEEB4E4011AA8E71FD3D9
+[OK] RPC de consulta remota
+[OK] RPC de transicao
+[OK] Estado pendente
+[OK] Estado em transito
+[OK] Estado conferencia
+[OK] Estado finalizado
+[OK] Verificacao de status remoto
+[OK] Confirmacao posterior ao envio
+[OK] Protecao de operacao simultanea
+[OK] Modal de confirmacao
+[OK] Retorno as expedicoes
+[OK] Tratamento de erro
+Resultado: 12/12 verificacoes
+Nota: analise estatica; nao comprova comportamento de rede, banco ou interface.

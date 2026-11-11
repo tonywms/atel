@@ -1,0 +1,16 @@
+ATEL E1 V124 - GATE DE QUALIDADE RET-PED
+Data: 2026-11-10 21:47:57
+Arquivo: C:\wms-atel\app\coletor\retornos\ped\[codigo]\page.tsx
+[OK] RPC de consulta remota
+[OK] RPC de transicao
+[OK] Estado aguardando retorno
+[OK] Estado em transito
+[OK] Estado aguardando conferencia
+[OK] Estado finalizado
+[OK] Protecao operacao em andamento
+[OK] Consulta posterior ao envio
+[OK] Modal acessivel
+[OK] Retorno para expedicoes
+[OK] Confirmacao fisica
+[OK] Mensagem de erro
+Resultado: 12/12 verificacoes aprovadas

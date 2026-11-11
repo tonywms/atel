@@ -1,3 +1,4 @@
+// ATEL E1 V128.2 - icone SVG do retorno
 "use client";
 
 import {
@@ -191,7 +192,7 @@ export default function Page() {
               }
               style={backButton}
             >
-              ‹
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M19 12H5"/><path d="m12 19-7-7 7-7"/></svg>
             </button>
 
             <strong style={headerTitle}>
@@ -508,7 +509,7 @@ export default function Page() {
             }
             style={backButton}
           >
-            ‹
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M19 12H5"/><path d="m12 19-7-7 7-7"/></svg>
           </button>
 
           <strong style={headerTitle}>
@@ -1591,13 +1592,15 @@ const headerTitle:
 
 const backButton:
   React.CSSProperties = {
-  width: 36,
-  height: 42,
+  width: 38,
+  height: 38,
   border: 0,
-  background: "transparent",
+  borderRadius: 11,
+  background: "rgba(255,255,255,.12)",
   color: "#ffffff",
-  fontSize: 34,
-  lineHeight: 1,
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
   cursor: "pointer",
   padding: 0,
 };

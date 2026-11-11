@@ -1,0 +1,50 @@
+/* ATEL E1 V128.5 - same viewport geometry as other collector routines.
+   Scoped to Devolucao CD only; no business logic or global overrides. */
+.collector-screen.atel-v128-devolucao {
+  width: 100% !important;
+  min-height: 100dvh !important;
+  height: 100dvh !important;
+  padding: 16px 12px !important;
+  margin: 0 !important;
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: flex-start !important;
+  justify-content: center !important;
+  box-sizing: border-box !important;
+  overflow: hidden !important;
+}
+.collector-screen.atel-v128-devolucao > .collector-phone {
+  width: 420px !important;
+  max-width: 100% !important;
+  height: calc(100dvh - 32px) !important;
+  max-height: calc(100dvh - 32px) !important;
+  min-height: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  overflow: hidden !important;
+  box-sizing: border-box !important;
+}
+.collector-screen.atel-v128-devolucao > .collector-phone > .collector-operation-body {
+  flex: 1 1 0 !important;
+  min-height: 0 !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  overscroll-behavior: contain;
+}
+.collector-screen.atel-v128-devolucao > .collector-phone > div:last-child {
+  flex: 0 0 36px !important;
+  height: 36px !important;
+  min-height: 36px !important;
+  margin: 0 !important;
+}
+@media (max-width: 480px) {
+  .collector-screen.atel-v128-devolucao { padding: 0 !important; }
+  .collector-screen.atel-v128-devolucao > .collector-phone {
+    width: 100% !important;
+    max-width: none !important;
+    height: 100dvh !important;
+    max-height: 100dvh !important;
+  }
+}

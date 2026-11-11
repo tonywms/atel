@@ -1,0 +1,135 @@
+/* ATEL V132 - VISUAL SOMENTE.
+   PROIBIDO alterar .collector-screen, .collector-phone, altura,
+   largura, posicionamento, overflow, flex ou barra preta. */
+.atel-v132-documento {
+  padding: 4px 0 14px;
+}
+.atel-v132-documento-titulo {
+  display:flex;align-items:center;gap:10px;
+  padding:13px 12px;background:linear-gradient(110deg,#fff,#f0faff);
+  border:1px solid #d4e7f0;border-radius:14px;
+  box-shadow:0 4px 14px rgba(7,73,104,.07);
+}
+.atel-v132-documento-titulo > div {flex:1;min-width:0}
+.atel-v132-documento-titulo small,
+.atel-v132-produto small {display:block;font-size:9px;font-weight:850;letter-spacing:.7px;color:#738ca0}
+.atel-v132-documento-titulo strong {display:block;color:#067ca5;font-size:17px;letter-spacing:-.35px;margin-top:3px}
+.atel-v132-status {white-space:nowrap;background:#e0f5fb;color:#057fa2;font-size:8px;font-weight:850;padding:7px;border-radius:30px}
+.atel-v132-icon {width:38px;height:38px;flex-shrink:0;border-radius:11px;background:#e2f4fa;color:#087fa6;display:grid;place-items:center}
+.atel-v132-icon svg {width:21px;height:21px}
+.atel-v132-item {border:1px solid #d8e6ee!important;border-radius:15px!important;box-shadow:0 4px 15px rgba(9,61,89,.065)!important;padding:14px!important}
+.atel-v132-produto {display:flex;align-items:center;gap:10px;margin-bottom:7px}
+.atel-v132-produto strong {display:block;color:#087da7;font-size:15px;margin-top:3px}
+.atel-v132-item > p {color:#344c5b!important;font-weight:550;line-height:1.4}
+.atel-v132-esperado {display:flex;align-items:center;gap:7px;padding:9px 10px;background:#f0f7fb;border:1px solid #e0ebf2;border-radius:9px;color:#526c7e;font-size:11px}
+.atel-v132-esperado strong {margin-left:auto;color:#087fa6;font-size:15px}
+.atel-v132-mini svg {width:15px;height:15px;color:#1599bb}
+.atel-v132-label {font-weight:750!important;color:#35566a!important;margin-bottom:6px!important}
+.atel-v132-item input,.atel-v132-item select,.atel-v132-item textarea {border:1px solid #cddfe9!important;border-radius:10px!important;background:#fbfdff!important;color:#173c51!important;min-height:42px}
+.atel-v132-item textarea {min-height:72px;resize:vertical}
+.atel-v132-item input:focus,.atel-v132-item select:focus,.atel-v132-item textarea:focus {outline:2px solid rgba(9,143,184,.20)!important;border-color:#1598b4!important}
+.atel-v132-endereco-titulo {display:flex;align-items:center;gap:9px;margin:14px 0 9px}
+.atel-v132-endereco-titulo .atel-v132-icon {width:30px;height:30px;border-radius:9px}
+.atel-v132-endereco-titulo .atel-v132-icon svg {width:17px;height:17px}
+.atel-v132-endereco-titulo label {margin:0!important;font-weight:800;color:#31556b}
+.atel-v132-confirmar {border:0!important;border-radius:11px!important;min-height:48px!important;background:linear-gradient(105deg,#087da7,#0c9bb4)!important;box-shadow:0 5px 14px rgba(7,116,151,.17)!important;letter-spacing:.1px}
+.atel-v132-confirmar:disabled {background:#a6c3d1!important;box-shadow:none!important;cursor:not-allowed!important}
+.atel-v132-confirmar-conteudo {display:flex;align-items:center;justify-content:center;gap:8px}
+.atel-v132-confirmar-conteudo svg {width:19px;height:19px}
+/* ATEL V132.1 CORRECAO
+   Apenas elementos internos da conferencia. Nao alterar geometria
+   collector-screen, collector-phone, collector-operation-body ou rodape. */
+.atel-v132-documento {
+  display: block !important;
+  position: static !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  padding: 0 0 12px !important;
+  margin: 0 !important;
+  box-sizing: border-box !important;
+  float: none !important;
+  transform: none !important;
+}
+.atel-v132-documento > .atel-v132-documento-titulo {
+  display: flex !important;
+  position: static !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  padding: 12px !important;
+  margin: 0 !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+  gap: 10px !important;
+  box-sizing: border-box !important;
+  float: none !important;
+  transform: none !important;
+}
+.atel-v132-documento-titulo > div {
+  flex: 1 1 0% !important;
+  min-width: 0 !important;
+  width: auto !important;
+  max-width: none !important;
+}
+.atel-v132-documento-titulo strong {
+  font-size: 15px !important;
+  line-height: 1.25 !important;
+  overflow-wrap: anywhere !important;
+}
+.atel-v132-documento-titulo small { font-size: 9px !important; line-height: 1.3 !important; }
+.atel-v132-documento-titulo > .atel-v132-status {
+  display: inline-flex !important;
+  flex: 0 0 auto !important;
+  align-items: center !important;
+  width: auto !important;
+  max-width: 104px !important;
+  white-space: normal !important;
+  text-align: center !important;
+  line-height: 1.2 !important;
+}
+.atel-v132-documento > div:not(.atel-v132-documento-titulo) {
+  display: block !important;
+  position: static !important;
+  width: 100% !important;
+  margin: 8px 0 0 !important;
+  padding: 0 3px !important;
+  box-sizing: border-box !important;
+  color: #5d7484 !important;
+  font-size: 11px !important;
+}
+.atel-v132-item {
+  position: static !important;
+  display: block !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+  padding: 14px !important;
+  margin: 0 0 12px !important;
+}
+.atel-v132-item .atel-v132-produto {
+  width: 100% !important;
+  min-width: 0 !important;
+  box-sizing: border-box !important;
+}
+.atel-v132-item input,
+.atel-v132-item select,
+.atel-v132-item textarea {
+  display: block !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+  margin: 0 !important;
+}
+.atel-v132-item textarea { min-height: 72px !important; }
+.atel-v132-item .atel-v132-label { display: block !important; margin-top: 13px !important; margin-bottom: 6px !important; }
+.atel-v132-endereco-titulo {
+  width: 100% !important;
+  box-sizing: border-box !important;
+  padding: 10px 12px !important;
+  border: 1px solid #d8e6ee !important;
+  background: #fff !important;
+  border-radius: 12px !important;
+  margin: 4px 0 8px !important;
+}
+.atel-v132-confirmar { width: 100% !important; box-sizing: border-box !important; }

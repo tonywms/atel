@@ -62,7 +62,12 @@ export default function RetPedColetorPage() {
       if (!encontrado) throw new Error("RET não encontrado ou sem permissão para consulta.");
       setRet(encontrado);
       setErro("");
-      if (encontrado.status === "EM_TRANSITO_CD") setSucesso("Envio já confirmado anteriormente no Supabase. Não foi duplicado.");
+      // ATEL E1 V120.2: reabertura segura de retorno com status remoto avancado.
+      if (encontrado.status === "EM_TRANSITO_CD" || encontrado.status === "AGUARDANDO_CONFERENCIA" || encontrado.status === "FINALIZADO") {
+        setSucesso("Este retorno ja foi enviado e seu estado foi confirmado no Supabase. Nenhum novo envio foi realizado.");
+      } else {
+        setSucesso("");
+      }
       return encontrado;
     } catch (e) { setErro(erroTexto(e)); return null; }
     finally { setCarregando(false); }
@@ -90,7 +95,8 @@ export default function RetPedColetorPage() {
       if (erroLista) throw new Error(erroLista.message);
       const atual = localizarRet(lista, ret.codigo);
       if (!atual) throw new Error("RET não encontrado no servidor.");
-      if (atual.status === "EM_TRANSITO_CD") {
+      // ATEL E1 V121: reabertura e revalidacao idempotente.
+      if (["EM_TRANSITO_CD", "AGUARDANDO_CONFERENCIA", "FINALIZADO"].includes(atual.status)) {
         setRet(atual); setSucesso("Envio já confirmado anteriormente no Supabase. Não foi duplicado."); return;
       }
       if (atual.status !== "AGUARDANDO_RETORNO") {
@@ -125,6 +131,12 @@ export default function RetPedColetorPage() {
         </header>
         <main style={{ padding: 12, display: "grid", gap: 12, color: "#163a51" }}>
           {carregando && <div role="status" style={bloco}>Consultando retorno no Supabase...</div>}
+          {/* ATEL-E1-V126-REFRESH-STATUS */}
+          <button type="button" disabled={carregando || operando} onClick={() => void carregar(true)}
+            aria-label="Atualizar status do retorno no Supabase"
+            style={{ minHeight: 42, width: "100%", border: "1px solid #9ccfdd", borderRadius: 9, background: "#e9f6fa", color: "#164b62", fontWeight: 800, fontSize: 12, cursor: carregando || operando ? "wait" : "pointer", opacity: carregando || operando ? .6 : 1 }}>
+            {carregando ? "CONSULTANDO STATUS..." : "ATUALIZAR STATUS"}
+          </button>
           {erro && <div role="alert" style={{ ...bloco, background: "#fff3e5", borderColor: "#eab68d", color: "#8b3500", overflowWrap: "anywhere" }}>{erro}</div>}
           {ret && <>
             <section style={bloco}>

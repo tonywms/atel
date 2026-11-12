@@ -1,4 +1,5 @@
 "use client";
+import { useAtelAprResumoV1589 } from "@/components/atel-ui/useAtelAprResumoV1589"; // ATEL_E1_V158_9_NAO_ATENDIDA
 
 import "./atel-v47.css";
 import AtelOsEstadoERP from "@/components/atel-ui/AtelOsEstadoERP"; // ATEL_OS_ESTADOS_V142
@@ -517,6 +518,7 @@ const emptyStyle: CSSProperties = {
 ========================================================= */
 
 export default function OrdensServicoPage() {
+  const { estados: aprPorOs, erro: erroApr } = useAtelAprResumoV1589("tecnico");
   const router = useRouter();
 
   const [busca, setBusca] = useState("");
@@ -702,6 +704,7 @@ export default function OrdensServicoPage() {
           className="collector-request-list atel-os-v142-list-area"
           style={listStyle}
         >
+          {erroApr && <div role="status" style={{marginBottom:9,padding:"9px 10px",fontSize:10,borderRadius:9,background:"#fff8ed",color:"#92610f"}}>Não foi possível consultar a situação de segurança das OS. Atualize a tela para tentar novamente.</div>}
           {carregandoERP && <AtelOsEstadoERP carregando titulo="Ordens de Serviço" />}
           {!carregandoERP && erroERP && <AtelOsEstadoERP carregando={false} erro={erroERP} titulo="Ordens de Serviço" onRetry={() => setTentativaERP(n => n + 1)} />}
           {!carregandoERP && !erroERP && filtradas.length === 0 && (
@@ -753,11 +756,9 @@ export default function OrdensServicoPage() {
                     </div>
 
                     <span
-                      style={prioridadeStyle(
-                        prioridade
-                      )}
+                      style={aprPorOs[String(ordem.id)] === "NAO_APTO" ? { ...prioridadeStyle(prioridade), background: "#fff1ed", color: "#ad3523", border: "1px solid #ffc6b8" } : prioridadeStyle(prioridade)}
                     >
-                      {prioridade}
+                      {aprPorOs[String(ordem.id)] === "NAO_APTO" ? "IMPEDIMENTO" : prioridade}
                     </span>
                   </div>
 
@@ -840,17 +841,13 @@ export default function OrdensServicoPage() {
                   <div style={cardFooterStyle}>
                     <div style={footerLeftStyle}>
                       <span
-                        style={statusStyle(
-                          ordem.status
-                        )}
+                        style={aprPorOs[String(ordem.id)] === "NAO_APTO" ? { ...statusStyle(ordem.status), background: "#fff0ee", color: "#ad3523", border: "1px solid #f7bfad" } : statusStyle(ordem.status)}
                       >
                         <span
                           style={statusDotStyle}
                         />
 
-                        {statusNome(
-                          ordem.status
-                        )}
+                        {aprPorOs[String(ordem.id)] === "NAO_APTO" ? "NÃO ATENDIDA" : statusNome(ordem.status)}
                       </span>
                     </div>
 

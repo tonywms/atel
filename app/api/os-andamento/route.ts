@@ -54,6 +54,23 @@ export async function PUT(req: NextRequest) {
  if(!atendimento||!Number.isSafeInteger(versao)||versao<0||!["DESLOCAMENTO","NO_CLIENTE","ATENDIMENTO"].includes(String(destino)))return reply({error:"Transicao invalida"},400);
  try {
   const ctx=await autorizado(req,atendimento);if(!ctx)return reply({error:"Acesso nao autorizado a OS"},403);
+  // ATEL_E1_V158_2_GATE: a exigência é verificada NO SERVIDOR; nenhum cliente pode pular a APR.
+  if(String(destino)==="ATENDIMENTO") {
+   const {data:apr,error:aprErro}=await bancoServidor().from("atel_os_apr_riscos_v1582")
+     .select("id,resultado,situacao,ciencia,modelo_versao,profissionais")
+     .eq("usuario_id",ctx.userId).eq("tecnico_erp",ctx.tecnico).eq("atendimento_erp",atendimento)
+     .eq("situacao","REGISTRADO").eq("resultado","APTO").eq("ciencia",true)
+     .order("registrado_em",{ascending:false}).limit(1).maybeSingle();
+   if(aprErro)return reply({error:"Não foi possível validar a APR de segurança."},503);
+   const {data:modeloAtual,error:modeloErro}=await bancoServidor().from("atel_os_apr_modelos_v1582")
+     .select("versao").eq("codigo","APR_RISCOS").neq("estado","INATIVO")
+     .order("versao",{ascending:false}).limit(1).maybeSingle();
+   if(modeloErro||!modeloAtual)return reply({error:"Modelo de APR indisponível para liberação."},503);
+   if(!apr||apr.modelo_versao!==modeloAtual.versao)return reply({error:"APR obrigatória não registrada como APTA para a versão atual. Abra a avaliação antes de iniciar o atendimento."},409);
+   // ATEL_E1_V158_5_PROFISSIONAIS_GATE: exige a identificação dos profissionais também no servidor.
+   if(!Array.isArray(apr.profissionais)||apr.profissionais.length===0||apr.profissionais.some(p=>!p||typeof p.nome!=="string"||!p.nome.trim()||typeof p.funcao!=="string"||!p.funcao.trim()))
+    return reply({error:"Identifique os profissionais envolvidos na APR antes de iniciar o atendimento."},409);
+  }
   const {data,error}=await bancoServidor().rpc("atel_avancar_os_v525c",{p_usuario:ctx.userId,p_tecnico:ctx.tecnico,p_atendimento:atendimento,p_versao:versao,p_destino:destino});
   if(error)return reply({error:error.message.includes("CONFLITO_ETAPA")?"Etapa alterada ou transicao fora de ordem. Atualize a pagina.":"Falha ao salvar andamento"},error.message.includes("CONFLITO_ETAPA")?409:503);
   return reply({atendimento,etapa:data.etapa,versao:data.versao});

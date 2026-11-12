@@ -1,4 +1,6 @@
 "use client";
+import { useAtelAprResumoV1589 } from "@/components/atel-ui/useAtelAprResumoV1589"; // ATEL_E1_V158_9_NAO_ATENDIDA
+import AtelAprEvidenciaGestaoV1584 from "@/components/atel-ui/AtelAprEvidenciaGestaoV1584";
 import type { ReactNode } from "react";
 
 import { useEffect, useMemo, useState } from "react";
@@ -60,7 +62,7 @@ function IconeEtapaFSM({ etapa }: { etapa: string }) {
   }
 }
 
-function FluxoTecnico({ ordem }: { ordem: OrdemServico }) {
+function FluxoTecnico({ ordem, aprNaoApta = false }: { ordem: OrdemServico; aprNaoApta?: boolean }) {
   const etapas = [
     { id: "PENDENTE", nome: "Pendente" },
     { id: "EM_DESLOCAMENTO", nome: "Deslocamento" },
@@ -77,17 +79,27 @@ function FluxoTecnico({ ordem }: { ordem: OrdemServico }) {
   const excepcional = ["PENDENTE_REAGENDAMENTO", "PENDENTE_TRATATIVA", "CANCELADA"].includes(atual);
   const etapaAtual = excepcional ? -1 : atualIndex;
   return <section className={styles.fsmFlow} aria-label="Etapas do atendimento técnico">
-    <div className={styles.fsmFlowTitle}><strong>Andamento do atendimento</strong><span>{rotulo(atual)}</span></div>
-    <ol className={styles.fsmFlowSteps}>
+    <div className={styles.fsmFlowTitle}><strong>Andamento do atendimento</strong><span className={aprNaoApta ? styles.aprStatusTituloV1589 : ""}>{aprNaoApta ? "NÃO ATENDIDA" : rotulo(atual)}</span></div>
+    <ol className={`${styles.fsmFlowSteps} ${aprNaoApta ? styles.aprFluxoInterrompidoV1590 : ""}`}>
       {etapas.map((e, i) => {
         const concluida = atual === "FINALIZADA" || (visitados.has(e.id) && i < ultimaEtapa);
         const ativa = i === etapaAtual;
         return <li key={e.id} className={`${styles.fsmFlowStep} ${concluida ? styles.fsmFlowDone : ""} ${ativa ? styles.fsmFlowCurrent : ""}`} aria-current={ativa ? "step" : undefined}>
           <span className={styles.fsmFlowCircle}><IconeEtapaFSM etapa={e.id} /></span><span className={styles.fsmFlowLabel}>{e.nome}</span>
+          {/* ATEL_E1_V159_0_APR_BLOQUEIO_VISUAL: marco visual no conector, nao representa estado ERP */}
+          {aprNaoApta && e.id === "NO_LOCAL" && (
+            <span className={styles.aprInterrupcaoV1590} role="img" aria-label="Nao avancou: APR nao apta" title="Atendimento interrompido: APR nao apta">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" aria-hidden="true"><path d="M5 5l14 14M19 5L5 19"/></svg>
+              <span className={styles.aprInterrupcaoRotuloV1590}>APR NÃO APTA</span>
+            </span>
+          )}
         </li>;
       })}
     </ol>
+    {/* ATEL_E1_V158_4_GESTAO */}
+    <AtelAprEvidenciaGestaoV1584 atendimento={ordem.id} />
     {excepcional && <div className={styles.fsmFlowAlert}>Situação atual: {rotulo(atual)}. Consulte o Histórico operacional para os detalhes.</div>}
+    {aprNaoApta && <div className={styles.aprAvisoV1589} role="status"><strong>ATENDIMENTO NÃO REALIZADO · APR NÃO APTA</strong><span>A visita não prosseguiu após a avaliação de segurança. O PDF da APR está disponível abaixo. A OS não foi finalizada no ERP e nenhuma baixa de estoque foi realizada por esta marcação.</span></div>}
   </section>;
 }
 
@@ -112,6 +124,7 @@ function OsIcon({ name, size = 18 }: { name: "clipboard" | "truck" | "activity" 
 }
 
 export default function PainelOrdensServico() {
+  const { estados: aprPorOs, erro: erroApr } = useAtelAprResumoV1589("gestao");
   const [lista, setLista] = useState<OrdemServico[]>([]);
   const [erro, setErro] = useState("");
   const [busca, setBusca] = useState("");
@@ -218,9 +231,10 @@ export default function PainelOrdensServico() {
     <section className={styles.kpis} aria-label="Indicadores de ordens de serviço">{indicadores.map(i=><div className={styles.kpi} key={i.nome}><div className={`${styles.kpiHead} ${styles[i.cor]}`}><span>{i.nome}</span><OsIcon name={i.icone} size={19}/></div><div className={styles.kpiBody}><strong>{i.valor}</strong><span>{lista.length ? Math.round(i.valor / lista.length * 100) : 0}% do total</span></div></div>)}</section>
     <section className={styles.toolbar}><div><strong className={styles.toolbarTitle}><OsIcon name="list" size={19}/> Acompanhamento de Ordens de Serviço</strong><small>{filtradas.length} de {lista.length} OS</small></div><div className={styles.filters}><input aria-label="Pesquisar OS" value={busca} onChange={e=>{setBusca(e.target.value);setPagina(1)}} placeholder="Pesquisar OS, cliente, técnico..."/><select aria-label="Filtrar status" value={filtroStatus} onChange={e=>{setFiltroStatus(e.target.value);setPagina(1)}}><option value="TODOS">Todos os status</option>{status.map(x=><option key={x} value={x}>{rotulo(x)}</option>)}</select><select aria-label="Filtrar técnico" value={filtroTecnico} onChange={e=>{setFiltroTecnico(e.target.value);setPagina(1)}}><option value="TODOS">Todos os técnicos</option>{tecnicos.map(x=><option key={x} value={x}>{x}</option>)}</select><button onClick={()=>{setBusca("");setFiltroStatus("TODOS");setFiltroTecnico("TODOS");setPagina(1)}}>Limpar</button></div></section>
     {erro && <p role="alert" className={styles.error}>{erro}</p>}
+    {erroApr && <p role="status" className={styles.aprConsultaAvisoV1589}>Situação das APRs temporariamente indisponível. Atualize a gestão para verificar os impedimentos.</p>}
     <div className={styles.workspace}>
-      <div className={styles.listPane}><div className={styles.paneTitle}><span className={styles.paneTitleLabel}><OsIcon name="clipboard" size={18}/> Ordens de serviço</span> <span>{filtradas.length}</span></div><div className={styles.osList}>{exibidas.map(o=><button key={o.id} onClick={()=>{setSelecionada(o.id);setAba("materiais")}} className={`${styles.osCard} ${ordem?.id===o.id?styles.selected:""}`} aria-pressed={ordem?.id===o.id}><div className={styles.osTop}><strong>OS nº {o.codigo}</strong><span className={`${styles.state} ${styles[estado(o).toLowerCase()] ?? ""}`}>{rotulo(estado(o))}</span></div><div className={styles.client}>{o.cliente}</div><div className={styles.osMeta}><span>{o.observacao}</span><span>Cliente: {o.codigoCliente}</span><span>Tipo: {rotulo(o.tipo)}</span><span>Técnico: {o.tecnico}</span><span>Data: {dataBR(prevista(o))}</span><span>Base: {o.base} · {o.codigoTecnico}</span></div></button>)}{!exibidas.length&&<div className={styles.empty}>Nenhuma OS encontrada.</div>}</div><footer className={styles.pager}><button disabled={paginaAtual<=1} onClick={()=>setPagina(p=>p-1)}>‹</button><span>{paginaAtual} / {totalPaginas}</span><button disabled={paginaAtual>=totalPaginas} onClick={()=>setPagina(p=>p+1)}>›</button></footer></div>
-      <section className={styles.detailPane} aria-label="Detalhamento da ordem de serviço">{ordem?<><div className={styles.detailHead}><div><span className={styles.detailEyebrow}><OsIcon name="clipboard" size={15}/> ORDEM DE SERVIÇO</span><h2>OS nº {ordem.codigo}</h2><p>{ordem.cliente} · {ordem.observacao}</p></div><div className={styles.detailActions}><span className={`${styles.state} ${styles[estado(ordem).toLowerCase()]??""}`}>{rotulo(estado(ordem))}</span></div></div>{ordem.endereco && <p className={styles.addressNote}>Endereço: {ordem.endereco}{ordem.cidade ? ` · ${ordem.cidade}` : ""}</p>}
+      <div className={styles.listPane}><div className={styles.paneTitle}><span className={styles.paneTitleLabel}><OsIcon name="clipboard" size={18}/> Ordens de serviço</span> <span>{filtradas.length}</span></div><div className={styles.osList}>{exibidas.map(o=><button key={o.id} onClick={()=>{setSelecionada(o.id);setAba("materiais")}} className={`${styles.osCard} ${ordem?.id===o.id?styles.selected:""}`} aria-pressed={ordem?.id===o.id}><div className={styles.osTop}><strong>OS nº {o.codigo}</strong><span className={`${styles.state} ${aprPorOs[String(o.id)] === "NAO_APTO" ? styles.aprNaoAtendidaV1589 : (styles[estado(o).toLowerCase()] ?? "")}`}>{aprPorOs[String(o.id)] === "NAO_APTO" ? "NÃO ATENDIDA" : rotulo(estado(o))}</span></div><div className={styles.client}>{o.cliente}</div><div className={styles.osMeta}><span>{o.observacao}</span><span>Cliente: {o.codigoCliente}</span><span>Tipo: {rotulo(o.tipo)}</span><span>Técnico: {o.tecnico}</span><span>Data: {dataBR(prevista(o))}</span><span>Base: {o.base} · {o.codigoTecnico}</span></div></button>)}{!exibidas.length&&<div className={styles.empty}>Nenhuma OS encontrada.</div>}</div><footer className={styles.pager}><button disabled={paginaAtual<=1} onClick={()=>setPagina(p=>p-1)}>‹</button><span>{paginaAtual} / {totalPaginas}</span><button disabled={paginaAtual>=totalPaginas} onClick={()=>setPagina(p=>p+1)}>›</button></footer></div>
+      <section className={styles.detailPane} aria-label="Detalhamento da ordem de serviço">{ordem?<><div className={styles.detailHead}><div><span className={styles.detailEyebrow}><OsIcon name="clipboard" size={15}/> ORDEM DE SERVIÇO</span><h2>OS nº {ordem.codigo}</h2><p>{ordem.cliente} · {ordem.observacao}</p></div><div className={styles.detailActions}><span className={`${styles.state} ${aprPorOs[String(ordem.id)] === "NAO_APTO" ? styles.aprNaoAtendidaV1589 : (styles[estado(ordem).toLowerCase()] ?? "")}`}>{aprPorOs[String(ordem.id)] === "NAO_APTO" ? "NÃO ATENDIDA" : rotulo(estado(ordem))}</span></div></div>{ordem.endereco && <p className={styles.addressNote}>Endereço: {ordem.endereco}{ordem.cidade ? ` · ${ordem.cidade}` : ""}</p>}
 
       <nav className={styles.tabs} aria-label="Informações da OS"><button className={aba==="materiais"?styles.active:""} onClick={()=>setAba("materiais")}><OsIcon name="box" size={17}/> Materiais e quantidades</button><button className={aba==="historico"?styles.active:""} onClick={()=>setAba("historico")}><OsIcon name="history" size={17}/> Histórico operacional ({ordem.historicoFSM?.length??0})</button></nav>
       {aba==="materiais"?<>
@@ -239,7 +253,7 @@ export default function PainelOrdensServico() {
       {!rascunho?.itens.length && <tr><td colSpan={8} className={styles.empty}>{carregandoMateriais ? "Consultando..." : erroMateriais ? erroMateriais : "Nenhum material apontado nesta OS."}</td></tr>}
       </tbody></table></div>
       </>:<div className={styles.timeline}>{ordem.historicoFSM?.length?[...ordem.historicoFSM].reverse().map((h,i)=><article key={h.id||i}><div className={styles.timelineDot}/><div><strong>{rotulo(h.estadoAnterior)} → {rotulo(h.estadoNovo)}</strong><small>{dataHora(h.ocorridoEm)} · {h.tecnico}</small>{h.tipoOcorrencia&&<p>Ocorrência: {rotulo(h.tipoOcorrencia)}</p>}{h.motivo&&<p>Motivo: {h.motivo}</p>}{h.observacao&&<p>{h.observacao}</p>}{h.novaData&&<p>Nova data: {dataBR(h.novaData)}</p>}</div></article>):<div className={styles.empty}>Nenhum evento FSM registrado.</div>}</div>}
-      <FluxoTecnico ordem={ordem} />
+      <FluxoTecnico ordem={ordem} aprNaoApta={aprPorOs[String(ordem.id)] === "NAO_APTO"} />
       </>:<div className={styles.placeholder}><div className={styles.placeholderIcon}>▤</div><h2>Selecione uma ordem de serviço</h2><p>Escolha um cartão à esquerda para consultar os materiais, as quantidades e o histórico do atendimento.</p></div>}</section>
     </div>
     <div className={styles.footnote}>Ordens obtidas do ERP. Etapas e histórico operacional sincronizados com o WMS quando disponíveis; nenhuma baixa de estoque ocorre neste painel.</div>

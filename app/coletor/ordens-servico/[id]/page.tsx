@@ -1,4 +1,6 @@
 "use client";
+import AtelOsAprAcaoUnicaV1583 from "@/components/atel-ui/AtelOsAprAcaoUnicaV1583";
+import AtelOsChecklistsV158 from "@/components/atel-ui/AtelOsChecklistsV158"; // ATEL_E1_V158
 import "./atel-v145-os-erp-header.css";
 
 import { consultarDetalheErpV52, consultarEstoqueErpV52, type EstoqueErpV52, type DetalheErpV52 } from "@/lib/erpOperacionalV52";
@@ -2685,6 +2687,7 @@ function DetalheOrdemErpSomenteLeitura() {
   try{
    const a=await apiAtel<AndamentoAtel>("/api/os-andamento",{atendimento:id,versao:andamento.versao,etapa:prox});
    setAndamento(a);setAviso("Etapa registrada no Supabase.");
+   if(prox==="NO_CLIENTE"){router.push(`/coletor/ordens-servico/${id}/apr?origem=erp`);return;}
    try { await atualizarEventos(); } catch { setAviso("Etapa registrada. Atualize a OS para consultar o histórico."); }
   }catch(e){setErro(e instanceof Error?e.message:"Falha na transição");}
   finally{setOcupado(false);}
@@ -2743,6 +2746,10 @@ function DetalheOrdemErpSomenteLeitura() {
       </button>}
      </div>}
     </section>
+    {etapa==="ATENDIMENTO"&&<section style={{margin:"0 10px 12px",padding:"9px 12px",border:"1px solid #d6e8ef",borderRadius:10,background:"#f8fbfd"}}>
+      <button type="button" style={{border:0,background:"transparent",fontSize:11,fontWeight:850,color:"#087d9f",cursor:"pointer",padding:4}} onClick={()=>router.push(`/coletor/ordens-servico/${id}/apr?origem=erp`)}>▣ CONSULTAR APR REGISTRADA</button>
+    </section>}
+    {etapa==="ATENDIMENTO"&&<AtelOsChecklistsV158 atendimento={id} etapa={etapa} somenteEncerramento />}
     <section style={{...receiptSectionStyle,margin:"0 10px 12px"}}>
      <div style={receiptTitleStyle}><div><span style={sectionEyebrowStyle}>EXECUÇÃO</span><span style={sectionTitleTextStyle}>Materiais do Atendimento</span></div><span style={sectionCountStyle}>{itens.length}</span></div>
      <div style={receiptInfoStyle}>Nenhum material previsto pelo ERP. O técnico registra os produtos utilizados. A baixa ocorre somente na finalização.</div>
@@ -2951,7 +2958,7 @@ function DetalheOrdemErpSomenteLeitura() {
     <button type="button" disabled={ocupado} onClick={()=>{setErroModal("");setModalRetomar(true);}} style={footerButtonStyle}>RETOMAR DESLOCAMENTO</button>
    </>:<>
     {(["DESLOCAMENTO","NO_CLIENTE","ATENDIMENTO"] as EtapaAtel[]).includes(etapa)&&<button type="button" disabled={ocupado} style={{...footerButtonStyle,background:"#b7791f",marginBottom:8}} onClick={()=>{setErroModal("");setModalOcorrencia(true);}}>REGISTRAR OCORRÊNCIA / REAGENDAR</button>}
-    {prox?<button type="button" onClick={()=>void avancar()} disabled={ocupado||carregando||!andamento} style={footerButtonStyle}>{rotulo}</button>:<button type="button" onClick={()=>void conferirFinalizacao()} disabled={ocupado||carregando||!andamento} style={{...footerButtonStyle,background:"#147e9f"}}>CONFERIR FINALIZAÇÃO</button>}
+    {prox?<AtelOsAprAcaoUnicaV1583 atendimento={id} destino={prox} rotulo={rotulo} disabled={ocupado||carregando||!andamento} style={footerButtonStyle} onAvancar={()=>void avancar()} onAbrirApr={()=>router.push(`/coletor/ordens-servico/${id}/apr?origem=erp`)} />:<button type="button" onClick={()=>void conferirFinalizacao()} disabled={ocupado||carregando||!andamento} style={{...footerButtonStyle,background:"#147e9f"}}>CONFERIR FINALIZAÇÃO</button>}
    </>}
   </div>}
  </div></div>;

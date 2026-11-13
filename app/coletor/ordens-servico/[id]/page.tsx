@@ -1,6 +1,10 @@
+// ATEL_E1_V159_7_FINALIZACAO_SEM_LOOP: preflight sem ciclo, consulta unica, sem executar baixa.
 "use client";
 import AtelOsAprAcaoUnicaV1583 from "@/components/atel-ui/AtelOsAprAcaoUnicaV1583";
-import AtelOsChecklistsV158 from "@/components/atel-ui/AtelOsChecklistsV158"; // ATEL_E1_V158
+import AtelOsFinalizacaoV160 from "@/components/atel-ui/AtelOsFinalizacaoV160"; // ATEL_E1_V160_ESTOQUE_TECNICO_FINALIZACAO
+import AtelAprConsultaModalV1595 from "@/components/atel-ui/AtelAprConsultaModalV1595";
+import {useAtelAprHistoricoV1596, AtelAprEventoV1596} from "@/components/atel-ui/AtelAprHistoricoV1596"; // ATEL_E1_V159_6_APR_HISTORICO_OS
+import AtelRelatorioFotograficoV1595 from "@/components/atel-ui/AtelRelatorioFotograficoV1595";
 import "./atel-v145-os-erp-header.css";
 
 import { consultarDetalheErpV52, consultarEstoqueErpV52, type EstoqueErpV52, type DetalheErpV52 } from "@/lib/erpOperacionalV52";
@@ -2564,6 +2568,7 @@ async function acaoOsEventoAtel<T>(body:Record<string,unknown>):Promise<T>{
 }
 function DetalheOrdemErpSomenteLeitura() {
  const params=useParams(),router=useRouter(),id=Number(params.id);
+ const aprHistoricoV1596=useAtelAprHistoricoV1596(id);
  const [detalhe,setDetalhe]=useState<DetalheErpV52|null>(null);
  const [estoqueErp,setEstoqueErp]=useState<EstoqueErpV52[]>([]);
  const [andamento,setAndamento]=useState<AndamentoAtel|null>(null);
@@ -2574,12 +2579,15 @@ function DetalheOrdemErpSomenteLeitura() {
  const [quantidade,setQuantidade]=useState("1");
  const [edicaoMaterial,setEdicaoMaterial]=useState<string|null>(null);
  const [erro,setErro]=useState(""),[aviso,setAviso]=useState("");
+ const [confirmacaoMateriais,setConfirmacaoMateriais]=useState<{tipo:"sucesso"|"erro";itens:number;unidades:number;mensagem:string}|null>(null); // ATEL_E1_V159_8_MODAL_MATERIAIS
  const [falhasConsultaErp,setFalhasConsultaErp]=useState<string[]>([]); // ATEL_E1_V143
  const [ocupado,setOcupado]=useState(false),[carregando,setCarregando]=useState(true),[alterado,setAlterado]=useState(false);
  const [tentativaERP,setTentativaERP]=useState(0);
  const [eventos,setEventos]=useState<HistoricoErpV525D4[]>([]);
  const [pendencia,setPendencia]=useState<PendenciaErpV525D4|null>(null);
  const [mostrarHistorico,setMostrarHistorico]=useState(false);
+ // ATEL_E1_V159_3_OS_MOBILE_MODAL_TIMELINE: documentação de encerramento acessivel no cabecalho.
+ const [modalAprConsultaV1595,setModalAprConsultaV1595]=useState(false);
  const [modalOcorrencia,setModalOcorrencia]=useState(false);
  const [tipoOcorrencia,setTipoOcorrencia]=useState("CLIENTE_AUSENTE");
  const [motivoOcorrencia,setMotivoOcorrencia]=useState("");
@@ -2593,10 +2601,23 @@ function DetalheOrdemErpSomenteLeitura() {
  const [preflightErro,setPreflightErro]=useState("");
  const [preflightDados,setPreflightDados]=useState<{atendimento:number;etapa:string;total_itens:number;total_unidades:number;conferencias:{cod_produto:number;produto:string;quantidade:number;saldo_erp:number;valido:boolean}[];motivos:string[];finalizacao_liberada:boolean}|null>(null);
  async function conferirFinalizacao() {
-  setPreflightAberto(true);setPreflightCarregando(true);setPreflightErro("");setPreflightDados(null);
-  try { const resultado=await apiAtel<{atendimento:number;etapa:string;total_itens:number;total_unidades:number;conferencias:{cod_produto:number;produto:string;quantidade:number;saldo_erp:number;valido:boolean}[];motivos:string[];finalizacao_liberada:boolean}>(`/api/os-finalizacao/preflight?atendimento=${encodeURIComponent(String(id))}`);setPreflightDados(resultado); }
-  catch(e){setPreflightErro(e instanceof Error?e.message:"Falha na pré-conferência");}
-  finally{setPreflightCarregando(false);}
+  if (preflightCarregando) return;
+  setPreflightCarregando(true);
+  setPreflightErro("");
+  setPreflightDados(null);
+  try {
+    const resultado = await apiAtel<{
+      atendimento:number;etapa:string;total_itens:number;total_unidades:number;
+      conferencias:{cod_produto:number;produto:string;quantidade:number;saldo_erp:number;valido:boolean}[];
+      motivos:string[];finalizacao_liberada:boolean;
+    }>(`/api/os-finalizacao/preflight?atendimento=${encodeURIComponent(String(id))}`);
+    setPreflightDados(resultado);
+  } catch(e) {
+    setPreflightErro(e instanceof Error ? e.message : "Consulta operacional indisponivel.");
+  } finally {
+    setPreflightCarregando(false);
+    setPreflightAberto(true);
+  }
  }
  const obsRef=useRef<HTMLSpanElement|null>(null);
  const [obsTruncada,setObsTruncada]=useState(false);
@@ -2707,8 +2728,10 @@ function DetalheOrdemErpSomenteLeitura() {
   setOcupado(true);setErro("");
   try{
    const m=await apiAtel<ApontamentoAtel>("/api/os-materiais",{atendimento:id,versao:apontamento.versao,itens});
-   setApontamento(m);setItens(m.itens);setAlterado(false);setAviso("Materiais salvos. Nenhuma baixa realizada.");
-  }catch(e){setErro(e instanceof Error?e.message:"Falha ao salvar");}
+   setApontamento(m);setItens(m.itens);setAlterado(false);setAviso("");
+   setConfirmacaoMateriais({tipo:"sucesso",itens:m.itens.length,unidades:m.itens.reduce((total,item)=>total+Number(item.quantidade||0),0),mensagem:""});
+  }catch(e){const mensagem=e instanceof Error?e.message:"Falha ao salvar";
+   setErro(mensagem);setConfirmacaoMateriais({tipo:"erro",itens:0,unidades:0,mensagem});}
   finally{setOcupado(false);}
  }
  const btn:CSSProperties={width:"100%",minHeight:47,border:0,borderRadius:4,fontSize:12,fontWeight:900,background:"#0d7897",color:"#fff",cursor:"pointer"};
@@ -2716,7 +2739,7 @@ function DetalheOrdemErpSomenteLeitura() {
   <div style={headerStyle} className="atel-v145-erp-header">
    <button type="button" style={backButtonStyle} onClick={()=>router.push("/coletor/ordens-servico")}><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M19 12H5"/><path d="m12 19-7-7 7-7"/></svg></button>
    <div style={headerInfoStyle} className="atel-v145-erp-title"><span className="atel-v145-erp-eyebrow">ORDEM DE SERVIÇO · ERP</span><strong style={headerCodigoStyle}>OS nº {id}</strong><span>{String(detalhe?.NomeTecnicoVisita??"TÉCNICO ERP").toUpperCase()}</span><span>ERP · {String(detalhe?.IdTecnicoVisita??"—")}</span></div>
-   <span className="atel-v145-erp-header-icon" aria-hidden="true"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"><rect x="6" y="4" width="12" height="17" rx="2"/><path d="M9 4.5V3h6v1.5M9 10h6M9 14h3m1 3 1.5 1.5L18 15"/></svg></span>
+   {etapa==="ATENDIMENTO" ? <button type="button" className="atel-v1593-checklist-trigger" title="Consultar APR registrada" aria-label="Consultar APR registrada" onClick={()=>setModalAprConsultaV1595(true)}><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><circle cx="8.5" cy="10" r="1.4"/><path d="m3 17 5-4 4 3 4-5 5 6"/></svg></button> : <span className="atel-v145-erp-header-icon" aria-hidden="true"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"><rect x="6" y="4" width="12" height="17" rx="2"/><path d="M9 4.5V3h6v1.5M9 10h6M9 14h3m1 3 1.5 1.5L18 15"/></svg></span>}
   </div>
   <div style={scrollStyle} className="atel-os-v142-detail-area">
    {!detalhe && (carregando || erro) && <AtelOsEstadoERP carregando={carregando} erro={carregando ? undefined : erro} titulo={`OS nº ${id}`} onRetry={() => setTentativaERP(n => n + 1)} />}
@@ -2746,10 +2769,7 @@ function DetalheOrdemErpSomenteLeitura() {
       </button>}
      </div>}
     </section>
-    {etapa==="ATENDIMENTO"&&<section style={{margin:"0 10px 12px",padding:"9px 12px",border:"1px solid #d6e8ef",borderRadius:10,background:"#f8fbfd"}}>
-      <button type="button" style={{border:0,background:"transparent",fontSize:11,fontWeight:850,color:"#087d9f",cursor:"pointer",padding:4}} onClick={()=>router.push(`/coletor/ordens-servico/${id}/apr?origem=erp`)}>▣ CONSULTAR APR REGISTRADA</button>
-    </section>}
-    {etapa==="ATENDIMENTO"&&<AtelOsChecklistsV158 atendimento={id} etapa={etapa} somenteEncerramento />}
+    {/* ATEL_E1_V159_3_OS_MOBILE_MODAL_TIMELINE: documentação acessivel somente no modal do cabecalho; materiais ficam aqui. */}
     <section style={{...receiptSectionStyle,margin:"0 10px 12px"}}>
      <div style={receiptTitleStyle}><div><span style={sectionEyebrowStyle}>EXECUÇÃO</span><span style={sectionTitleTextStyle}>Materiais do Atendimento</span></div><span style={sectionCountStyle}>{itens.length}</span></div>
      <div style={receiptInfoStyle}>Nenhum material previsto pelo ERP. O técnico registra os produtos utilizados. A baixa ocorre somente na finalização.</div>
@@ -2804,13 +2824,18 @@ function DetalheOrdemErpSomenteLeitura() {
      </div>
      {etapa==="ATENDIMENTO"&&!pendenciaAtiva&&<div style={{padding:"0 11px 13px"}}><button type="button" style={{...btn,borderRadius:11,minHeight:48,background:alterado?"#087f9f":"#a6c6d1"}} disabled={!alterado||ocupado} onClick={()=>void salvar()}>{ocupado?"SALVANDO...":alterado?"▣ SALVAR APONTAMENTOS":"✓ APONTAMENTOS SALVOS"}</button></div>}
     </section>
+    {/* ATEL_E1_V159_5_RELATORIO_FOTOGRAFICO: após os materiais, relatório final somente fotográfico. */}
+    {etapa==="ATENDIMENTO"&&<AtelRelatorioFotograficoV1595 atendimento={id} etapa={etapa} />}
+
     <section style={{...receiptSectionStyle,margin:"0 10px 12px",padding:12}}>
      <button type="button" onClick={()=>setMostrarHistorico(v=>!v)} aria-expanded={mostrarHistorico}
        style={{width:"100%",background:"#eff8fb",border:"1px solid #cce8f0",borderRadius:7,padding:13,color:"#087da7",fontWeight:900,cursor:"pointer",fontSize:13}}>
-       {mostrarHistorico?"OCULTAR HISTÓRICO DA OS":"VER HISTÓRICO DA OS"} ({eventos.length})
+       {mostrarHistorico?"OCULTAR HISTÓRICO DA OS":"VER HISTÓRICO DA OS"} ({eventos.length+(aprHistoricoV1596.apr?1:0)})
      </button>
      {mostrarHistorico&&<div style={{display:"grid",gap:8,marginTop:12}}>
-      {eventos.length===0&&<p style={{fontSize:12,color:"#64748b",textAlign:"center",margin:8}}>Nenhuma movimentação registrada no WMS para esta OS.</p>}
+      {eventos.length===0&&!aprHistoricoV1596.apr&&!aprHistoricoV1596.erro&&<p style={{fontSize:12,color:"#64748b",textAlign:"center",margin:8}}>Nenhuma movimentação registrada no WMS para esta OS.</p>}
+      {aprHistoricoV1596.apr&&<AtelAprEventoV1596 apr={aprHistoricoV1596.apr} onConsultar={()=>setModalAprConsultaV1595(true)} />}
+      {aprHistoricoV1596.erro&&<p role="status" style={{fontSize:10,color:"#9b631a",margin:4}}>APR temporariamente indisponível para consulta. Os eventos operacionais continuam visíveis.</p>}
       {eventos.map(ev=><article key={ev.id} style={{border:"1px solid #dce8ef",borderLeft:`3px solid ${ev.tipo==="OCORRENCIA"?"#b7791f":"#1198ba"}`,borderRadius:9,background:"#fff",padding:12}}>
        <div style={{display:"flex",justifyContent:"space-between",gap:8,alignItems:"start"}}>
         <strong style={{fontSize:11,color:"#073d57"}}>{ev.tipo==="OCORRENCIA"?"Ocorrência de atendimento":ev.tipo==="RETOMADA"?"Deslocamento retomado":`${rotuloEtapaAtel(ev.etapa_anterior)} → ${rotuloEtapaAtel(ev.etapa_nova)}`}</strong>
@@ -2820,7 +2845,7 @@ function DetalheOrdemErpSomenteLeitura() {
        {ev.motivo&&<p style={{fontSize:11,margin:"4px 0",lineHeight:1.5,overflowWrap:"anywhere",whiteSpace:"pre-wrap"}}>{ev.motivo}</p>}
        {ev.nova_data&&<p style={{fontSize:11,margin:"4px 0",fontWeight:800}}>Reagendado para: {dataBrAtel(ev.nova_data)}</p>}
       </article>)}
-      <button type="button" onClick={()=>{void atualizarEventos().catch(e=>setErro(e instanceof Error?e.message:"Histórico indisponível"));}} style={{border:0,background:"transparent",color:"#087da7",fontWeight:800,fontSize:11,cursor:"pointer"}}>ATUALIZAR HISTÓRICO</button>
+      <button type="button" onClick={()=>{aprHistoricoV1596.recarregar();void atualizarEventos().catch(e=>setErro(e instanceof Error?e.message:"Histórico indisponível"));}} style={{border:0,background:"transparent",color:"#087da7",fontWeight:800,fontSize:11,cursor:"pointer"}}>ATUALIZAR HISTÓRICO</button>
      </div>}
     </section>
    </>}
@@ -2935,21 +2960,63 @@ function DetalheOrdemErpSomenteLeitura() {
     <div style={{padding:"13px 18px 18px",display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}><button type="button" disabled={ocupado} onClick={()=>setModalRetomar(false)} style={{minHeight:44,border:"1px solid #b7d8e5",borderRadius:9,background:"#fff",color:"#087da7",fontWeight:900,fontSize:11}}>CANCELAR</button><button type="button" disabled={ocupado} onClick={()=>void retomar()} style={{minHeight:44,border:0,borderRadius:9,background:"#0b92b6",color:"#fff",fontWeight:900,fontSize:11}}>{ocupado?"SALVANDO...":"RETOMAR"}</button></div>
    </div>
   </div>}
-  {preflightAberto&&<div role="presentation" onClick={()=>setPreflightAberto(false)} style={{position:"fixed",inset:0,zIndex:11000,background:"rgba(7,28,45,.64)",display:"flex",alignItems:"center",justifyContent:"center",padding:16}}>
-   <div role="dialog" aria-modal="true" aria-labelledby="titulo-preflight-atel" onClick={e=>e.stopPropagation()} style={{width:"100%",maxWidth:390,maxHeight:"85vh",overflowY:"auto",background:"#fff",borderRadius:16,boxShadow:"0 20px 65px rgba(0,0,0,.3)",padding:18,color:"#113b50"}}>
-    <div style={{fontSize:10,fontWeight:900,color:"#1483a6",letterSpacing:1}}>CONFERÊNCIA OPERACIONAL</div>
-    <h2 id="titulo-preflight-atel" style={{fontSize:17,margin:"7px 0 5px"}}>Pré-finalização · OS nº {id}</h2>
-    <p style={{fontSize:11,color:"#617a88",lineHeight:1.5}}>Consulta somente leitura. Nenhuma baixa ou finalização será executada.</p>
-    {preflightCarregando&&<p role="status" style={{fontSize:12}}>Consultando apontamentos e validacao WMS...</p>}
-    {preflightErro&&<p role="alert" style={{fontSize:12,color:"#a32d2d",background:"#fff2f0",padding:10,borderRadius:8}}>{preflightErro}</p>}
-    {preflightDados&&<>
-     <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,margin:"12px 0"}}><div style={{background:"#eef7fb",padding:12,borderRadius:10,fontSize:11}}>SKUs<br/><strong style={{fontSize:22}}>{preflightDados.total_itens}</strong></div><div style={{background:"#eef7fb",padding:12,borderRadius:10,fontSize:11}}>Unidades<br/><strong style={{fontSize:22}}>{preflightDados.total_unidades}</strong></div></div>
-     <div style={{display:"grid",gap:7}}>{preflightDados.conferencias.map((item,i)=><div key={`${item.cod_produto}-${i}`} style={{border:"1px solid #d9e9f0",borderRadius:9,padding:10,fontSize:11}}><strong>SKU {item.cod_produto} · {item.produto}</strong><div style={{marginTop:5,color:item.valido?"#167b55":"#a62f2f"}}>Apontado: {item.quantidade} · Saldo WMS: {item.saldo_erp == null ? "Nao conciliado" : item.saldo_erp} · {item.valido?"Conferido":"Pendente de conciliacao"}</div></div>)}</div>
-     <div style={{background:"#fff7e8",border:"1px solid #f0d6a6",borderRadius:9,padding:11,marginTop:12,fontSize:11}}><strong>Finalização indisponível</strong>{preflightDados.motivos.map((m,i)=><div key={i} style={{marginTop:5}}>• {m}</div>)}</div>
-    </>}
-    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginTop:15}}><button type="button" onClick={()=>setPreflightAberto(false)} style={{minHeight:43,border:"1px solid #c7dce6",background:"white",borderRadius:9,color:"#17627c",fontWeight:800}}>FECHAR</button><button type="button" disabled={preflightCarregando} onClick={()=>void conferirFinalizacao()} style={{minHeight:43,border:0,background:"#087fa3",borderRadius:9,color:"white",fontWeight:800}}>RECONSULTAR</button></div>
+  {confirmacaoMateriais&&<div role="presentation" onClick={()=>setConfirmacaoMateriais(null)}
+ style={{position:"absolute",inset:0,zIndex:12500,background:"rgba(7,35,51,.72)",display:"flex",alignItems:"center",justifyContent:"center",padding:15,boxSizing:"border-box",backdropFilter:"blur(3px)"}}>
+ <div role="dialog" aria-modal="true" aria-labelledby="atel-confirmacao-materiais-titulo" onClick={e=>e.stopPropagation()}
+  style={{width:"100%",maxWidth:355,maxHeight:"calc(100% - 28px)",overflowY:"auto",background:"#fff",color:"#123f57",borderRadius:17,padding:18,boxSizing:"border-box",boxShadow:"0 25px 68px rgba(5,27,42,.35)",border:"1px solid #d8e9f0"}}>
+  <div style={{display:"flex",alignItems:"center",gap:11,marginBottom:10}}>
+   <span aria-hidden="true" style={{width:39,height:39,flex:"0 0 39px",display:"grid",placeItems:"center",fontSize:22,fontWeight:900,borderRadius:12,color:confirmacaoMateriais.tipo==="sucesso"?"#0a8559":"#ac392a",background:confirmacaoMateriais.tipo==="sucesso"?"#e4f6ee":"#fff0ed"}}>{confirmacaoMateriais.tipo==="sucesso"?"✓":"!"}</span>
+   <div style={{minWidth:0}}>
+    <span style={{fontSize:9,fontWeight:900,letterSpacing:".09em",color:"#3181a0"}}>MATERIAIS DA ORDEM DE SERVIÇO</span>
+    <h2 id="atel-confirmacao-materiais-titulo" style={{fontSize:16,lineHeight:1.25,margin:"4px 0 0",color:"#064866"}}>{confirmacaoMateriais.tipo==="sucesso"?"Materiais salvos com sucesso":"Não foi possível salvar"}</h2>
    </div>
+  </div>
+  {confirmacaoMateriais.tipo==="sucesso"?<>
+   <p style={{fontSize:12,lineHeight:1.55,margin:"0 0 12px",color:"#486779"}}>Os apontamentos foram registrados no ATEL. <strong>Nenhuma baixa de estoque nem finalização foi executada.</strong></p>
+   <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:15}}>
+    <div style={{border:"1px solid #d6e8ef",borderRadius:10,background:"#f1f9fc",padding:11,fontSize:10,color:"#5c7b8c"}}>Materiais<strong style={{fontSize:21,color:"#07648a",display:"block",marginTop:3}}>{confirmacaoMateriais.itens}</strong></div>
+    <div style={{border:"1px solid #d6e8ef",borderRadius:10,background:"#f1f9fc",padding:11,fontSize:10,color:"#5c7b8c"}}>Unidades<strong style={{fontSize:21,color:"#07648a",display:"block",marginTop:3}}>{confirmacaoMateriais.unidades}</strong></div>
+   </div>
+  </>:<div role="alert" style={{fontSize:12,lineHeight:1.6,margin:"0 0 15px",color:"#922d23",background:"#fff3f1",border:"1px solid #f3cbc4",borderRadius:10,padding:12}}>
+   {confirmacaoMateriais.mensagem}<div style={{marginTop:7,fontWeight:700}}>Os itens permanecem na tela para correção. Não houve confirmação do salvamento.</div>
   </div>}
+  <button type="button" onClick={()=>setConfirmacaoMateriais(null)}
+   style={{width:"100%",minHeight:47,border:0,borderRadius:9,background:"#087fa3",color:"#fff",fontWeight:900,fontSize:12,cursor:"pointer"}}>
+   {confirmacaoMateriais.tipo==="sucesso"?"CONTINUAR ATENDIMENTO":"VOLTAR AOS MATERIAIS"}
+  </button>
+ </div>
+</div>}
+  {preflightAberto&&<div role="presentation" onClick={()=>setPreflightAberto(false)}
+  style={{position:"fixed",inset:0,zIndex:11000,background:"rgba(7,28,45,.67)",display:"flex",alignItems:"center",justifyContent:"center",padding:15,boxSizing:"border-box"}}>
+  <div role="dialog" aria-modal="true" aria-labelledby="titulo-preflight-atel" onClick={e=>e.stopPropagation()}
+   style={{width:"100%",maxWidth:370,maxHeight:"88vh",overflowY:"auto",background:"#fff",borderRadius:17,boxShadow:"0 22px 65px rgba(0,0,0,.29)",padding:17,boxSizing:"border-box",color:"#113b50"}}>
+   <div style={{display:"flex",alignItems:"center",gap:9,marginBottom:10}}>
+    <span aria-hidden="true" style={{width:35,height:35,borderRadius:11,display:"grid",placeItems:"center",background:"#fff0d8",color:"#9c6210",fontWeight:900,fontSize:21}}>!</span>
+    <div><span style={{fontSize:9,letterSpacing:1.1,fontWeight:900,color:"#1483a6"}}>SITUAÇÃO OPERACIONAL</span>
+     <h2 id="titulo-preflight-atel" style={{fontSize:16,margin:"3px 0 0"}}>Finalização não disponível</h2></div>
+   </div>
+   <p style={{fontSize:11,lineHeight:1.5,color:"#516c7b",margin:"0 0 13px"}}>OS nº {id} · O encerramento está bloqueado porque a conciliação de estoque e a baixa segura do WMS/ERP ainda não foram homologadas. Esta pendência depende da equipe técnica, não de novas tentativas do operador. Nenhum material será baixado ou atendimento finalizado por esta consulta.</p>
+   {preflightErro&&<div role="alert" style={{padding:11,borderRadius:9,border:"1px solid #f0c3b9",background:"#fff4f2",color:"#962b20",fontSize:11,lineHeight:1.5,marginBottom:12}}>
+    <strong>Não foi possível consultar as pendências.</strong><div style={{marginTop:4}}>{preflightErro}</div>
+    <div style={{marginTop:6}}>A OS continua em atendimento. Retorne à tela para conferir o que já foi registrado.</div>
+   </div>}
+   {preflightDados&&<>
+    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:13}}>
+     <div style={{background:"#eef8fc",border:"1px solid #d9eaf2",borderRadius:10,padding:11,fontSize:10,color:"#5c7586"}}>Materiais apontados<strong style={{display:"block",fontSize:20,color:"#095a79",marginTop:2}}>{preflightDados.total_itens}</strong></div>
+     <div style={{background:"#eef8fc",border:"1px solid #d9eaf2",borderRadius:10,padding:11,fontSize:10,color:"#5c7586"}}>Unidades<strong style={{display:"block",fontSize:20,color:"#095a79",marginTop:2}}>{preflightDados.total_unidades}</strong></div>
+    </div>
+    <div style={{border:"1px solid #efdbb4",background:"#fff8eb",borderRadius:10,padding:12,marginBottom:12}}>
+     <strong style={{fontSize:12,color:"#956014"}}>Pendências para liberar a finalização</strong>
+     {preflightDados.motivos.length>0 ? <ul style={{paddingLeft:17,margin:"8px 0 0",fontSize:11,lineHeight:1.55,color:"#765321"}}>{preflightDados.motivos.map((motivo,i)=><li key={i} style={{marginBottom:5}}>{motivo}</li>)}</ul> : <p style={{fontSize:11,lineHeight:1.5,color:"#765321",margin:"8px 0 0"}}>A consulta não identificou pendências adicionais, mas o processo de finalização permanece em homologação.</p>}
+    </div>
+   </>}
+   <div style={{background:"#edf8fc",borderRadius:9,padding:10,fontSize:11,lineHeight:1.5,color:"#215a73",marginBottom:13}}>
+    <strong>O que fazer agora?</strong><div>Confira os materiais e conclua o Relatório Fotográfico Final. Depois de salvar os materiais e concluir o relatório fotográfico, o registro de campo estará documentado. O encerramento da OS exige liberação técnica da integração de estoque.</div>
+   </div>
+   <button type="button" onClick={()=>setPreflightAberto(false)}
+    style={{display:"block",width:"100%",minHeight:46,border:0,borderRadius:9,background:"#087fa3",color:"#fff",fontWeight:900,fontSize:12,cursor:"pointer"}}>VOLTAR AO ATENDIMENTO</button>
+  </div>
+ </div>}
   {detalhe && <div style={footerStyle}>
    {pendenciaAtiva?<>
     <div style={{fontSize:11,textAlign:"center",background:"#fff7e6",color:"#885b18",padding:"10px 8px",fontWeight:850,marginBottom:8}}>
@@ -2958,9 +3025,10 @@ function DetalheOrdemErpSomenteLeitura() {
     <button type="button" disabled={ocupado} onClick={()=>{setErroModal("");setModalRetomar(true);}} style={footerButtonStyle}>RETOMAR DESLOCAMENTO</button>
    </>:<>
     {(["DESLOCAMENTO","NO_CLIENTE","ATENDIMENTO"] as EtapaAtel[]).includes(etapa)&&<button type="button" disabled={ocupado} style={{...footerButtonStyle,background:"#b7791f",marginBottom:8}} onClick={()=>{setErroModal("");setModalOcorrencia(true);}}>REGISTRAR OCORRÊNCIA / REAGENDAR</button>}
-    {prox?<AtelOsAprAcaoUnicaV1583 atendimento={id} destino={prox} rotulo={rotulo} disabled={ocupado||carregando||!andamento} style={footerButtonStyle} onAvancar={()=>void avancar()} onAbrirApr={()=>router.push(`/coletor/ordens-servico/${id}/apr?origem=erp`)} />:<button type="button" onClick={()=>void conferirFinalizacao()} disabled={ocupado||carregando||!andamento} style={{...footerButtonStyle,background:"#147e9f"}}>CONFERIR FINALIZAÇÃO</button>}
+    {prox?<AtelOsAprAcaoUnicaV1583 atendimento={id} destino={prox} rotulo={rotulo} disabled={ocupado||carregando||!andamento} style={footerButtonStyle} onAvancar={()=>void avancar()} onAbrirApr={()=>router.push(`/coletor/ordens-servico/${id}/apr?origem=erp`)} />:<AtelOsFinalizacaoV160 atendimento={id} disabled={ocupado||carregando||!andamento} onConcluida={()=>router.push("/coletor/ordens-servico")}/>}
    </>}
   </div>}
+  <AtelAprConsultaModalV1595 aberto={modalAprConsultaV1595} atendimento={id} fechar={()=>setModalAprConsultaV1595(false)} />
  </div></div>;
 }
 

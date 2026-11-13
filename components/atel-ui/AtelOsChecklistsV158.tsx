@@ -68,8 +68,9 @@ class ProtecaoChecklistV1581 extends Component<{children:ReactNode;titulo:string
   }
 }
 
-function PainelChecklist({atendimento,tipo,etapa}:{atendimento:number;tipo:Tipo;etapa:string}) {
-  const [aberto,setAberto]=useState(false);
+function PainelChecklist({atendimento,tipo,etapa,abertoInicial=false}:{atendimento:number;tipo:Tipo;etapa:string;abertoInicial?:boolean}) {
+  // ATEL_E1_V159_3_OS_MOBILE_MODAL_TIMELINE: iniciar aberto somente dentro do modal de documentacao.
+  const [aberto,setAberto]=useState(abertoInicial);
   const [dados,setDados]=useState<Consulta|null>(null);
   const [respostas,setRespostas]=useState<Respostas>({});
   const [observacao,setObservacao]=useState("");
@@ -425,10 +426,10 @@ function PainelChecklist({atendimento,tipo,etapa}:{atendimento:number;tipo:Tipo;
   </section>;
 }
 
-export default function AtelOsChecklistsV158({atendimento,etapa,somenteEncerramento=false}:{atendimento:number;etapa:string;somenteEncerramento?:boolean}) {
+export default function AtelOsChecklistsV158({atendimento,etapa,somenteEncerramento=false,defaultOpen=false}:{atendimento:number;etapa:string;somenteEncerramento?:boolean;defaultOpen?:boolean}) {
   if(!["NO_CLIENTE","ATENDIMENTO"].includes(etapa))return null;
   return <div className={styles.root}>
     {!somenteEncerramento&&<ProtecaoChecklistV1581 titulo="Análise Preliminar de Risco"><PainelChecklist atendimento={atendimento} tipo="APR" etapa={etapa}/></ProtecaoChecklistV1581>}
-    <ProtecaoChecklistV1581 titulo="Checklist de encerramento"><PainelChecklist atendimento={atendimento} tipo="ENCERRAMENTO" etapa={etapa}/></ProtecaoChecklistV1581>
+    <ProtecaoChecklistV1581 titulo="Checklist de encerramento"><PainelChecklist atendimento={atendimento} tipo="ENCERRAMENTO" etapa={etapa} abertoInicial={defaultOpen}/></ProtecaoChecklistV1581>
   </div>;
 }

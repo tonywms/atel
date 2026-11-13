@@ -1,9 +1,10 @@
 "use client";
 import { useAtelAprResumoV1589 } from "@/components/atel-ui/useAtelAprResumoV1589"; // ATEL_E1_V158_9_NAO_ATENDIDA
 import AtelAprEvidenciaGestaoV1584 from "@/components/atel-ui/AtelAprEvidenciaGestaoV1584";
+import AtelRelatorioFotograficoGestaoV1595 from "@/components/atel-ui/AtelRelatorioFotograficoGestaoV1595";
 import type { ReactNode } from "react";
 
-import { useEffect, useMemo, useState } from "react";
+import { Fragment, useEffect, useMemo, useState } from "react";
 import { obterEstadoFSMOS, type OrdemServico } from "@/lib/ordensServicoStore";
 import styles from "./page.module.css";
 import atelTokens from "@/components/atel-ui/atel-tokens.module.css";
@@ -22,18 +23,21 @@ type RascunhoV525 = { atendimento: number; itens: ApontamentoV525[]; versao: num
 type AndamentoAdminERP = { atendimento_erp:number;etapa:string;versao:number;atualizado_em:string };
 type OcorrenciaAdminERP = { atendimento_erp:number;tipo:"CLIENTE_AUSENTE"|"IMPEDIMENTO_TECNICO"|"OUTRO";motivo:string;nova_data:string|null;criado_em:string;ativa:boolean };
 type EventoAdminERP = {id:string;atendimento_erp:number;tipo:string;etapa_anterior:string;etapa_nova:string;tipo_ocorrencia:string|null;motivo:string|null;nova_data:string|null;ocorrido_em:string;versao:number};
-type PainelStatusERP = {andamentos:AndamentoAdminERP[];ocorrencias:OcorrenciaAdminERP[];eventos:EventoAdminERP[]};
-const estadoEtapaERP=(v:string) => ({PENDENTE:"PENDENTE",DESLOCAMENTO:"EM_DESLOCAMENTO",NO_CLIENTE:"NO_LOCAL",ATENDIMENTO:"EM_ATENDIMENTO"} as Record<string,string>)[v]??"PENDENTE";
+type PainelStatusERP = {andamentos:AndamentoAdminERP[];ocorrencias:OcorrenciaAdminERP[];eventos:EventoAdminERP[];finalizacoes?:{atendimento_erp:number;finalizada_em:string;total_unidades:number}[]};
+const estadoEtapaERP=(v:string) => ({PENDENTE:"PENDENTE",DESLOCAMENTO:"EM_DESLOCAMENTO",NO_CLIENTE:"NO_LOCAL",ATENDIMENTO:"EM_ATENDIMENTO",FINALIZADA:"FINALIZADA"} as Record<string,string>)[v]??"PENDENTE";
 function enriquecerOsERP(ordens:OrdemServico[],dados:PainelStatusERP):OrdemServico[]{
  const andamentos=new Map(dados.andamentos.map(x=>[Number(x.atendimento_erp),x]));
+ // ATEL_E1_V160_2_FINALIZACOES: o registro de finalizacao prevalece sobre o status antigo devolvido pelo ERP.
+ const finalizadas=new Map((dados.finalizacoes??[]).map(x=>[Number(x.atendimento_erp),x]));
  const ocorrencias=new Map<number,OcorrenciaAdminERP>();
  dados.ocorrencias.forEach(x=>{const id=Number(x.atendimento_erp);if(!ocorrencias.has(id))ocorrencias.set(id,x)});
  const eventos=new Map<number,EventoAdminERP[]>();
  dados.eventos.forEach(x=>{const id=Number(x.atendimento_erp);const lista=eventos.get(id)??[];lista.push(x);eventos.set(id,lista)});
  return ordens.map(os=>{
   const atual=andamentos.get(os.id),oc=ocorrencias.get(os.id),hist=eventos.get(os.id)??[];
+   const finalizacao=finalizadas.get(os.id);
   const ativo=oc?.ativa??false;
-  const estadoFSM=(ativo?(oc?.nova_data?"PENDENTE_REAGENDAMENTO":"PENDENTE_TRATATIVA"):(atual?estadoEtapaERP(atual.etapa):"PENDENTE")) as OrdemServico["estadoFSM"];
+  const estadoFSM=(finalizacao?"FINALIZADA":(ativo?(oc?.nova_data?"PENDENTE_REAGENDAMENTO":"PENDENTE_TRATATIVA"):(atual?estadoEtapaERP(atual.etapa):"PENDENTE"))) as OrdemServico["estadoFSM"];
   const mapped=hist.map(h=>{
    const origem=estadoEtapaERP(h.etapa_anterior);
    const destino=h.tipo==="OCORRENCIA"?(h.nova_data?"PENDENTE_REAGENDAMENTO":"PENDENTE_TRATATIVA"):
@@ -41,7 +45,7 @@ function enriquecerOsERP(ordens:OrdemServico[],dados:PainelStatusERP):OrdemServi
    const anterior=origem;
    return {id:h.id,estadoAnterior:anterior as NonNullable<OrdemServico["estadoFSM"]>,estadoNovo:destino as NonNullable<OrdemServico["estadoFSM"]>,ocorridoEm:h.ocorrido_em,codigoTecnico:os.codigoTecnico,tecnico:os.tecnico,...(h.tipo_ocorrencia?{tipoOcorrencia:h.tipo_ocorrencia as "CLIENTE_AUSENTE"|"IMPEDIMENTO_TECNICO"|"OUTRO"}:{}),...(h.motivo?{motivo:h.motivo}:{}),...(h.nova_data?{novaData:h.nova_data}:{})};
   });
-  return {...os,estadoFSM,historicoFSM:mapped,...(oc?{ocorrenciaFSM:{tipo:oc.tipo,motivo:oc.motivo,registradoEm:oc.criado_em}}:{}),...(ativo&&oc?.nova_data?{agendamentoFSM:{novaData:oc.nova_data,motivo:oc.motivo,registradoEm:oc.criado_em}}:{})};
+  return {...os,...(finalizacao?{status:"FINALIZADA" as const,finalizadoEm:finalizacao.finalizada_em}:{}),estadoFSM,historicoFSM:mapped,...(oc?{ocorrenciaFSM:{tipo:oc.tipo,motivo:oc.motivo,registradoEm:oc.criado_em}}:{}),...(ativo&&oc?.nova_data?{agendamentoFSM:{novaData:oc.nova_data,motivo:oc.motivo,registradoEm:oc.criado_em}}:{})};
  });
 }
 const porPagina = 8;
@@ -84,20 +88,19 @@ function FluxoTecnico({ ordem, aprNaoApta = false }: { ordem: OrdemServico; aprN
       {etapas.map((e, i) => {
         const concluida = atual === "FINALIZADA" || (visitados.has(e.id) && i < ultimaEtapa);
         const ativa = i === etapaAtual;
-        return <li key={e.id} className={`${styles.fsmFlowStep} ${concluida ? styles.fsmFlowDone : ""} ${ativa ? styles.fsmFlowCurrent : ""}`} aria-current={ativa ? "step" : undefined}>
+        return <Fragment key={e.id}><li className={`${styles.fsmFlowStep} ${concluida ? styles.fsmFlowDone : ""} ${ativa ? styles.fsmFlowCurrent : ""}`} aria-current={ativa ? "step" : undefined}>
           <span className={styles.fsmFlowCircle}><IconeEtapaFSM etapa={e.id} /></span><span className={styles.fsmFlowLabel}>{e.nome}</span>
           {/* ATEL_E1_V159_0_APR_BLOQUEIO_VISUAL: marco visual no conector, nao representa estado ERP */}
-          {aprNaoApta && e.id === "NO_LOCAL" && (
-            <span className={styles.aprInterrupcaoV1590} role="img" aria-label="Nao avancou: APR nao apta" title="Atendimento interrompido: APR nao apta">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" aria-hidden="true"><path d="M5 5l14 14M19 5L5 19"/></svg>
-              <span className={styles.aprInterrupcaoRotuloV1590}>APR NÃO APTA</span>
-            </span>
-          )}
-        </li>;
+          
+        </li>
+          {/* ATEL_E1_V159_3_OS_MOBILE_MODAL_TIMELINE: o X e uma etapa visual independente entre dois conectores. */}
+          {aprNaoApta && e.id === "NO_LOCAL" && <li className={`${styles.fsmFlowStep} ${styles.aprBloqueioEtapaV1593}`} role="img" aria-label="Bloqueio: APR não apta. O atendimento não avançou."><span className={styles.aprBloqueioMarcaV1593} aria-hidden="true">×</span><span className={styles.aprBloqueioTextoV1593}>APR NÃO APTA</span></li>}</Fragment>;
       })}
     </ol>
     {/* ATEL_E1_V158_4_GESTAO */}
     <AtelAprEvidenciaGestaoV1584 atendimento={ordem.id} />
+    {/* ATEL_E1_V159_5_RELATORIO_FOTOGRAFICO: PDF final independente da APR inicial. */}
+    <AtelRelatorioFotograficoGestaoV1595 atendimento={ordem.id} />
     {excepcional && <div className={styles.fsmFlowAlert}>Situação atual: {rotulo(atual)}. Consulte o Histórico operacional para os detalhes.</div>}
     {aprNaoApta && <div className={styles.aprAvisoV1589} role="status"><strong>ATENDIMENTO NÃO REALIZADO · APR NÃO APTA</strong><span>A visita não prosseguiu após a avaliação de segurança. O PDF da APR está disponível abaixo. A OS não foi finalizada no ERP e nenhuma baixa de estoque foi realizada por esta marcação.</span></div>}
   </section>;
@@ -242,13 +245,13 @@ export default function PainelOrdensServico() {
         <div><small><OsIcon name="box" size={17}/> Produtos apontados</small><strong>{rascunho?.itens.length ?? 0}</strong></div>
         <div><small><OsIcon name="layers" size={17}/> Quantidade apontada</small><strong>{rascunho?.itens.reduce((a, i) => a + Number(i.quantidade || 0), 0) ?? 0}</strong></div>
         <div><small><OsIcon name="hash" size={17}/> Versão do rascunho</small><strong>{rascunho?.versao ?? 0}</strong></div>
-        <div><small><OsIcon name="shield" size={17}/> Baixa de estoque</small><strong>Não realizada</strong></div>
+        <div><small><OsIcon name="shield" size={17}/> Baixa de estoque</small><strong>{estado(ordem)==="FINALIZADA"?"Realizada":"Não realizada"}</strong></div>
       </div>
 
       {erroMateriais && <p role="alert" className={styles.error}>{erroMateriais}</p>}
       <div className={styles.tableWrap}><div className={styles.tableTitle}><span><OsIcon name="box" size={18}/> Itens e materiais da OS</span><span>{rascunho?.itens.length ?? 0} produto(s)</span></div><table><thead><tr><th>STATUS</th><th>CÓDIGO</th><th>DESCRIÇÃO DO PRODUTO</th><th>UND</th><th>QTD</th><th>PATRIMÔNIO</th><th>MAC</th><th>BAIXA</th></tr></thead>
       <tbody>{(rascunho?.itens ?? []).map((item, i) => <tr key={`${item.cod_produto}-${item.patrimonio ?? ""}-${item.mac ?? ""}-${i}`}>
-        <td><span className={styles.draftBadge}>Rascunho</span></td><td><strong className={styles.productCode}>{item.cod_produto}</strong></td><td>{item.produto || "Produto ERP"}</td><td>{item.unidade || "—"}</td><td>{item.quantidade}</td><td>{item.patrimonio ?? "—"}</td><td>{item.mac ?? "—"}</td><td><span className={styles.noBadge}>Não</span></td>
+        <td><span className={styles.draftBadge} style={estado(ordem)==="FINALIZADA"?{background:"#E7F7EF",color:"#076747"}:undefined}>{estado(ordem)==="FINALIZADA"?"Baixado":"Rascunho"}</span></td><td><strong className={styles.productCode}>{item.cod_produto}</strong></td><td>{item.produto || "Produto ERP"}</td><td>{item.unidade || "—"}</td><td>{item.quantidade}</td><td>{item.patrimonio ?? "—"}</td><td>{item.mac ?? "—"}</td><td><span className={styles.noBadge} style={estado(ordem)==="FINALIZADA"?{background:"#E7F7EF",color:"#076747"}:undefined}>{estado(ordem)==="FINALIZADA"?"Sim":"Não"}</span></td>
       </tr>)}
       {!rascunho?.itens.length && <tr><td colSpan={8} className={styles.empty}>{carregandoMateriais ? "Consultando..." : erroMateriais ? erroMateriais : "Nenhum material apontado nesta OS."}</td></tr>}
       </tbody></table></div>

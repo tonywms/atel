@@ -83,7 +83,8 @@ export function validarAPR(input:Record<string,unknown>,modelo:ModeloAPR):DadosA
     if(!ciencia)throw new ErroChecklistV158("Confirme que avaliou as condições e medidas de controle.");
     if(!nenhum_risco&&riscos.length===0)throw new ErroChecklistV158("Selecione os riscos identificados ou marque explicitamente Nenhum risco identificado.");
     if(resultado!=="APTO"&&resultado!=="NAO_APTO")throw new ErroChecklistV158("Informe se o local está apto ou não apto.");
-    if(resultado==="APTO"&&riscos.length&&medidas.length===0)throw new ErroChecklistV158("Informe as medidas de controle aplicáveis aos riscos selecionados.");
+    // ATEL_E1_V159_2_APR_FLUXO_APTO_EPI: EPI/EPC exige ao menos uma opcao em qualquer avaliacao registrada.
+    if(medidas.length===0)throw new ErroChecklistV158("Selecione pelo menos uma medida de controle EPI/EPC antes de concluir a APR.");
     if(resultado==="NAO_APTO"&&observacao.length<10)throw new ErroChecklistV158("Justifique o impedimento com pelo menos 10 caracteres.");
     if(resultado==="APTO"&&riscos.length&&observacao.length<10)throw new ErroChecklistV158("Descreva como os riscos selecionados foram controlados (mínimo 10 caracteres).");
   }

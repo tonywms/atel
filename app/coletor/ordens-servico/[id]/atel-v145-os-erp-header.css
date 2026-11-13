@@ -32,3 +32,119 @@
 .atel-v145-erp .atel-v145-erp-title > span:not(.atel-v145-erp-eyebrow) { display:block; font-size:9px !important; font-weight:600; line-height:1.15; color:#e9f8fc !important; white-space:nowrap;overflow:hidden;text-overflow:ellipsis; }
 .atel-v145-erp .atel-v145-erp-header-icon { width:34px;height:34px;min-width:34px;display:grid;place-items:center;background:rgba(255,255,255,.14);border-radius:10px;color:#f3fcff; }
 @media (prefers-reduced-motion: reduce){.atel-v145-erp .atel-v145-erp-header *{transition:none!important}}
+
+/* ATEL_E1_V159_3_OS_MOBILE_MODAL_TIMELINE: exclusivo da OS ERP. Nunca altera collector-phone, altura ou cabecalho global. */
+.atel-v145-erp > .collector-phone > .atel-os-v142-detail-area {
+  flex: 1 1 0px !important;
+  min-height: 0 !important;
+  height: 0 !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  overscroll-behavior-y: contain;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-gutter: stable;
+  padding-bottom: 26px !important;
+}
+.atel-v145-erp .atel-v1593-checklist-trigger {
+  flex:0 0 35px; width:35px; height:35px; min-width:35px;
+  display:inline-flex; align-items:center; justify-content:center;
+  border:1px solid rgba(255,255,255,.2); border-radius:10px;
+  background:rgba(255,255,255,.14);color:white;cursor:pointer;padding:0;
+}
+.atel-v145-erp .atel-v1593-checklist-trigger:focus-visible{outline:2px solid white;outline-offset:2px}
+.atel-v145-erp > .collector-phone > .atel-v1593-checklist-backdrop {
+  position:absolute;inset:0;z-index:120;display:flex;align-items:center;justify-content:center;
+  padding:12px;box-sizing:border-box;background:rgba(8,32,48,.74);
+}
+.atel-v145-erp .atel-v1593-checklist-dialog {
+  width:100%;max-height:100%;min-height:0;display:flex;flex-direction:column;
+  overflow:hidden;border-radius:15px;background:#f5f9fc;
+  border:1px solid #b7d8e7;box-shadow:0 18px 36px rgba(0,22,42,.32);
+}
+.atel-v145-erp .atel-v1593-checklist-modal-header {
+  flex:0 0 auto;min-height:58px;padding:11px 12px 10px;
+  display:flex;align-items:center;justify-content:space-between;gap:10px;
+  background:linear-gradient(105deg,#087ba4,#1598b4);color:white;
+}
+.atel-v145-erp .atel-v1593-checklist-modal-header>div{display:grid;gap:3px;min-width:0}
+.atel-v145-erp .atel-v1593-checklist-modal-header span{font-size:8px;font-weight:850;letter-spacing:.08em;color:#daf4fa}
+.atel-v145-erp .atel-v1593-checklist-modal-header strong{font-size:14px;font-weight:850;line-height:1.2}
+.atel-v145-erp .atel-v1593-checklist-modal-header button{flex:0 0 36px;width:36px;height:36px;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.2);border-radius:10px;color:#fff;font-size:24px;cursor:pointer}
+.atel-v145-erp .atel-v1593-checklist-modal-scroll {
+  flex:1 1 0;min-height:0;overflow-y:auto;overflow-x:hidden;
+  -webkit-overflow-scrolling:touch;overscroll-behavior:contain;
+  padding:12px 0 20px;
+}
+.atel-v145-erp .atel-v1593-consultar-apr {
+  display:block;box-sizing:border-box;width:calc(100% - 20px);margin:0 10px 10px;
+  min-height:42px;border:1px solid #cae2ec;border-radius:9px;
+  color:#087da5;background:#fff;cursor:pointer;font-size:11px;font-weight:850;
+}
+
+/* ATEL_E1_V159_4_FIX_ROLAGEM_MODAL - CORRECAO SEGURA; SOMENTE OS ERP.
+   Mantem DS-COL-1.0, tamanho do coletor, cabecalho e rodape.
+   Corrige rolagem do detalhe e modal de checklist com altura realmente util. */
+.atel-v145-erp > .collector-phone > .atel-os-v142-detail-area {
+  display: block !important;
+  flex: 1 1 auto !important;
+  min-height: 0 !important;
+  height: auto !important;
+  max-height: none !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  overscroll-behavior-y: contain;
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: 28px !important;
+}
+/* Card do cliente tem altura natural: LOCAL, TECNICO e OBS nunca cortados. */
+.atel-v145-erp > .collector-phone > .atel-os-v142-detail-area > section:first-of-type {
+  display: block !important;
+  flex-shrink: 0 !important;
+  height: auto !important;
+  min-height: 0 !important;
+  max-height: none !important;
+  overflow: visible !important;
+}
+.atel-v145-erp > .collector-phone > .atel-os-v142-detail-area > section:first-of-type > div {
+  max-height: none !important;
+}
+/* Modal: uma janela GRANDE com corpo rolavel. Corrige flex-basis 0 e altura auto da V159.3. */
+.atel-v145-erp > .collector-phone > .atel-v1593-checklist-backdrop {
+  position: absolute !important;
+  inset: 0 !important;
+  z-index: 200 !important;
+  box-sizing: border-box !important;
+  padding: 12px !important;
+  display: flex !important;
+  align-items: stretch !important;
+  justify-content: center !important;
+}
+.atel-v145-erp > .collector-phone > .atel-v1593-checklist-backdrop > .atel-v1593-checklist-dialog {
+  width: 100% !important;
+  height: 100% !important;
+  min-height: 0 !important;
+  max-height: 100% !important;
+  display: flex !important;
+  flex-direction: column !important;
+  overflow: hidden !important;
+  box-sizing: border-box !important;
+  border-radius: 14px !important;
+}
+.atel-v145-erp .atel-v1593-checklist-dialog > .atel-v1593-checklist-modal-header {
+  flex: 0 0 auto !important;
+}
+.atel-v145-erp .atel-v1593-checklist-dialog > .atel-v1593-checklist-modal-scroll {
+  display: block !important;
+  flex: 1 1 auto !important;
+  min-height: 0 !important;
+  height: auto !important;
+  max-height: none !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  overscroll-behavior-y: contain;
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: 22px !important;
+}
+.atel-v145-erp .atel-v1593-checklist-dialog .atel-v1593-checklist-modal-scroll > * {
+  max-height: none;
+}

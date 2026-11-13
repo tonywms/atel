@@ -24,6 +24,12 @@ export async function PUT(req:NextRequest){
   if(andamento.etapa!=="NO_CLIENTE")throw new ErroChecklistV158("A APR só pode ser alterada após a chegada e antes do início do atendimento.",409);
   if(Number(b.modeloVersao)!==modelo.versao)throw new ErroChecklistV158("Versão do formulário alterada. Atualize a APR.",409);
   const dados=validarAPR(b,modelo);
+  // ATEL_E1_V159_2_APR_FLUXO_APTO_EPI: documento concluido e imutavel: o autosave atrasado NUNCA reabre rascunho.
+  if(atual?.situacao==="REGISTRADO"){
+   const identico=dados.situacao==="REGISTRADO"&&(Object.keys(dados) as Array<keyof typeof dados>).every(k=>JSON.stringify(atual[k])===JSON.stringify(dados[k]));
+   if(identico)return reply({apr:atual,andamento}); // Retry idempotente apos falha de rede.
+   throw new ErroChecklistV158("APR ja registrada e protegida contra alteracoes. Consulte o PDF ou solicite nova avaliacao pelo fluxo autorizado.",409);
+  }
   if(atual&&Number(atual.versao)!==versao)throw new ErroChecklistV158("APR modificada em outra sessão. Atualize e revise antes de salvar.",409);
   if(!atual&&versao!==0)throw new ErroChecklistV158("Rascunho não encontrado para essa versão.",409);
   const timestamp=new Date().toISOString();

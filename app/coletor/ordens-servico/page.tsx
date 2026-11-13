@@ -1,5 +1,6 @@
 "use client";
-import { useAtelAprResumoV1589 } from "@/components/atel-ui/useAtelAprResumoV1589"; // ATEL_E1_V158_9_NAO_ATENDIDA
+import { useAtelAprResumoV1589 } from "@/components/atel-ui/useAtelAprResumoV1589";
+import { useAtelOsFinalizadasV1602 } from "@/components/atel-ui/useAtelOsFinalizadasV1602"; // ATEL_E1_V160_2_FINALIZACOES // ATEL_E1_V158_9_NAO_ATENDIDA
 
 import "./atel-v47.css";
 import AtelOsEstadoERP from "@/components/atel-ui/AtelOsEstadoERP"; // ATEL_OS_ESTADOS_V142
@@ -519,6 +520,7 @@ const emptyStyle: CSSProperties = {
 
 export default function OrdensServicoPage() {
   const { estados: aprPorOs, erro: erroApr } = useAtelAprResumoV1589("tecnico");
+  const { finalizadas, carregando: carregandoFinalizadas, erro: erroFinalizadas } = useAtelOsFinalizadasV1602();
   const router = useRouter();
 
   const [busca, setBusca] = useState("");
@@ -571,8 +573,8 @@ export default function OrdensServicoPage() {
 
     const ativas = ordens.filter(
       (ordem) =>
-        ordem.status === "PENDENTE" ||
-        ordem.status === "EM_ATENDIMENTO"
+        !finalizadas[String(ordem.id)] &&
+        (ordem.status === "PENDENTE" || ordem.status === "EM_ATENDIMENTO")
     );
 
     if (!termo) {
@@ -599,7 +601,7 @@ export default function OrdensServicoPage() {
           .includes(termo)
       );
     });
-  }, [ordens, busca]);
+  }, [ordens, busca, finalizadas]);
 
   /* =======================================================
      TOTAIS
@@ -706,14 +708,16 @@ export default function OrdensServicoPage() {
         >
           {erroApr && <div role="status" style={{marginBottom:9,padding:"9px 10px",fontSize:10,borderRadius:9,background:"#fff8ed",color:"#92610f"}}>Não foi possível consultar a situação de segurança das OS. Atualize a tela para tentar novamente.</div>}
           {carregandoERP && <AtelOsEstadoERP carregando titulo="Ordens de Serviço" />}
+          {!carregandoERP && !erroERP && carregandoFinalizadas && <AtelOsEstadoERP carregando titulo="Validando OS finalizadas" />}
+          {!carregandoERP && !erroERP && erroFinalizadas && <div role="alert" style={{padding:"10px 11px",fontSize:11,border:"1px solid #f7bfad",borderRadius:9,background:"#fff6ed",color:"#8c3b17"}}>Não foi possível confirmar as OS finalizadas. Atualize a tela antes de abrir um atendimento. {erroFinalizadas}</div>}
           {!carregandoERP && erroERP && <AtelOsEstadoERP carregando={false} erro={erroERP} titulo="Ordens de Serviço" onRetry={() => setTentativaERP(n => n + 1)} />}
-          {!carregandoERP && !erroERP && filtradas.length === 0 && (
+          {!carregandoERP && !erroERP && !carregandoFinalizadas && !erroFinalizadas && filtradas.length === 0 && (
             <div style={emptyStyle}>
               Nenhuma ordem de serviço encontrada.
             </div>
           )}
 
-          {filtradas.map((ordem) => {
+          {(!carregandoFinalizadas && !erroFinalizadas ? filtradas : []).map((ordem) => {
             const prioridade =
               prioridadeOrdem(ordem);
 

@@ -88,3 +88,15 @@
 .autoSaveNote strong{color:#07799c}
 .finalError{font-size:11px;line-height:1.5;background:#fff1ed;border:1px solid #edae9c;color:#9f2f20;border-radius:10px;padding:12px;font-weight:750}
 .phone>.footer .primary{min-width:0;font-size:12px;font-weight:900}
+
+/* ATEL_E1_V159_2_APR_FLUXO_APTO_EPI: modal de confirmacao no dispositivo; nao altera as dimensoes externas do coletor. */
+.confirmBackdrop{position:absolute;inset:0;z-index:90;background:rgba(10,35,51,.67);display:flex;align-items:center;justify-content:center;padding:18px;box-sizing:border-box}
+.confirmDialog{box-sizing:border-box;width:100%;max-width:362px;max-height:calc(100% - 20px);overflow-y:auto;background:#fff;border:1px solid #b8d9e8;border-radius:17px;padding:19px 17px 16px;box-shadow:0 18px 45px rgba(3,26,45,.28);display:flex;flex-direction:column;align-items:stretch;gap:11px}
+.confirmIcon{width:41px;height:41px;background:#e1f6ed;color:#087a54;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:23px;font-weight:900}
+.confirmDialog h2{font-size:18px;color:#063d57;margin:0;line-height:1.25}
+.confirmDialog p{font-size:12px;color:#4a6779;line-height:1.55;margin:0;overflow-wrap:anywhere}
+.confirmActions{display:flex;flex-direction:column;gap:8px;margin-top:5px}
+.confirmActions button{font:inherit;min-height:43px;cursor:pointer;border-radius:9px;font-size:11px;font-weight:850;padding:10px 12px;text-align:center}
+.confirmActions button:first-child{background:#fff;border:1px solid #bfdae8;color:#0c739b}
+.confirmActions button:last-child{background:#0c90b2;color:#fff;border:1px solid #0c90b2}
+.confirmActions button:disabled{opacity:.6;cursor:wait}

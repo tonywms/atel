@@ -1,0 +1,52 @@
+/* ATEL V159.5 - exclusivo da OS ERP. Nenhuma regra em collector-phone ou CSS global. */
+.atel-v145-erp .atel-v1595-report{margin:0 10px 13px;background:#fff;border:1px solid #c9e2ec;border-left:4px solid #0e94b4;border-radius:13px;overflow:hidden;box-shadow:0 3px 10px rgba(17,66,84,.06);font-family:inherit;color:#153e54}
+.atel-v145-erp .atel-v1595-report-title{padding:12px 12px 8px;display:flex;gap:7px;align-items:center;justify-content:space-between}
+.atel-v145-erp .atel-v1595-report-title>div{display:grid;gap:3px;min-width:0}
+.atel-v145-erp .atel-v1595-report-title span{font-size:8px;color:#8194a7;letter-spacing:.09em;font-weight:900}
+.atel-v145-erp .atel-v1595-report-title strong{color:#087fa5;font-size:14px;font-weight:900}
+.atel-v145-erp .atel-v1595-report-title>b{font-size:10px;white-space:nowrap;padding:6px 9px;border-radius:20px;background:#e5f4fa;color:#087fa5}
+.atel-v145-erp .atel-v1595-report-title>b.done{background:#e7f7ed;color:#0b7950}
+.atel-v145-erp .atel-v1595-report-sub{margin:0 12px 12px;font-size:10px;line-height:1.5;color:#597589}
+.atel-v145-erp .atel-v1595-report-body{padding:0 12px 13px;display:grid;gap:10px;min-width:0}
+.atel-v145-erp .atel-v1595-report-body textarea,.atel-v145-erp .atel-v1595-report-body input:not([type=file]){display:block;box-sizing:border-box;width:100%;min-width:0;border:1px solid #bbd7e5;border-radius:10px;background:#fff;padding:10px 11px;color:#19495d;font:inherit;font-size:12px;outline-offset:2px}
+.atel-v145-erp .atel-v1595-report-body textarea{resize:vertical;min-height:82px;line-height:1.5}
+.atel-v145-erp .atel-v1595-report-body label{font-size:11px;color:#154e68;font-weight:850;display:grid;gap:7px}
+.atel-v145-erp .atel-v1595-report-body label small{font-weight:500;color:#7690a1}
+.atel-v145-erp .atel-v1595-label{font-size:10px;font-weight:900;color:#11546e}
+.atel-v145-erp .atel-v1595-photo{border:1px solid #d2e5ed;border-radius:11px;padding:10px;display:grid;gap:9px;background:#f8fcfe}
+.atel-v145-erp .atel-v1595-photo-head{display:flex;align-items:center;gap:10px;min-width:0}
+.atel-v145-erp .atel-v1595-photo-head>a{display:block;flex:0 0 65px;width:65px;height:65px;border-radius:8px;overflow:hidden;border:1px solid #cadde6}
+.atel-v145-erp .atel-v1595-photo-head img{width:100%;height:100%;object-fit:cover}
+.atel-v145-erp .atel-v1595-photo-head>div:last-child{display:grid;gap:4px;min-width:0}
+.atel-v145-erp .atel-v1595-photo-head strong{font-size:10px;color:#1f536a;overflow-wrap:anywhere}
+.atel-v145-erp .atel-v1595-photo-head span{font-size:9px;color:#6a8795}
+.atel-v145-erp .atel-v1595-photo-head button,.atel-v145-erp .atel-v1595-pendente button{border:0;background:none;color:#b73f32;font-size:10px;font-weight:900;text-align:left;padding:3px;cursor:pointer}
+.atel-v145-erp .atel-v1595-photo-placeholder{width:65px;min-height:65px;flex:0 0 65px;font-size:9px;display:grid;place-items:center}
+.atel-v145-erp .atel-v1595-add{position:relative;cursor:pointer!important;text-align:center;border:1px dashed #1097c0;border-radius:11px;background:#eff9fd;padding:13px 9px;display:grid!important;gap:4px!important;color:#0787ad!important;min-height:45px;align-content:center}
+.atel-v145-erp .atel-v1595-add span{font-size:11px;font-weight:900}
+.atel-v145-erp .atel-v1595-add small{font-size:9px}
+.atel-v145-erp .atel-v1595-add input[type=file]{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer}
+.atel-v145-erp .atel-v1595-finish,.atel-v145-erp .atel-v1595-retry{min-height:45px;width:100%;border:0;border-radius:9px;background:#0c90b0;color:white;font-size:11px;font-weight:900;padding:10px;cursor:pointer}
+.atel-v145-erp .atel-v1595-finish:disabled{opacity:.45;cursor:not-allowed}
+.atel-v145-erp .atel-v1595-retry{background:#e8f7fc;color:#086e91;border:1px solid #b7dbe9}
+.atel-v145-erp .atel-v1595-hint{font-size:9px;line-height:1.45;color:#56768b;margin:2px 0}
+.atel-v145-erp .atel-v1595-error,.atel-v145-erp .atel-v1595-success,.atel-v145-erp .atel-v1595-msg{padding:9px;border-radius:8px;font-size:10px;line-height:1.5;margin:0}
+.atel-v145-erp .atel-v1595-error{border:1px solid #ffc6bd;background:#fff3ef;color:#a12e20}
+.atel-v145-erp .atel-v1595-success{border:1px solid #c6ebd9;background:#edfbf4;color:#166e4d}
+.atel-v145-erp .atel-v1595-msg{background:#eaf6fa;color:#126c8c}
+.atel-v145-erp .atel-v1595-pendente{padding:10px;border:1px solid #eac98f;background:#fff9ed;border-radius:8px;font-size:10px;display:grid;gap:3px}
+.atel-v145-erp .atel-v1595-apr-backdrop{position:absolute;inset:0;z-index:125;display:flex;align-items:center;justify-content:center;background:rgba(5,29,45,.72);padding:11px;box-sizing:border-box}
+.atel-v145-erp .atel-v1595-apr-dialog{width:100%;max-height:100%;height:94%;display:flex;flex-direction:column;min-height:0;border:1px solid #9fcbd9;border-radius:15px;background:#fff;overflow:hidden;box-shadow:0 20px 40px rgba(2,25,44,.35)}
+.atel-v145-erp .atel-v1595-apr-modal-header{flex:0 0 61px;display:flex;justify-content:space-between;align-items:center;gap:12px;padding:10px 12px;background:linear-gradient(105deg,#087ba4,#1598b4);color:white}
+.atel-v145-erp .atel-v1595-apr-modal-header>div{display:grid;gap:3px;min-width:0}
+.atel-v145-erp .atel-v1595-apr-modal-header small{font-size:9px;font-weight:850;color:#e0f5fc}
+.atel-v145-erp .atel-v1595-apr-modal-header strong{font-size:16px;font-weight:900}
+.atel-v145-erp .atel-v1595-apr-modal-header button{width:35px;height:35px;flex:0 0 35px;border-radius:10px;background:rgba(255,255,255,.15);color:white;font-size:24px;border:1px solid rgba(255,255,255,.25);cursor:pointer}
+.atel-v145-erp .atel-v1595-apr-content{min-height:0;flex:1 1 0;overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;padding:12px 14px 22px;box-sizing:border-box;color:#184458;font-size:12px;line-height:1.5}
+.atel-v145-erp .atel-v1595-apr-content h3{font-size:12px;margin:15px 0 7px;color:#086e91;border-bottom:1px solid #e0ecf2;padding-bottom:6px}
+.atel-v145-erp .atel-v1595-apr-content ul{padding-left:20px;margin:6px 0}.atel-v145-erp .atel-v1595-apr-content li{margin-bottom:5px}
+.atel-v145-erp .atel-v1595-apr-readonly{padding:9px;background:#eff8fc;font-size:10px;color:#136682;border-radius:8px;font-weight:800}
+.atel-v145-erp .atel-v1595-apr-result{padding:12px;background:#eaf7f0;border:1px solid #bfe5d2;border-radius:9px;display:flex;gap:5px;flex-wrap:wrap;align-items:center}
+.atel-v145-erp .atel-v1595-apr-result strong{color:#157756}.atel-v145-erp .atel-v1595-apr-result small{color:#587c71}
+.atel-v145-erp .atel-v1595-apr-thumbs{display:flex;gap:8px;flex-wrap:wrap}.atel-v145-erp .atel-v1595-apr-thumbs img{height:82px;width:82px;object-fit:cover;border:1px solid #b7dce7;border-radius:9px}
+.atel-v145-erp .atel-v1595-apr-close{flex:0 0 49px;border:0;background:#0c8baa;color:white;font-weight:900;font-size:11px;cursor:pointer}

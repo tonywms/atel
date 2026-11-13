@@ -30,19 +30,23 @@ export async function GET(req: NextRequest) {
     const permitidas = new Set(os.map((v: unknown) => v && typeof v === "object"
       ? Number((v as { atendimento?: unknown }).atendimento) : 0).filter((v: number) => Number.isSafeInteger(v) && v > 0));
     const db = createClient(url, service, { auth: { persistSession: false, autoRefreshToken: false } });
-    const [andamento, pendencias, eventos] = await Promise.all([
+    const [andamento, pendencias, eventos, finalizacoes] = await Promise.all([
       db.from("atel_os_andamento").select("atendimento_erp,etapa,versao,atualizado_em")
         .eq("usuario_id", data.user.id).eq("tecnico_erp", tecnico).limit(1000),
       db.from("atel_os_ocorrencias").select("atendimento_erp,tipo,motivo,nova_data,criado_em,ativa")
         .eq("usuario_id", data.user.id).eq("tecnico_erp", tecnico).order("criado_em", { ascending: false }).limit(1000),
       db.from("atel_os_eventos").select("id,atendimento_erp,tipo,etapa_anterior,etapa_nova,tipo_ocorrencia,motivo,nova_data,ocorrido_em,versao")
         .eq("usuario_id", data.user.id).eq("tecnico_erp", tecnico).order("ocorrido_em", { ascending: true }).limit(1000),
+      // ATEL_E1_V160_2_FINALIZACOES: registro definitivo de baixa e conclusao, filtrado por usuario e OS autorizada.
+      db.from("atel_os_finalizacoes_v160").select("atendimento_erp,finalizada_em,total_unidades")
+        .eq("usuario_id",data.user.id).eq("tecnico_erp",tecnico).limit(1000),
     ]);
-    if (andamento.error || pendencias.error || eventos.error) return reply({ error: "Consulta de andamento indisponível" }, 503);
+    if (andamento.error || pendencias.error || eventos.error || finalizacoes.error) return reply({ error: "Consulta de andamento indisponível" }, 503);
     return reply({
       andamentos: (andamento.data ?? []).filter(v => permitidas.has(Number(v.atendimento_erp))),
       ocorrencias: (pendencias.data ?? []).filter(v => permitidas.has(Number(v.atendimento_erp))),
       eventos: (eventos.data ?? []).filter(v => permitidas.has(Number(v.atendimento_erp))),
+      finalizacoes: (finalizacoes.data ?? []).filter(v => permitidas.has(Number(v.atendimento_erp))),
     });
   } catch { return reply({ error: "Não foi possível consultar o acompanhamento ERP" }, 502); }
 }

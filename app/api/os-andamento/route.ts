@@ -57,7 +57,7 @@ export async function PUT(req: NextRequest) {
   // ATEL_E1_V158_2_GATE: a exigência é verificada NO SERVIDOR; nenhum cliente pode pular a APR.
   if(String(destino)==="ATENDIMENTO") {
    const {data:apr,error:aprErro}=await bancoServidor().from("atel_os_apr_riscos_v1582")
-     .select("id,resultado,situacao,ciencia,modelo_versao,profissionais")
+     .select("id,resultado,situacao,ciencia,modelo_versao,profissionais,medidas")
      .eq("usuario_id",ctx.userId).eq("tecnico_erp",ctx.tecnico).eq("atendimento_erp",atendimento)
      .eq("situacao","REGISTRADO").eq("resultado","APTO").eq("ciencia",true)
      .order("registrado_em",{ascending:false}).limit(1).maybeSingle();
@@ -70,6 +70,9 @@ export async function PUT(req: NextRequest) {
    // ATEL_E1_V158_5_PROFISSIONAIS_GATE: exige a identificação dos profissionais também no servidor.
    if(!Array.isArray(apr.profissionais)||apr.profissionais.length===0||apr.profissionais.some(p=>!p||typeof p.nome!=="string"||!p.nome.trim()||typeof p.funcao!=="string"||!p.funcao.trim()))
     return reply({error:"Identifique os profissionais envolvidos na APR antes de iniciar o atendimento."},409);
+   // ATEL_E1_V159_2_APR_FLUXO_APTO_EPI: a transicao tambem verifica EPI/EPC registrado.
+   if(!Array.isArray(apr.medidas)||apr.medidas.length===0)
+    return reply({error:"APR sem medidas de controle EPI/EPC. Preencha e registre ao menos uma medida antes de iniciar o atendimento."},409);
   }
   const {data,error}=await bancoServidor().rpc("atel_avancar_os_v525c",{p_usuario:ctx.userId,p_tecnico:ctx.tecnico,p_atendimento:atendimento,p_versao:versao,p_destino:destino});
   if(error)return reply({error:error.message.includes("CONFLITO_ETAPA")?"Etapa alterada ou transicao fora de ordem. Atualize a pagina.":"Falha ao salvar andamento"},error.message.includes("CONFLITO_ETAPA")?409:503);

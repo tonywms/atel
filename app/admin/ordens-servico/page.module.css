@@ -305,3 +305,30 @@
   .root .aprFluxoInterrompidoV1590 { margin-bottom: 37px; }
   .root .aprInterrupcaoV1590 { right: 2px; }
 }
+
+/* ATEL_E1_V159_3_OS_MOBILE_MODAL_TIMELINE: anexo de referencia, conector real - etapa X - conector real, sem overlay absoluto. */
+.root .aprFluxoInterrompidoV1590 .aprBloqueioEtapaV1593 {
+  flex: 0.65 1 0; min-width:88px; position:relative;display:flex;
+  align-items:center;justify-content:flex-start;gap:0;
+  color:#c52d29; z-index:1;
+}
+.root .aprFluxoInterrompidoV1590 .aprBloqueioEtapaV1593::after {
+  content:"";display:block;min-width:12px;height:2px;
+  flex:1 1 auto;margin:0 6px;background:#dce4e9;
+}
+.root .aprFluxoInterrompidoV1590 .aprBloqueioMarcaV1593 {
+  width:26px;height:26px;min-width:26px;flex:0 0 26px;
+  display:flex;align-items:center;justify-content:center;
+  border-radius:50%;border:2px solid #f9cfcc;
+  box-sizing:border-box;background:#cb322b;color:white;
+  font-family:Arial,Helvetica,sans-serif;font-size:21px;font-weight:800;line-height:1;
+}
+.root .aprFluxoInterrompidoV1590 .aprBloqueioTextoV1593 {
+  position:absolute;top:32px;left:13px;transform:translateX(-50%);
+  color:#b52a25;font-size:9px;line-height:1.15;font-weight:900;
+  white-space:nowrap;letter-spacing:.01em;text-align:center;
+}
+@media(max-width:850px){
+ .root .aprFluxoInterrompidoV1590 .aprBloqueioEtapaV1593{min-width:73px}
+ .root .aprFluxoInterrompidoV1590 .aprBloqueioTextoV1593{font-size:8px}
+}

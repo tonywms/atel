@@ -40,6 +40,8 @@ export default function AprOsV1582Page(){
  const [passo,setPasso]=useState(0),[modelo,setModelo]=useState<Modelo|null>(null),[etapa,setEtapa]=useState("PENDENTE"),[etapaVersao,setEtapaVersao]=useState(0);
  const [draft,setDraft]=useState<Dados>(vazio),[reg,setReg]=useState<Registro|null>(null),[fotos,setFotos]=useState<Foto[]>([]),[pendentes,setPendentes]=useState<FotoPendenteV1581[]>([]);
  const [carregando,setCarregando]=useState(true),[ocupado,setOcupado]=useState(false),[subindo,setSubindo]=useState(false);
+ // ATEL_E1_V159_2_APR_FLUXO_APTO_EPI: confirmar antes de registrar APR apta e alterar etapa da OS.
+ const [confirmarInicio,setConfirmarInicio]=useState(false);
  const [erro,setErro]=useState(""),[aviso,setAviso]=useState(""),[alterado,setAlterado]=useState(false),[revisao,setRevisao]=useState(0);
  const chaveRef=useRef(""),fotoEscopoRef=useRef(""),dadosRef=useRef<Dados>(vazio),versaoRef=useRef(0),revisaoRef=useRef(0),salvandoRef=useRef<Promise<boolean>|null>(null),subindoRef=useRef(false),ativoRef=useRef(true);
  const endereco=`/coletor/ordens-servico/${id}?origem=erp`;
@@ -69,13 +71,15 @@ export default function AprOsV1582Page(){
    if(!d||!d.modelo||!Array.isArray(d.modelo.riscos)||!Array.isArray(d.modelo.medidas))throw new Error("Modelo de APR incompleto.");
    if(!ativoRef.current)return;
    setModelo(d.modelo);setEtapa(d.andamento.etapa);setEtapaVersao(d.andamento.versao);setReg(d.apr);setFotos(d.fotos||[]);versaoRef.current=d.apr?.versao||0;
-   if(!cache?.alterado){const remoto=toForm(d.apr||vazio);dadosRef.current=remoto;setDraft(remoto);setAlterado(false);guardarLocal(remoto,false);}
+   if(!cache?.alterado||d.apr?.situacao==="REGISTRADO"){const remoto=toForm(d.apr||vazio);dadosRef.current=remoto;setDraft(remoto);setAlterado(false);guardarLocal(remoto,false);}
    else setAviso("Rascunho local recuperado. As alterações ainda não sincronizadas foram preservadas.");
   }catch(e){setErro(e instanceof Error?e.message:"Falha ao carregar a APR. O rascunho local, quando existente, foi preservado.");}
   finally{if(ativoRef.current)setCarregando(false);}
  }
  useEffect(()=>{ativoRef.current=true;void carregar();return()=>{ativoRef.current=false;};/* Só muda ao abrir outra OS */},[id]);
  const sincronizar=useCallback(async(registrar=false):Promise<boolean>=>{
+  // Nunca salvar um rascunho por cima de uma APR ja registrada.
+  if(!registrar&&dadosRef.current.situacao==="REGISTRADO")return true;
   if(salvandoRef.current){await salvandoRef.current;if(!registrar&&!alterado)return true;}
   if(!modelo||etapa!=="NO_CLIENTE"){setErro("A APR pode ser registrada somente após a chegada ao cliente.");return false;}
   if(typeof navigator!=="undefined"&&!navigator.onLine){setAviso("Sem internet. Rascunho preservado neste dispositivo.");return false;}
@@ -94,9 +98,9 @@ export default function AprOsV1582Page(){
   salvandoRef.current=tarefa;
   try{return await tarefa;}finally{if(salvandoRef.current===tarefa)salvandoRef.current=null;}
  },[modelo,etapa,id,guardarLocal,alterado]);
- useEffect(()=>{if(!modelo||!alterado||etapa!=="NO_CLIENTE")return;
+ useEffect(()=>{if(!modelo||!alterado||etapa!=="NO_CLIENTE"||ocupado||dadosRef.current.situacao==="REGISTRADO")return;
   const t=window.setTimeout(()=>{void sincronizar(false);},2500);return()=>window.clearTimeout(t);
- },[revisao,modelo,alterado,etapa,sincronizar]);
+ },[revisao,modelo,alterado,etapa,sincronizar,ocupado]);
  const enviarFotos=useCallback(async()=>{
   if(subindoRef.current||!fotoEscopoRef.current||etapa!=="NO_CLIENTE"||(typeof navigator!=="undefined"&&!navigator.onLine))return;
   subindoRef.current=true;setSubindo(true);const escopo=fotoEscopoRef.current;
@@ -153,27 +157,41 @@ export default function AprOsV1582Page(){
   if(new Set(pessoas.map(p=>p.nome.trim().toLocaleLowerCase("pt-BR"))).size!==pessoas.length)return "Não repita o mesmo profissional na APR.";
   if(d.resultado!=="APTO"&&d.resultado!=="NAO_APTO")return "Selecione o resultado da avaliação: Apto ou Não apto.";
   if(!d.ciencia)return "Marque a confirmação de que avaliou as condições do local e as medidas de controle.";
-  if(d.resultado==="APTO"&&d.riscos.length>0&&d.medidas.length===0)return "Selecione as medidas de controle utilizadas para os riscos identificados.";
+  if(d.medidas.length===0)return "Selecione ao menos uma medida de controle EPI/EPC para concluir a APR.";
   if(d.resultado==="NAO_APTO"&&d.observacao.trim().length<10)return `Para registrar o impedimento, descreva o motivo em pelo menos 10 caracteres (faltam ${10-d.observacao.trim().length}).`;
   if(d.resultado==="APTO"&&d.riscos.length>0&&d.observacao.trim().length<10)return `Explique as medidas adotadas em pelo menos 10 caracteres (faltam ${10-d.observacao.trim().length}).`;
   return null;
  }
- async function registrar(){
+ // ATEL_E1_V159_2_APR_FLUXO_APTO_EPI: tres etapas + confirmacao + transicao apenas apos registro no servidor.
+ function solicitarConclusao(){
   setErro("");setAviso("");
   if(ocupado||subindo)return;
   const pendencia=conferirConclusao();
   if(pendencia){setErro(pendencia);requestAnimationFrame(()=>{const el=document.querySelector('[data-atel-apr-v1587-alerta]');el?.scrollIntoView({behavior:"smooth",block:"nearest"});});return;}
-  if(pendentes.length>0){setErro("Ainda há foto(s) aguardando envio. Use TENTAR SINCRONIZAR FOTOS antes de concluir.");return;}
+  if(pendentes.length>0){setErro("Ha fotos pendentes. Sincronize as evidencias antes de concluir.");return;}
+  if(dadosRef.current.resultado==="APTO"){setConfirmarInicio(true);return;}
+  void registrar();
+ }
+ async function registrar(){
+  setConfirmarInicio(false);setErro("");setAviso("");
+  if(ocupado||subindo)return;
+  const pendencia=conferirConclusao();
+  if(pendencia){setErro(pendencia);return;}
+  if(pendentes.length>0){setErro("Ainda ha fotos pendentes de envio. Sincronize antes de concluir.");return;}
   setOcupado(true);
   try{
    const ok=await sincronizar(true);
-   if(ok){
-    // A fonte da verdade e o Supabase: o PDF do gestor so aparece apos REGISTRADO.
-    // ATEL_E1_V158_8_APR_RETORNO_POR_RESULTADO: redirecionar somente apos resposta OK da API.
-    const destinoAposAPR = dadosRef.current.resultado === "NAO_APTO"
-      ? "/coletor/ordens-servico"
-      : endereco;
-    router.replace(destinoAposAPR);
+   if(!ok)return;
+   // A APR, inclusive seu PDF, existe no Supabase antes de alterar a etapa.
+   if(dadosRef.current.resultado==="NAO_APTO"){router.replace("/coletor/ordens-servico");return;}
+   try{
+    const resposta=await api<{etapa:string;versao:number}>("/api/os-andamento",{method:"PUT",body:JSON.stringify({atendimento:id,versao:etapaVersao,destino:"ATENDIMENTO"})});
+    if(resposta.etapa!=="ATENDIMENTO")throw new Error("A transição para Atendimento não foi confirmada.");
+    setEtapa("ATENDIMENTO");setEtapaVersao(resposta.versao);
+    router.replace(endereco);
+   }catch(e){
+    // Nunca declarar atendimento iniciado sem a confirmacao da API.
+    setErro("APR Apta registrada e enviada à gestão, mas o atendimento não foi iniciado: "+(e instanceof Error?e.message:"falha na transicao")+". Volte à OS e use INICIAR ATENDIMENTO; não refaça a APR.");
    }
   }finally{setOcupado(false);}
  }
@@ -191,7 +209,7 @@ export default function AprOsV1582Page(){
    irParaPasso(1);return;
   }
   if(passo===1){
-   if(!draft.nenhum_risco&&draft.riscos.length>0&&draft.medidas.length===0){setErro("Indique as medidas de controle verificadas para os riscos identificados.");return;}
+   if(draft.medidas.length===0){setErro("Selecione pelo menos uma medida de controle EPI/EPC antes de confirmar.");requestAnimationFrame(()=>{if(conteudoRef.current)conteudoRef.current.scrollTop=0;});return;}
    if(draft.medidas.includes("outros")&&!draft.medidas_outros.trim()){setErro("Descreva as outras medidas EPI/EPC antes de avançar.");return;}
    irParaPasso(2);
   }
@@ -200,7 +218,7 @@ export default function AprOsV1582Page(){
  const ris=draft.riscos.length,con=draft.medidas.length,concluido=reg?.situacao==="REGISTRADO"&&!alterado&&profissionaisRegistrados;
  const destinoSaida=concluido&&reg?.resultado==="NAO_APTO"?"/coletor/ordens-servico":endereco;
  const status=concluido?(reg?.resultado==="APTO"?"REGISTRADA · APTA":"REGISTRADA · NÃO APTA"):alterado?"ALTERAÇÕES LOCAIS":"RASCUNHO";
- const visitavel=etapa==="NO_CLIENTE";
+ const visitavel=etapa==="NO_CLIENTE"&&reg?.situacao!=="REGISTRADO"&&!ocupado;
  return <div className="collector-screen"><div className={`collector-phone ${styles.phone}`}>
    <header className={styles.header}>
      <button type="button" className={styles.back} aria-label="Voltar à OS" onClick={()=>router.push(destinoSaida)}><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"><path d="M19 12H5m7 7-7-7 7-7"/></svg></button>
@@ -290,7 +308,7 @@ export default function AprOsV1582Page(){
        </div>
        <label className={`${styles.ack} ${draft.ciencia?styles.checked:""}`}><input disabled={!visitavel} type="checkbox" checked={draft.ciencia} onChange={e=>mudar(d=>({...d,ciencia:e.target.checked}))}/><span>Confirmo que avaliei as condições do local e as medidas de controle informadas nesta APR.</span></label>
        {draft.resultado==="NAO_APTO"&&<div className={styles.stop}>⚠ Local não apto: o atendimento permanecerá bloqueado. Ao concluir, você voltará à lista de Ordens de Serviço. O atendimento continuará bloqueado; a avaliação e o PDF estarão disponíveis para a gestão.</div>}
-       {draft.resultado==="APTO"&&<div className={styles.success}>Após concluir a APR, você voltará à OS e poderá solicitar INICIAR ATENDIMENTO. O PDF ficará disponível para a gestão.</div>}
+       {draft.resultado==="APTO"&&<div className={styles.success}>Ao concluir uma APR apta, confirme o início do atendimento. O ATEL registrará a APR, validará a transição no servidor e abrirá a tela de materiais da OS.</div>}
        <div className={styles.autoSaveNote}>✓ As respostas são salvas automaticamente como rascunho. Somente <strong>CONCLUIR APR</strong> registra a avaliação e a disponibiliza à gestão.</div>
        {erro&&<div className={styles.finalError} role="alert" data-atel-apr-v1587-alerta>{erro}</div>}
        {concluido&&<div className={reg?.resultado==="APTO"?styles.success:styles.stop}>Avaliação registrada no ATEL. {reg?.resultado==="APTO"?"Pode solicitar o início do atendimento.":"Atendimento bloqueado por local não apto."}</div>}
@@ -302,12 +320,23 @@ export default function AprOsV1582Page(){
     {passo<2?<button type="button" className={styles.primary} disabled={carregando||!modelo||ocupado} onClick={confirmarPasso}>
       {passo===0?"CONFIRMAR RISCOS →":"CONFIRMAR EPI / EPC →"}
     </button>:<>
-      {visitavel&&(!concluido||alterado)?<button type="button" className={styles.primary} disabled={ocupado||subindo||!modelo} onClick={()=>void registrar()}>
+      {visitavel&&(!concluido||alterado)?<button type="button" className={styles.primary} disabled={ocupado||subindo||!modelo} onClick={solicitarConclusao}>
        {ocupado?"CONCLUINDO...":"CONCLUIR APR"}
       </button>:<button type="button" className={styles.primary} onClick={()=>router.push(destinoSaida)}>
        {destinoSaida==="/coletor/ordens-servico"?"VOLTAR À LISTA DE OS":"VOLTAR À ORDEM DE SERVIÇO"}
       </button>}
     </>}
    </footer>
+   {confirmarInicio&&<div className={styles.confirmBackdrop}>
+    <section role="dialog" aria-modal="true" aria-labelledby="atel-apr-confirmar-titulo" className={styles.confirmDialog}>
+     <div className={styles.confirmIcon} aria-hidden="true">✓</div>
+     <h2 id="atel-apr-confirmar-titulo">Confirmar APR Apta?</h2>
+     <p>Ao confirmar, a APR será registrada e o ATEL tentará iniciar o atendimento após validação no servidor. Prossiga somente se o local estiver seguro e as medidas de controle tiverem sido aplicadas.</p>
+     <div className={styles.confirmActions}>
+      <button type="button" onClick={()=>setConfirmarInicio(false)} disabled={ocupado}>REVISAR APR</button>
+      <button type="button" onClick={()=>void registrar()} disabled={ocupado||subindo}>CONFIRMAR APR E INICIAR ATENDIMENTO</button>
+     </div>
+    </section>
+   </div>}
  </div></div>;
 }
